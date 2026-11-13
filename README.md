@@ -89,6 +89,11 @@ on the right, the page chosen.
 - **Add a range** starts a new range at the page shown, and so does a
   double-click on a page; **Remove the range** lets the range before go on
   over its pages; **No labels** removes them all.
+- Select pages in the list (with Shift and Ctrl) and right-click them to
+  **number them** (in any style, from any start, with a prefix and a
+  suffix), **continue the numbering from before** them, **give them one
+  label**, **edit their labels one by one**, or leave them with **no
+  label**.
 - **View ▸ Thumbnails of the pages** shows the pages as thumbnails with
   their labels, to look over a whole book at once.
 - **Go to the page labelled…** (Ctrl+L) finds a page by its label: `xii`,

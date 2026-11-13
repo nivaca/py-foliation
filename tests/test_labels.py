@@ -192,3 +192,39 @@ def test_find_label():
     assert labels.find_label(ranges, N, "vii") == [7]
     assert labels.find_label(ranges, N, "VII") == [7]  # (but for capitals)
     assert labels.find_label(ranges, N, "7") == [15]
+
+
+# =========================================================================== chosen pages
+
+
+def test_blocks():
+    assert labels.blocks([9, 3, 4, 5, 4]) == [(3, 5), (9, 9)]
+    assert labels.blocks([]) == []
+
+
+def test_number_pages():
+    book = [Range(1, "r"), Range(9)]
+    out = labels.number_pages(book, N, [20, 21, 22], "A", "Plate ")
+    assert labels.page_labels(out, N)[18:24] == ["11", "Plate A", "Plate B", "Plate C", "15", "16"]
+    out = labels.number_pages(book, N, [30, 32, 34], "D", "", 5)  # (not consecutive: one after the other)
+    assert labels.page_labels(out, N)[29:34] == ["5", "23", "6", "25", "7"]
+    out = labels.number_pages(book, N, [50, 51], "f", start=3)
+    assert labels.page_labels(out, N)[49:52] == ["2r", "2v", "44"]
+
+
+def test_continue_numbering():
+    book = [Range(1, "r"), Range(9), Range(20, "", "Plate"), Range(22, "D", "", 12)]
+    out = labels.continue_numbering(book, N, [20, 21])  # (the pages after them keep their numbers)
+    assert out == [Range(1, "r"), Range(9), Range(22, "D", "", 12)]
+    assert labels.continue_numbering(book, N, [20, 21, 22, 23]) == [Range(1, "r"), Range(9), Range(24, "D", "", 14)]
+    assert labels.continue_numbering([Range(1, "", "Cover"), Range(2)], N, [2]) == \
+        [Range(1, "", "Cover"), Range(3, "D", "", 2)]
+    with pytest.raises(LabelError):
+        labels.continue_numbering(book, N, [1])
+
+
+def test_relabel():
+    book = [Range(1, "r"), Range(9)]
+    out = labels.relabel(book, N, {20: "Map", 21: "12bis", 40: "x", 41: "xi"})
+    got = labels.page_labels(out, N)
+    assert got[18:23] == ["11", "Map", "12bis", "14", "15"] and got[39:42] == ["x", "xi", "34"]

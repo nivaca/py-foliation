@@ -532,6 +532,55 @@ def apply(base: list[Range], requests: list[Request], n: int, remove: list[int] 
     return _compress(specs)
 
 
+# =========================================================================== chosen pages
+
+
+def blocks(pages) -> list[tuple[int, int]]:
+    """The runs of consecutive PAGES: [3, 4, 5, 9] -> [(3, 5), (9, 9)]."""
+    out: list[tuple[int, int]] = []
+    for p in sorted(set(pages)):
+        if out and p == out[-1][1] + 1:
+            out[-1] = (out[-1][0], p)
+        else:
+            out.append((p, p))
+    return out
+
+
+def number_pages(ranges: list[Range], n: int, pages, style: str, prefix: str = "", start: int = 1,
+                 suffix: str = "") -> list[Range]:
+    """RANGES with PAGES numbered in STYLE from START, one after the other (the
+    pages between them, if they are not consecutive, keep their labels)."""
+    requests = []
+    count = 0
+    for first, last in blocks(pages):
+        requests.append(Request(Range(first, style, prefix, start + count if style else 1, suffix), last))
+        count += last - first + 1
+    return apply(ranges, requests, n)
+
+
+def continue_numbering(ranges: list[Range], n: int, pages) -> list[Range]:
+    """RANGES with each run of PAGES numbered on from the page before it."""
+    specs = _page_specs(ranges, n)
+    requests = []
+    for first, last in blocks(pages):
+        if first == 1:
+            raise LabelError(tr("page 1 has no page before it to go on from"))
+        style, prefix, number, suffix = specs[first - 2]
+        requests.append(Request(Range(first, style, prefix, number + 1 if style else 1, suffix), last))
+    return apply(ranges, requests, n)
+
+
+def relabel(ranges: list[Range], n: int, new: dict[int, str]) -> list[Range]:
+    """RANGES with the pages of NEW ({page: label}) given those labels, each run
+    of them as the fewest ranges that give them (see from_labels)."""
+    requests = []
+    for first, last in blocks(new):
+        found = from_labels([new[p] for p in range(first, last + 1)], first)
+        for i, r in enumerate(found):
+            requests.append(Request(r, found[i + 1].page - 1 if i + 1 < len(found) else last))
+    return apply(ranges, requests, n)
+
+
 def describe(r: Range, last: int) -> str:
     """'i … viii' (the labels of the first and last pages of a range)."""
     a, b = r.label(r.page), r.label(last)

@@ -139,7 +139,10 @@ a book is exported again; `set`, `clear` and `copy` take several files at
 once, and `--dry-run` only shows what they would do; `show --label` and
 the window's *Go to the page labelled…* find a page by its label.  The
 window can show the pages as thumbnails with their labels, and a
-double-click on a page starts a range there.  Protected PDFs are opened
+double-click on a page starts a range there.  Pages chosen in the list
+(with Shift and Ctrl) can be numbered at once, in any style, numbered on
+from the page before them, given one label, or relabelled one by one,
+from a menu on the right button.  Protected PDFs are opened
 with their password, and keep their protection when they are saved (the
 first version took it away).  The command line completes its commands and
 options in bash, fish and zsh, and has a manual page, made from its own
@@ -149,7 +152,7 @@ PyPI, and there is a Flatpak, for Flathub.
 Testing
 -------
 
-The program has 84 automated tests (`tests/`), run with pytest.  They
+The program has 90 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, the reading and
 writing of the number tree, including odd trees, and the ranges found in

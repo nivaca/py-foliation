@@ -726,10 +726,6 @@ entrada estándar), y encuentra el menor número de intervalos que las da.</tr>
     <tr>Copiar las etiquetas de otro PDF…</tr>
   </text>
   <text>
-    <en>Double-click a page to start a range at it</en>
-    <tr>Haga doble clic en una página para empezar un intervalo en ella</tr>
-  </text>
-  <text>
     <en>FILE</en>
     <tr>ARCHIVO</tr>
   </text>
@@ -973,5 +969,85 @@ hoja y su lado, como 12v), - o none (solo el prefijo).</tr>
   <text>
     <en>{token!r} is not one of style=, start=, prefix= or suffix=</en>
     <tr>{token!r} no es ninguno de style=, start=, prefix= o suffix=</tr>
+  </text>
+  <text>
+    <en>Continue the numbering from before</en>
+    <tr>Seguir la numeración anterior</tr>
+  </text>
+  <text>
+    <en>Copy its label</en>
+    <tr>Copiar su etiqueta</tr>
+  </text>
+  <text>
+    <en>Copy their labels</en>
+    <tr>Copiar sus etiquetas</tr>
+  </text>
+  <text>
+    <en>Double-click a page to start a range at it; select pages (Shift, Ctrl) and right-click them for more</en>
+    <tr>Haga doble clic en una página para empezar un intervalo en ella; seleccione páginas (Mayús, Ctrl) y haga clic derecho en ellas para más</tr>
+  </text>
+  <text>
+    <en>Edit their labels one by one…</en>
+    <tr>Editar sus etiquetas una por una…</tr>
+  </text>
+  <text>
+    <en>Give it a label…</en>
+    <tr>Darle una etiqueta…</tr>
+  </text>
+  <text>
+    <en>Give them one label…</en>
+    <tr>Darles una sola etiqueta…</tr>
+  </text>
+  <text>
+    <en>Labels copied</en>
+    <tr>Etiquetas copiadas</tr>
+  </text>
+  <text>
+    <en>No label</en>
+    <tr>Sin etiqueta</tr>
+  </text>
+  <text>
+    <en>Number these pages</en>
+    <tr>Numerar estas páginas</tr>
+  </text>
+  <text>
+    <en>Number these pages…</en>
+    <tr>Numerar estas páginas…</tr>
+  </text>
+  <text>
+    <en>Number this page…</en>
+    <tr>Numerar esta página…</tr>
+  </text>
+  <text>
+    <en>One label</en>
+    <tr>Una etiqueta</tr>
+  </text>
+  <text>
+    <en>Start a range at page {page}</en>
+    <tr>Empezar un intervalo en la página {page}</tr>
+  </text>
+  <text>
+    <en>The label of each page chosen, one on each line:</en>
+    <tr>La etiqueta de cada página elegida, una en cada línea:</tr>
+  </text>
+  <text>
+    <en>The label of the pages chosen:</en>
+    <tr>La etiqueta de las páginas elegidas:</tr>
+  </text>
+  <text>
+    <en>Their labels</en>
+    <tr>Sus etiquetas</tr>
+  </text>
+  <text>
+    <en>There are {lines} lines for {count} pages</en>
+    <tr>Hay {lines} líneas para {count} páginas</tr>
+  </text>
+  <text>
+    <en>page 1 has no page before it to go on from</en>
+    <tr>la página 1 no tiene una página anterior desde la cual seguir</tr>
+  </text>
+  <text>
+    <en>{count} pages, numbered one after the other:</en>
+    <tr>{count} páginas, numeradas una tras otra:</tr>
   </text>
 </interface>

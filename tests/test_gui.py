@@ -212,3 +212,57 @@ def test_pages_list(app, window, book):
     assert len(window._thumbs) == 100 and not window.pages.item(0).icon().isNull()
     assert window.pages.item(3).text() == "4\niv"
     window.a_thumbs.setChecked(False)
+
+
+def select(window, pages):
+    window.pages.clearSelection()
+    window.pages.setCurrentRow(pages[0] - 1)
+    for p in pages:
+        window.pages.item(p - 1).setSelected(True)
+
+
+def labels_of(window, first, last):
+    return labels.page_labels(window.ranges, window.count)[first - 1:last]
+
+
+def test_actions_on_chosen_pages(app, window, book, monkeypatch):
+    window.open_path(book)
+    select(window, [20, 21, 22])
+    assert window.selected_pages() == [20, 21, 22]
+    shown = [a.text() for a in window.build_pages_menu().actions()]
+    assert "Number these pages…" in shown and "Edit their labels one by one…" in shown
+    assert "Start a range at page 20" in shown
+
+    window.ask_numbering = lambda count: ("A", "Plate ", 1, "")
+    assert window.number_selected()
+    assert labels_of(window, 19, 23) == ["11", "Plate A", "Plate B", "Plate C", "15"]
+    assert window.selected_pages() == [20, 21, 22]  # (still chosen, for another action)
+    assert window.continue_selected()
+    assert labels_of(window, 19, 23) == ["11", "12", "13", "14", "15"]
+    window.ask_text = lambda *a: "Map"
+    assert window.label_selected()
+    assert labels_of(window, 20, 22) == ["Map"] * 3
+    window.ask_lines = lambda *a: "12\n12bis\n13\n"
+    assert window.edit_selected()
+    assert labels_of(window, 19, 23) == ["11", "12", "12bis", "13", "15"]
+    window.ask_lines = lambda *a: "a\nb"
+    assert not window.edit_selected() and "2 lines for 3 pages" in window.statusBar().currentMessage()
+    window.copy_labels()
+    assert QtWidgets.QApplication.clipboard().text() == "12\n12bis\n13"
+    window.undo()
+    assert labels_of(window, 20, 22) == ["Map"] * 3
+    select(window, [1])
+    assert not window.continue_selected()  # (page 1 has nothing before it)
+
+
+def test_number_dialog(app, window):
+    from py_foliation.gui.window import NumberDialog
+    dlg = NumberDialog(window, 5)
+    assert dlg.preview.text() == "1 … 5"
+    dlg.style.setCurrentIndex(dlg.style.findData("f"))
+    assert dlg.start.text() == "1r" and dlg.preview.text() == "1r … 3r"
+    dlg.start.setValue(24)
+    dlg.prefix.setText("f. ")
+    assert dlg.values() == ("f", "f. ", 24, "") and dlg.preview.text() == "f. 12v … f. 14v"
+    dlg.style.setCurrentIndex(dlg.style.findData("r"))
+    assert dlg.start.text() == "12"  # (the leaf, as a number)

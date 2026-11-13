@@ -16,9 +16,9 @@ from PySide6.QtGui import QAction, QActionGroup, QColor, QIcon, QKeySequence, QP
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtWidgets import (
-    QAbstractItemView, QApplication, QComboBox, QFileDialog, QHBoxLayout, QHeaderView, QInputDialog, QLabel,
-    QLineEdit, QListView, QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QSpinBox,
-    QSplitter, QTableWidget, QVBoxLayout, QWidget,
+    QAbstractItemView, QApplication, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QHBoxLayout,
+    QHeaderView, QInputDialog, QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMainWindow, QMenu,
+    QMessageBox, QPushButton, QSpinBox, QSplitter, QTableWidget, QVBoxLayout, QWidget,
 )
 
 from .. import __version__, config, interface, labels
@@ -83,6 +83,15 @@ class StartSpin(QSpinBox):
         self.folio = folio
         self.setRange(1, 999999)
 
+    def set_folio(self, folio: bool):
+        """Count leaves and sides (or not) from now on, keeping the number shown."""
+        if folio != self.folio:
+            value = self.value()
+            value = 2 * value - 1 if folio else (value + 1) // 2
+            self.folio = folio
+            self.setValue(value)
+            self.lineEdit().setText(self.textFromValue(value))
+
     def textFromValue(self, value: int) -> str:
         return labels.to_folio(value) if self.folio else str(value)
 
@@ -99,6 +108,55 @@ class StartSpin(QSpinBox):
             return QValidator.State.Acceptable, text, pos
         return (QValidator.State.Intermediate if re.fullmatch(r"\s*\d*\s*", text)
                 else QValidator.State.Invalid), text, pos
+
+
+class NumberDialog(QDialog):
+    """How to number some pages: a style, a start, a prefix and a suffix, with
+    the labels they would get."""
+
+    def __init__(self, parent, count: int):
+        super().__init__(parent)
+        self.count = count
+        self.setWindowTitle(tr("Number these pages"))
+        self.style = QComboBox()
+        for code in labels.STYLES:
+            if code:
+                self.style.addItem(tr(labels.STYLE_TITLES[code]), code)
+        self.start = StartSpin(False)
+        self.prefix = QLineEdit()
+        self.prefix.setPlaceholderText(tr("e.g. A-"))
+        self.suffix = QLineEdit()
+        self.suffix.setPlaceholderText(tr("e.g. ]"))
+        self.preview = QLabel()
+        form = QFormLayout()
+        form.addRow(tr("Style"), self.style)
+        form.addRow(tr("Starts at"), self.start)
+        form.addRow(tr("Prefix"), self.prefix)
+        form.addRow(tr("Suffix"), self.suffix)
+        form.addRow(tr("Labels"), self.preview)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        lay = QVBoxLayout(self)
+        lay.addWidget(QLabel(tr("{count} pages, numbered one after the other:", count=count)))
+        lay.addLayout(form)
+        lay.addWidget(buttons)
+        self.style.currentIndexChanged.connect(self._changed)
+        self.start.valueChanged.connect(self._changed)
+        self.prefix.textChanged.connect(self._changed)
+        self.suffix.textChanged.connect(self._changed)
+        self._changed()
+
+    def values(self) -> tuple[str, str, int, str]:
+        """(style, prefix, start, suffix)."""
+        return self.style.currentData(), self.prefix.text(), self.start.value(), self.suffix.text()
+
+    def _changed(self, *_):
+        style, prefix, start, suffix = self.values()
+        self.start.set_folio(style == "f")
+        style, prefix, start, suffix = self.values()
+        r = Range(1, style, prefix, start, suffix)
+        self.preview.setText(labels.describe(r, self.count))
 
 
 class MainWindow(QMainWindow):
@@ -153,9 +211,13 @@ class MainWindow(QMainWindow):
         buttons.addStretch(1)
 
         self.pages = QListWidget()
-        self.pages.setToolTip(tr("Double-click a page to start a range at it"))
+        self.pages.setToolTip(tr("Double-click a page to start a range at it; select pages (Shift, Ctrl) and "
+                                 "right-click them for more"))
         self.pages.currentRowChanged.connect(self._page_chosen)
         self.pages.itemDoubleClicked.connect(lambda item: self.start_range_at(self.pages.row(item) + 1))
+        self.pages.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.pages.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.pages.customContextMenuRequested.connect(self.pages_menu)
         self.thumb_timer = QTimer(self)
         self.thumb_timer.setInterval(0)
         self.thumb_timer.timeout.connect(self._draw_thumbnails)
@@ -562,6 +624,107 @@ class MainWindow(QMainWindow):
             return
         self.change(self.ranges + [Range(page)], select=page)
 
+    # ----------------------------------------------------------------- actions on chosen pages
+
+    def selected_pages(self) -> list[int]:
+        """The pages chosen in the list (1-based, in order), or else the page shown."""
+        rows = sorted(self.pages.row(item) for item in self.pages.selectedItems())
+        if rows:
+            return [r + 1 for r in rows]
+        return [self.current_page()] if self.count else []
+
+    def pages_menu(self, pos):
+        if self.path is None:
+            return
+        item = self.pages.itemAt(pos)
+        if item is not None and not item.isSelected():
+            self.pages.setCurrentItem(item)
+        menu = self.build_pages_menu()
+        if menu is not None:
+            menu.exec(self.pages.viewport().mapToGlobal(pos))
+
+    def build_pages_menu(self) -> QMenu | None:
+        """The menu of actions on the pages chosen."""
+        pages = self.selected_pages()
+        if not pages:
+            return None
+        menu = QMenu(self)
+        count = len(pages)
+        menu.addAction(tr("Number these pages…") if count > 1 else tr("Number this page…"),
+                       lambda: self.number_selected())
+        a = menu.addAction(tr("Continue the numbering from before"), lambda: self.continue_selected())
+        a.setEnabled(pages[0] > 1)
+        menu.addAction(tr("Give them one label…") if count > 1 else tr("Give it a label…"),
+                       lambda: self.label_selected())
+        if count > 1:
+            menu.addAction(tr("Edit their labels one by one…"), lambda: self.edit_selected())
+        menu.addAction(tr("No label"), lambda: self.change(labels.relabel(self.ranges, self.count,
+                                                                          {p: "" for p in pages})))
+        menu.addSeparator()
+        menu.addAction(tr("Start a range at page {page}", page=pages[0]), lambda: self.start_range_at(pages[0]))
+        menu.addAction(tr("Copy their labels") if count > 1 else tr("Copy its label"), lambda: self.copy_labels())
+        return menu
+
+    def ask_numbering(self, count: int) -> tuple[str, str, int, str] | None:
+        dlg = NumberDialog(self, count)
+        return dlg.values() if dlg.exec() == QDialog.DialogCode.Accepted else None
+
+    def ask_text(self, title: str, label: str, text: str = "") -> str | None:
+        value, ok = QInputDialog.getText(self, title, label, QLineEdit.EchoMode.Normal, text)
+        return value if ok else None
+
+    def ask_lines(self, title: str, label: str, text: str) -> str | None:
+        value, ok = QInputDialog.getMultiLineText(self, title, label, text)
+        return value if ok else None
+
+    def number_selected(self) -> bool:
+        pages = self.selected_pages()
+        answer = self.ask_numbering(len(pages)) if pages else None
+        if answer is None:
+            return False
+        style, prefix, start, suffix = answer
+        self.change(labels.number_pages(self.ranges, self.count, pages, style, prefix, start, suffix))
+        return True
+
+    def continue_selected(self) -> bool:
+        try:
+            self.change(labels.continue_numbering(self.ranges, self.count, self.selected_pages()))
+        except labels.LabelError as e:
+            self.status(str(e), error=True)
+            return False
+        return True
+
+    def label_selected(self) -> bool:
+        pages = self.selected_pages()
+        now = labels.page_labels(self.ranges, self.count)
+        text = self.ask_text(tr("One label"), tr("The label of the pages chosen:"), now[pages[0] - 1])
+        if text is None:
+            return False
+        self.change(labels.relabel(self.ranges, self.count, {p: text for p in pages}))
+        return True
+
+    def edit_selected(self) -> bool:
+        pages = self.selected_pages()
+        now = labels.page_labels(self.ranges, self.count)
+        text = self.ask_lines(tr("Their labels"), tr("The label of each page chosen, one on each line:"),
+                              "\n".join(now[p - 1] for p in pages))
+        if text is None:
+            return False
+        lines = text.split("\n")
+        while len(lines) > len(pages) and not lines[-1].strip():
+            lines.pop()
+        if len(lines) != len(pages):
+            self.status(tr("There are {lines} lines for {count} pages", lines=len(lines), count=len(pages)),
+                        error=True)
+            return False
+        self.change(labels.relabel(self.ranges, self.count, dict(zip(pages, lines))))
+        return True
+
+    def copy_labels(self):
+        now = labels.page_labels(self.ranges, self.count)
+        QApplication.clipboard().setText("\n".join(now[p - 1] for p in self.selected_pages()))
+        self.status(tr("Labels copied"))
+
     def add_range(self):
         if self.path is None:
             return
@@ -657,6 +820,7 @@ class MainWindow(QMainWindow):
         self._building = False
 
         page = self.current_page()
+        chosen = self.selected_pages()
         self.pages.blockSignals(True)
         self.pages.clear()
         thumbs = self.a_thumbs.isChecked() if hasattr(self, "a_thumbs") else False
@@ -672,6 +836,10 @@ class MainWindow(QMainWindow):
             self.thumb_timer.start()
         if self.count:
             self.pages.setCurrentRow(min(page, self.count) - 1)
+            if len(chosen) > 1:  # (the pages chosen stay chosen, for another action on them)
+                for p in chosen:
+                    if p <= self.count:
+                        self.pages.item(p - 1).setSelected(True)
         self.cmd_line.setText(set_command(self.path, self.ranges) if self.path else "")
         self._show_page_info()
         self._update_title()

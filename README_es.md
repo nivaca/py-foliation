@@ -92,6 +92,11 @@ la derecha, la página elegida.
 - **Añadir un intervalo** empieza un nuevo intervalo en la página mostrada, y
   también un doble clic en una página; **Quitar el intervalo** deja que el
   anterior siga sobre sus páginas; **Sin etiquetas** las quita todas.
+- Seleccione páginas en la lista (con Mayús y Ctrl) y haga clic derecho en
+  ellas para **numerarlas** (en cualquier estilo, desde cualquier inicio, con
+  prefijo y sufijo), **seguir la numeración anterior**, **darles una sola
+  etiqueta**, **editar sus etiquetas una por una** o dejarlas **sin
+  etiqueta**.
 - **Ver ▸ Miniaturas de las páginas** muestra las páginas en miniatura con sus
   etiquetas, para revisar todo un libro de un vistazo.
 - **Ir a la página con la etiqueta…** (Ctrl+L) busca una página por su
