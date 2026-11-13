@@ -75,6 +75,14 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.2" date="2026-11-12">
+      <description>
+        <p>Folios (1r, 1v, 2r) for manuscripts and early printed books, and labels with a suffix, as [i] or 12bis.</p>
+        <p>Labels from a list, one for each page, and copied from another PDF.</p>
+        <p>Thumbnails of the pages, and going to a page by its label.</p>
+        <p>Protected PDFs keep their protection when they are saved.</p>
+      </description>
+    </release>
     <release version="0.1" date="2026-11-12">
       <description>
         <p>The first release: the window and the command line, in English and Spanish.</p>

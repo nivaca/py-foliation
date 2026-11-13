@@ -10,7 +10,7 @@
 # Build with packaging/build-rpm.sh, which makes the source tarball.
 
 Name:           py-foliation
-Version:        0.1
+Version:        0.2
 Release:        1%{?dist}
 Summary:        Change the page labels (the numbering a viewer shows) of PDF documents
 
@@ -96,6 +96,11 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
 %{zsh_completions_dir}/_py-foliation
 
 %changelog
+* Thu Nov 12 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.2-1
+- Folios (1r, 1v, 2r) and suffixes; labels from a list; copy; several files,
+  --dry-run, --password; saving keeps a PDF's encryption; thumbnails and go to a
+  label in the window; completions and man pages
+
 * Thu Nov 12 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.1-1
 - First package: the command line and the window, in English or Spanish,
   with a menu entry that also opens PDF files
