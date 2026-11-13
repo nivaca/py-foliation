@@ -1,0 +1,687 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The interface of py-foliation in Spanish: each <text> gives an English text of the
+     program (<en>) and its translation (<tr>). See src/py_foliation/interface.py.
+     tests/test_interface.py checks that every text of the program is here, and nothing else. -->
+<interface code="es" name="Spanish" native="Español">
+  <text>
+    <en>A range is written PAGES:STYLE[:START[:PREFIX]]:</en>
+    <tr>Un intervalo se escribe PÁGINAS:ESTILO[:INICIO[:PREFIJO]]:</tr>
+  </text>
+  <text>
+    <en>1:r pages from 1 on: i, ii, iii ... 9:D pages from 9 on: 1, 2, 3 ... 201-214:A pages 201 to 214: A ... N (then the old numbering goes on) 215:D:1:App- pages from 215 on: App-1, App-2 ... LAST:-::Cover the last page: Cover</en>
+    <tr>  1:r            páginas desde la 1: i, ii, iii ...
+  9:D            páginas desde la 9: 1, 2, 3 ...
+  201-214:A      páginas 201 a 214: A ... N (luego sigue la numeración anterior)
+  215:D:1:Ap-    páginas desde la 215: Ap-1, Ap-2 ...
+  LAST:-::Tapa   la última página: Tapa</tr>
+  </text>
+  <text>
+    <en>or, with --range, PAGES [style=S] [start=N] [prefix=P]:</en>
+    <tr>o, con --range, PÁGINAS [style=E] [start=N] [prefix=P]:</tr>
+  </text>
+  <text>
+    <en>--range 9-200 style=arabic --range 215- style=arabic start=1 prefix=App-</en>
+    <tr>  --range 9-200 style=arabic
+  --range 215- style=arabic start=1 prefix=Ap-</tr>
+  </text>
+  <text>
+    <en>PAGES is a first page (9) or a span (9-200, 9..200, 201-); LAST and LAST-N count from the end. A range without a last page goes on until the next one.</en>
+    <tr>PÁGINAS es una primera página (9) o un tramo (9-200, 9..200, 201-); LAST y
+LAST-N cuentan desde el final. Un intervalo sin última página sigue hasta el
+siguiente.</tr>
+  </text>
+  <text>
+    <en>Styles: D or arabic (1, 2, 3), r or roman (i, ii, iii), R or ROMAN (I, II, III), a or letters (a, b, c), A or LETTERS (A, B, C), - or none (the prefix only).</en>
+    <tr>Estilos: D o arabic (1, 2, 3), r o roman (números romanos en minúscula: i,
+ii, iii), R o ROMAN (I, II, III), a o letters (a, b, c), A o LETTERS (A, B,
+C), - o none (solo el prefijo).</tr>
+  </text>
+  <text>
+    <en>{path}: {count} page</en>
+    <tr>{path}: {count} página</tr>
+  </text>
+  <text>
+    <en>{path}: {count} pages</en>
+    <tr>{path}: {count} páginas</tr>
+  </text>
+  <text>
+    <en>To give these labels to another file:</en>
+    <tr>Para dar estas etiquetas a otro archivo:</tr>
+  </text>
+  <text>
+    <en>Wrote {path} ({count} page)</en>
+    <tr>Se escribió {path} ({count} página)</tr>
+  </text>
+  <text>
+    <en>Wrote {path} ({count} pages)</en>
+    <tr>Se escribió {path} ({count} páginas)</tr>
+  </text>
+  <text>
+    <en>The interface is now in {name} (kept in {path}).</en>
+    <tr>La interfaz está ahora en {name} (se guarda en {path}).</tr>
+  </text>
+  <text>
+    <en>the language of the interface, for this run only (to keep a choice, use the 'interface' command)</en>
+    <tr>el idioma de la interfaz, solo para esta ejecución (para conservar una elección, use la orden 'interface')</tr>
+  </text>
+  <text>
+    <en>Change the page labels of a PDF: the numbering a PDF viewer shows for its pages (i, ii, iii ... 1, 2, 3 ... A-1, A-2 ...).</en>
+    <tr>Cambia las etiquetas de página de un PDF: la numeración que un visor de PDF muestra para sus páginas (i, ii, iii ... 1, 2, 3 ... A-1, A-2 ...).</tr>
+  </text>
+  <text>
+    <en>Run '%(prog)s COMMAND -h' for help on a command. '%(prog)s file.pdf' on its own shows the page labels of the file.</en>
+    <tr>Ejecute '%(prog)s ORDEN -h' para ver la ayuda de una orden. '%(prog)s archivo.pdf' a secas muestra las etiquetas de página del archivo.</tr>
+  </text>
+  <text>
+    <en>COMMAND</en>
+    <tr>COMMAND</tr>
+  </text>
+  <text>
+    <en>show the page labels of a PDF</en>
+    <tr>mostrar las etiquetas de página de un PDF</tr>
+  </text>
+  <text>
+    <en>Show the ranges of page labels of a PDF, and the command that would give them to another file.</en>
+    <tr>Muestra los intervalos de etiquetas de página de un PDF y la orden que se las daría a otro archivo.</tr>
+  </text>
+  <text>
+    <en>source PDF</en>
+    <tr>PDF de origen</tr>
+  </text>
+  <text>
+    <en>show the label of every page</en>
+    <tr>mostrar la etiqueta de cada página</tr>
+  </text>
+  <text>
+    <en>give a PDF new page labels</en>
+    <tr>dar a un PDF nuevas etiquetas de página</tr>
+  </text>
+  <text>
+    <en>Give a PDF new page labels, range by range. The labels it had are replaced, unless --keep is given.</en>
+    <tr>Da a un PDF nuevas etiquetas de página, intervalo por intervalo. Las que tenía se reemplazan, salvo que se indique --keep.</tr>
+  </text>
+  <text>
+    <en>RANGE</en>
+    <tr>INTERVALO</tr>
+  </text>
+  <text>
+    <en>a range: PAGES:STYLE[:START[:PREFIX]]</en>
+    <tr>un intervalo: PÁGINAS:ESTILO[:INICIO[:PREFIJO]]</tr>
+  </text>
+  <text>
+    <en>PAGES [KEY=VALUE]</en>
+    <tr>PÁGINAS [CLAVE=VALOR]</tr>
+  </text>
+  <text>
+    <en>a range: PAGES [style=S] [start=N] [prefix=P]</en>
+    <tr>un intervalo: PÁGINAS [style=E] [start=N] [prefix=P]</tr>
+  </text>
+  <text>
+    <en>keep the labels the PDF has, changing only the pages given</en>
+    <tr>conservar las etiquetas que tiene el PDF y cambiar solo las páginas indicadas</tr>
+  </text>
+  <text>
+    <en>PAGE</en>
+    <tr>PÁGINA</tr>
+  </text>
+  <text>
+    <en>drop the range that starts at PAGE (the one before goes on over its pages); implies --keep</en>
+    <tr>quitar el intervalo que empieza en PÁGINA (el anterior sigue sobre sus páginas); implica --keep</tr>
+  </text>
+  <text>
+    <en>remove the page labels of a PDF</en>
+    <tr>quitar las etiquetas de página de un PDF</tr>
+  </text>
+  <text>
+    <en>Remove the page labels of a PDF: viewers then number its pages 1, 2, 3 ...</en>
+    <tr>Quita las etiquetas de página de un PDF: los visores numeran entonces sus páginas 1, 2, 3 ...</tr>
+  </text>
+  <text>
+    <en>show or choose the language of the interface</en>
+    <tr>mostrar o elegir el idioma de la interfaz</tr>
+  </text>
+  <text>
+    <en>The language of the help, the messages and the window. The choice is kept in the configuration file; --interface CODE changes it for one run only.</en>
+    <tr>El idioma de la ayuda, los mensajes y la ventana. La elección se guarda en el archivo de configuración; --interface CODE la cambia solo para una ejecución.</tr>
+  </text>
+  <text>
+    <en>the language to use from now on; without it, the languages are listed and the one in use is marked</en>
+    <tr>el idioma que se usará de ahora en adelante; sin él, se listan los idiomas y se marca el que está en uso</tr>
+  </text>
+  <text>
+    <en>{path} not found</en>
+    <tr>no se encontró {path}</tr>
+  </text>
+  <text>
+    <en>No page labels: viewers number the pages 1, 2, 3 ...</en>
+    <tr>Sin etiquetas de página: los visores numeran las páginas 1, 2, 3 ...</tr>
+  </text>
+  <text>
+    <en>the output is the input file; use --in-place to change it</en>
+    <tr>la salida es el archivo de entrada; use --in-place para cambiarlo</tr>
+  </text>
+  <text>
+    <en>no ranges given (see py-foliation set -h)</en>
+    <tr>no se indicó ningún intervalo (vea py-foliation set -h)</tr>
+  </text>
+  <text>
+    <en>pages {first}-{last}</en>
+    <tr>páginas {first}-{last}</tr>
+  </text>
+  <text>
+    <en>page {first}</en>
+    <tr>página {first}</tr>
+  </text>
+  <text>
+    <en>Languages of the interface:</en>
+    <tr>Idiomas de la interfaz:</tr>
+  </text>
+  <text>
+    <en>Configuration file: {path}</en>
+    <tr>Archivo de configuración: {path}</tr>
+  </text>
+  <text>
+    <en>the language {code} cannot be used: {error}</en>
+    <tr>no se puede usar el idioma {code}: {error}</tr>
+  </text>
+  <text>
+    <en>output PDF (default: &lt;input&gt;-labelled.pdf)</en>
+    <tr>PDF de salida (por defecto: &lt;entrada&gt;-labelled.pdf)</tr>
+  </text>
+  <text>
+    <en>change the input file itself</en>
+    <tr>cambiar el propio archivo de entrada</tr>
+  </text>
+  <text>
+    <en>{path} is protected by a password</en>
+    <tr>{path} está protegido con contraseña</tr>
+  </text>
+  <text>
+    <en>{path} cannot be read as a PDF: {error}</en>
+    <tr>{path} no se puede leer como PDF: {error}</tr>
+  </text>
+  <text>
+    <en>FILE.pdf</en>
+    <tr>ARCHIVO.pdf</tr>
+  </text>
+  <text>
+    <en>{path} cannot be written: {error}</en>
+    <tr>no se puede escribir {path}: {error}</tr>
+  </text>
+  <text>
+    <en>Could not keep the setting: {error}</en>
+    <tr>No se pudo guardar el ajuste: {error}</tr>
+  </text>
+  <text>
+    <en>error: {error}</en>
+    <tr>error: {error}</tr>
+  </text>
+  <text>
+    <en>The settings of py-foliation. Delete this file to use the usual values.</en>
+    <tr>La configuración de py-foliation. Borre este archivo para usar los valores por defecto.</tr>
+  </text>
+  <text>
+    <en>The window needs PySide6. Install it with: pip install 'py-foliation[gui]'</en>
+    <tr>La ventana necesita PySide6. Instálelo con: pip install 'py-foliation[gui]'</tr>
+  </text>
+  <text>
+    <en>Add a range</en>
+    <tr>Añadir un intervalo</tr>
+  </text>
+  <text>
+    <en>Start a new range at the page shown</en>
+    <tr>Empezar un nuevo intervalo en la página mostrada</tr>
+  </text>
+  <text>
+    <en>Remove the range</en>
+    <tr>Quitar el intervalo</tr>
+  </text>
+  <text>
+    <en>The range before goes on over its pages</en>
+    <tr>El intervalo anterior sigue sobre sus páginas</tr>
+  </text>
+  <text>
+    <en>No labels</en>
+    <tr>Sin etiquetas</tr>
+  </text>
+  <text>
+    <en>Remove all the page labels: viewers number the pages 1, 2, 3 ...</en>
+    <tr>Quitar todas las etiquetas de página: los visores numeran las páginas 1, 2, 3 ...</tr>
+  </text>
+  <text>
+    <en>The command that gives these labels to a file</en>
+    <tr>La orden que da estas etiquetas a un archivo</tr>
+  </text>
+  <text>
+    <en>&amp;File</en>
+    <tr>&amp;Archivo</tr>
+  </text>
+  <text>
+    <en>Open recent</en>
+    <tr>Abrir reciente</tr>
+  </text>
+  <text>
+    <en>Save</en>
+    <tr>Guardar</tr>
+  </text>
+  <text>
+    <en>Give the file open these page labels</en>
+    <tr>Dar estas etiquetas de página al archivo abierto</tr>
+  </text>
+  <text>
+    <en>Save as…</en>
+    <tr>Guardar como…</tr>
+  </text>
+  <text>
+    <en>Save a copy of the file with these page labels</en>
+    <tr>Guardar una copia del archivo con estas etiquetas de página</tr>
+  </text>
+  <text>
+    <en>Revert to the labels of the file</en>
+    <tr>Volver a las etiquetas del archivo</tr>
+  </text>
+  <text>
+    <en>&amp;Edit</en>
+    <tr>&amp;Editar</tr>
+  </text>
+  <text>
+    <en>Undo</en>
+    <tr>Deshacer</tr>
+  </text>
+  <text>
+    <en>Redo</en>
+    <tr>Rehacer</tr>
+  </text>
+  <text>
+    <en>&amp;Settings</en>
+    <tr>Aj&amp;ustes</tr>
+  </text>
+  <text>
+    <en>Language of the interface</en>
+    <tr>Idioma de la interfaz</tr>
+  </text>
+  <text>
+    <en>&amp;Help</en>
+    <tr>A&amp;yuda</tr>
+  </text>
+  <text>
+    <en>Open PDF</en>
+    <tr>Abrir PDF</tr>
+  </text>
+  <text>
+    <en>PDF files (*.pdf)</en>
+    <tr>Archivos PDF (*.pdf)</tr>
+  </text>
+  <text>
+    <en>Opened {path}</en>
+    <tr>Se abrió {path}</tr>
+  </text>
+  <text>
+    <en>Save as</en>
+    <tr>Guardar como</tr>
+  </text>
+  <text>
+    <en>Saved {path}</en>
+    <tr>Se guardó {path}</tr>
+  </text>
+  <text>
+    <en>Page {page} of {count} — label: {label}</en>
+    <tr>Página {page} de {count} — etiqueta: {label}</tr>
+  </text>
+  <text>
+    <en>Unsaved changes</en>
+    <tr>Cambios sin guardar</tr>
+  </text>
+  <text>
+    <en>The new page labels haven't been saved. Save them before going on?</en>
+    <tr>Las nuevas etiquetas de página no se han guardado. ¿Guardarlas antes de seguir?</tr>
+  </text>
+  <text>
+    <en>Command line copied</en>
+    <tr>Línea de órdenes copiada</tr>
+  </text>
+  <text>
+    <en>About py-foliation</en>
+    <tr>Acerca de py-foliation</tr>
+  </text>
+  <text>
+    <en>&lt;b&gt;py-foliation {version}&lt;/b&gt;&lt;p&gt;Changes the page labels of PDF documents: the numbering a PDF viewer shows for their pages.&lt;/p&gt;&lt;p&gt;By {author}.&lt;/p&gt;&lt;p&gt;Licensed under the GNU General Public License, version 3 or later.&lt;/p&gt;</en>
+    <tr>&lt;b&gt;py-foliation {version}&lt;/b&gt;&lt;p&gt;Cambia las etiquetas de página de documentos PDF: la numeración que un visor de PDF muestra para sus páginas.&lt;/p&gt;&lt;p&gt;Por {author}.&lt;/p&gt;&lt;p&gt;Con licencia GNU General Public License, versión 3 o posterior.&lt;/p&gt;</tr>
+  </text>
+  <text>
+    <en>From page</en>
+    <tr>Desde la página</tr>
+  </text>
+  <text>
+    <en>Style</en>
+    <tr>Estilo</tr>
+  </text>
+  <text>
+    <en>Starts at</en>
+    <tr>Empieza en</tr>
+  </text>
+  <text>
+    <en>Prefix</en>
+    <tr>Prefijo</tr>
+  </text>
+  <text>
+    <en>Labels</en>
+    <tr>Etiquetas</tr>
+  </text>
+  <text>
+    <en>Command line:</en>
+    <tr>Línea de órdenes:</tr>
+  </text>
+  <text>
+    <en>Open…</en>
+    <tr>Abrir…</tr>
+  </text>
+  <text>
+    <en>Quit</en>
+    <tr>Salir</tr>
+  </text>
+  <text>
+    <en>Copy command line</en>
+    <tr>Copiar línea de órdenes</tr>
+  </text>
+  <text>
+    <en>About</en>
+    <tr>Acerca de</tr>
+  </text>
+  <text>
+    <en>The language of the interface could not be changed: {error}</en>
+    <tr>No se pudo cambiar el idioma de la interfaz: {error}</tr>
+  </text>
+  <text>
+    <en>Every page already starts a range</en>
+    <tr>Todas las páginas ya empiezan un intervalo</tr>
+  </text>
+  <text>
+    <en>Choose a range after the first one</en>
+    <tr>Elija un intervalo posterior al primero</tr>
+  </text>
+  <text>
+    <en>The first page of the range (the pages of the file, from 1)</en>
+    <tr>La primera página del intervalo (las páginas del archivo, desde 1)</tr>
+  </text>
+  <text>
+    <en>The number of the first page of the range</en>
+    <tr>El número de la primera página del intervalo</tr>
+  </text>
+  <text>
+    <en>e.g. A-</en>
+    <tr>p. ej. A-</tr>
+  </text>
+  <text>
+    <en>Text put before the number of each page</en>
+    <tr>Texto que se pone antes del número de cada página</tr>
+  </text>
+  <text>
+    <en>Open a PDF (File ▸ Open, or drop a file on the window)</en>
+    <tr>Abra un PDF (Archivo ▸ Abrir, o suelte un archivo en la ventana)</tr>
+  </text>
+  <text>
+    <en>Clear the list</en>
+    <tr>Vaciar la lista</tr>
+  </text>
+  <text>
+    <en>page {page} of the file: {label}</en>
+    <tr>página {page} del archivo: {label}</tr>
+  </text>
+  <text>
+    <en>Ranges of page labels</en>
+    <tr>Intervalos de etiquetas de página</tr>
+  </text>
+  <text>
+    <en>Pages and their labels</en>
+    <tr>Las páginas y sus etiquetas</tr>
+  </text>
+  <text>
+    <en>(no label)</en>
+    <tr>(sin etiqueta)</tr>
+  </text>
+  <text>
+    <en>1, 2, 3</en>
+    <tr>1, 2, 3</tr>
+  </text>
+  <text>
+    <en>i, ii, iii</en>
+    <tr>i, ii, iii</tr>
+  </text>
+  <text>
+    <en>I, II, III</en>
+    <tr>I, II, III</tr>
+  </text>
+  <text>
+    <en>a, b, c</en>
+    <tr>a, b, c</tr>
+  </text>
+  <text>
+    <en>A, B, C</en>
+    <tr>A, B, C</tr>
+  </text>
+  <text>
+    <en>no number (prefix only)</en>
+    <tr>sin número (solo el prefijo)</tr>
+  </text>
+  <text>
+    <en>unknown style {style!r} (one of: {styles})</en>
+    <tr>estilo desconocido {style!r} (uno de: {styles})</tr>
+  </text>
+  <text>
+    <en>page {page} is not in the document (1-{count})</en>
+    <tr>la página {page} no está en el documento (1-{count})</tr>
+  </text>
+  <text>
+    <en>the range {spec!r} ends before it starts</en>
+    <tr>el intervalo {spec!r} termina antes de empezar</tr>
+  </text>
+  <text>
+    <en>the start number in {spec!r} must be a whole number from 1 on</en>
+    <tr>el número inicial en {spec!r} debe ser un número entero desde 1</tr>
+  </text>
+  <text>
+    <en>a range is PAGES:STYLE[:START[:PREFIX]], as 9:D or 215:D:1:App- (not {spec!r})</en>
+    <tr>un intervalo es PÁGINAS:ESTILO[:INICIO[:PREFIJO]], como 9:D o 215:D:1:Ap- (no {spec!r})</tr>
+  </text>
+  <text>
+    <en>--range needs the pages, as --range 9-200 style=arabic</en>
+    <tr>--range necesita las páginas, como --range 9-200 style=arabic</tr>
+  </text>
+  <text>
+    <en>{label} (every page)</en>
+    <tr>{label} (todas las páginas)</tr>
+  </text>
+  <text>
+    <en>{token!r} is not one of style=, start= or prefix=</en>
+    <tr>{token!r} no es ninguno de style=, start= o prefix=</tr>
+  </text>
+  <text>
+    <en>no range starts at page {page} (ranges start at: {pages})</en>
+    <tr>ningún intervalo empieza en la página {page} (los intervalos empiezan en: {pages})</tr>
+  </text>
+  <text>
+    <en>invalid page number {token!r}</en>
+    <tr>número de página no válido {token!r}</tr>
+  </text>
+  <text>
+    <en>conflicting option string: %s</en>
+    <tr>cadena de opción en conflicto: %s</tr>
+  </text>
+  <text>
+    <en>conflicting option strings: %s</en>
+    <tr>cadenas de opción en conflicto: %s</tr>
+  </text>
+  <text>
+    <en>%(prog)s: error: %(message)s</en>
+    <tr>%(prog)s: error: %(message)s</tr>
+  </text>
+  <text>
+    <en>%(prog)s: warning: %(message)s</en>
+    <tr>%(prog)s: advertencia: %(message)s</tr>
+  </text>
+  <text>
+    <en>usage:</en>
+    <tr>uso:</tr>
+  </text>
+  <text>
+    <en>argument %(argument_name)s: %(message)s</en>
+    <tr>argumento %(argument_name)s: %(message)s</tr>
+  </text>
+  <text>
+    <en>show program's version number and exit</en>
+    <tr>mostrar el número de versión del programa y terminar</tr>
+  </text>
+  <text>
+    <en>positional arguments</en>
+    <tr>argumentos posicionales</tr>
+  </text>
+  <text>
+    <en>options</en>
+    <tr>opciones</tr>
+  </text>
+  <text>
+    <en>invalid choice: %(value)r (choose from %(choices)s)</en>
+    <tr>opción no válida: %(value)r (elija entre %(choices)s)</tr>
+  </text>
+  <text>
+    <en>(default: %(default)s)</en>
+    <tr>(por defecto: %(default)s)</tr>
+  </text>
+  <text>
+    <en>can't open '%(filename)s': %(error)s</en>
+    <tr>no se puede abrir '%(filename)s': %(error)s</tr>
+  </text>
+  <text>
+    <en>subcommands</en>
+    <tr>subórdenes</tr>
+  </text>
+  <text>
+    <en>unrecognized arguments: %s</en>
+    <tr>argumentos no reconocidos: %s</tr>
+  </text>
+  <text>
+    <en>ambiguous option: %(option)s could match %(matches)s</en>
+    <tr>opción ambigua: %(option)s podría ser %(matches)s</tr>
+  </text>
+  <text>
+    <en>expected one argument</en>
+    <tr>se esperaba un argumento</tr>
+  </text>
+  <text>
+    <en>expected at most one argument</en>
+    <tr>se esperaba como mucho un argumento</tr>
+  </text>
+  <text>
+    <en>expected at least one argument</en>
+    <tr>se esperaba al menos un argumento</tr>
+  </text>
+  <text>
+    <en>invalid %(type)s value: %(value)r</en>
+    <tr>valor %(type)s no válido: %(value)r</tr>
+  </text>
+  <text>
+    <en>%(heading)s:</en>
+    <tr>%(heading)s:</tr>
+  </text>
+  <text>
+    <en>unknown parser %(parser_name)r (choices: %(choices)s)</en>
+    <tr>analizador desconocido %(parser_name)r (opciones: %(choices)s)</tr>
+  </text>
+  <text>
+    <en>command '%(parser_name)s' is deprecated</en>
+    <tr>la orden '%(parser_name)s' está obsoleta</tr>
+  </text>
+  <text>
+    <en>show this help message and exit</en>
+    <tr>mostrar esta ayuda y terminar</tr>
+  </text>
+  <text>
+    <en>the following arguments are required: %s</en>
+    <tr>se necesitan los argumentos siguientes: %s</tr>
+  </text>
+  <text>
+    <en>one of the arguments %s is required</en>
+    <tr>se necesita uno de los argumentos %s</tr>
+  </text>
+  <text>
+    <en>expected %s argument</en>
+    <tr>se esperaba %s argumento</tr>
+  </text>
+  <text>
+    <en>expected %s arguments</en>
+    <tr>se esperaban %s argumentos</tr>
+  </text>
+  <text>
+    <en>argument "-" with mode %r</en>
+    <tr>argumento "-" con modo %r</tr>
+  </text>
+  <text>
+    <en>not allowed with argument %s</en>
+    <tr>no se permite con el argumento %s</tr>
+  </text>
+  <text>
+    <en>unexpected option string: %s</en>
+    <tr>cadena de opción inesperada: %s</tr>
+  </text>
+  <text>
+    <en>invalid choice: %(value)r, maybe you meant %(closest)r? (choose from %(choices)s)</en>
+    <tr>opción no válida: %(value)r; ¿quiso decir %(closest)r? (elija entre %(choices)s)</tr>
+  </text>
+  <text>
+    <en>ignored explicit argument %r</en>
+    <tr>se ignoró el argumento explícito %r</tr>
+  </text>
+  <text>
+    <en>option '%(option)s' is deprecated</en>
+    <tr>la opción '%(option)s' está obsoleta</tr>
+  </text>
+  <text>
+    <en>argument '%(argument_name)s' is deprecated</en>
+    <tr>el argumento '%(argument_name)s' está obsoleto</tr>
+  </text>
+  <text>
+    <en>%r is not callable</en>
+    <tr>%r no es invocable</tr>
+  </text>
+  <text>
+    <en>'required' is an invalid argument for positionals</en>
+    <tr>'required' no es un argumento válido para los posicionales</tr>
+  </text>
+  <text>
+    <en>.__call__() not defined</en>
+    <tr>.__call__() no está definido</tr>
+  </text>
+  <text>
+    <en>cannot have multiple subparser arguments</en>
+    <tr>no puede haber varios argumentos de subanalizadores</tr>
+  </text>
+  <text>
+    <en>cannot merge actions - two groups are named %r</en>
+    <tr>no se pueden combinar las acciones: dos grupos se llaman %r</tr>
+  </text>
+  <text>
+    <en>conflicting subparser alias: %s</en>
+    <tr>alias de subanalizador en conflicto: %s</tr>
+  </text>
+  <text>
+    <en>conflicting subparser: %s</en>
+    <tr>subanalizador en conflicto: %s</tr>
+  </text>
+  <text>
+    <en>dest= is required for options like %r</en>
+    <tr>se necesita dest= para opciones como %r</tr>
+  </text>
+  <text>
+    <en>invalid conflict_resolution value: %r</en>
+    <tr>valor de conflict_resolution no válido: %r</tr>
+  </text>
+  <text>
+    <en>invalid option string %(option)r: must start with a character %(prefix_chars)r</en>
+    <tr>cadena de opción no válida %(option)r: debe empezar con un carácter %(prefix_chars)r</tr>
+  </text>
+  <text>
+    <en>mutually exclusive arguments must be optional</en>
+    <tr>los argumentos mutuamente excluyentes deben ser opcionales</tr>
+  </text>
+</interface>

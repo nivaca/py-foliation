@@ -1,0 +1,35 @@
+[project]
+name = "py-foliation"
+version = "0.1"
+description = "Change the page labels (the numbering a PDF viewer shows) of PDF documents"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Nicolas Vaughan", email = "nivaca@fastmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "pikepdf>=10.8",
+]
+
+[project.scripts]
+py-foliation = "py_foliation:main"
+
+[project.gui-scripts]
+py-foliation-gui = "py_foliation.gui:main"
+
+[project.optional-dependencies]
+gui = [
+    "pyside6-essentials>=6.10",
+    "pyside6-pdf>=6.10",
+]
+
+[build-system]
+requires = ["uv_build>=0.10,<0.14"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]

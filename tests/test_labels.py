@@ -1,0 +1,131 @@
+"""Tests of the page labels themselves (labels.py)."""
+
+from __future__ import annotations
+
+import pikepdf
+import pytest
+from pikepdf import Array, Dictionary, Name
+
+from py_foliation import labels
+from py_foliation.labels import LabelError, Range, Request
+
+N = 100
+
+
+def test_numbers():
+    assert [labels.to_roman(n) for n in (1, 4, 9, 14, 40, 90, 400, 1994, 3999)] == \
+        ["I", "IV", "IX", "XIV", "XL", "XC", "CD", "MCMXCIV", "MMMCMXCIX"]
+    assert [labels.to_letters(n) for n in (1, 26, 27, 52, 53)] == ["A", "Z", "AA", "ZZ", "AAA"]
+    assert labels.format_number(12, "r") == "xii"
+    assert labels.format_number(28, "a") == "bb"
+    assert labels.format_number(7, "") == ""
+
+
+def test_range_labels_and_specs():
+    r = Range(215, "D", "App-", 1)
+    assert r.label(215) == "App-1" and r.label(217) == "App-3"
+    assert r.spec() == "215:D:1:App-"
+    assert Range(9).spec() == "9:D"
+    assert Range(1, "r", start=5).spec() == "1:r:5"
+    assert Range(100, "", "Cover").spec() == "100:-:1:Cover"
+    assert Range(100, "", "Cover").label(100) == "Cover"
+
+
+@pytest.mark.parametrize("spec, expected", [
+    ("9", (9, None)), ("9-20", (9, 20)), ("9..20", (9, 20)), ("90-", (90, N)),
+    ("LAST", (N, None)), ("LAST-2", (N - 2, None)), ("last-2-LAST", (N - 2, N)), ("1..LAST-1", (1, N - 1)),
+])
+def test_pages(spec, expected):
+    assert labels.parse_pages(spec, N) == expected
+
+
+@pytest.mark.parametrize("spec", ["0", "101", "20-9", "x", "LAST-100", "9-x"])
+def test_bad_pages(spec):
+    with pytest.raises(LabelError):
+        labels.parse_pages(spec, N)
+
+
+def test_compact_and_named():
+    assert labels.parse_compact("1:r", N) == Request(Range(1, "r"))
+    assert labels.parse_compact("20-30:roman:3", N) == Request(Range(20, "r", "", 3), 30)
+    assert labels.parse_compact("50:D:1:A:B", N) == Request(Range(50, "D", "A:B", 1))  # (colons in the prefix)
+    assert labels.parse_compact("LAST:-::Cover", N) == Request(Range(N, "", "Cover", 1))
+    assert labels.parse_compact("5:none:1:x", N) == Request(Range(5, "", "x", 1))
+    assert labels.parse_named(["9-20", "style=LETTERS", "prefix=P-", "start=2"], N) == \
+        Request(Range(9, "A", "P-", 2), 20)
+    assert labels.parse_named(["9"], N) == Request(Range(9, "D"))
+    for bad in ("9", "9:Q", "9:D:0", "9:D:x"):
+        with pytest.raises(LabelError):
+            labels.parse_compact(bad, N)
+    for bad in ([], ["9", "colour=red"], ["9", "style"]):
+        with pytest.raises(LabelError):
+            labels.parse_named(bad, N)
+
+
+def test_apply():
+    book = labels.apply([], [labels.parse_compact(s, N) for s in ("1:r", "9:D")], N)
+    assert book == [Range(1, "r"), Range(9, "D")]
+    assert labels.page_labels(book, N)[:10] == ["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "1", "2"]
+    # a span: the pages after it keep the numbers they had
+    out = labels.apply(book, [labels.parse_compact("50-52:A", N)], N)
+    assert out == [Range(1, "r"), Range(9, "D"), Range(50, "A"), Range(53, "D", "", 45)]
+    assert labels.page_labels(out, N)[48:54] == ["41", "A", "B", "C", "45", "46"]
+    # no last page: up to the next range
+    out = labels.apply(out, [labels.parse_compact("20:R", N)], N)
+    assert labels.page_labels(out, N)[19:50] == [labels.to_roman(i) for i in range(1, 31)] + ["A"]
+    # removing a range: the one before goes on
+    out = labels.apply(out, [], N, remove=[20])
+    assert out == [Range(1, "r"), Range(9, "D"), Range(50, "A"), Range(53, "D", "", 45)]
+    with pytest.raises(LabelError):
+        labels.apply(out, [], N, remove=[1])
+    with pytest.raises(LabelError):
+        labels.apply(out, [], N, remove=[21])
+    # spans are laid over the ranges without a last page, whatever their order
+    for order in (("50-52:A", "9:D"), ("9:D", "50-52:A")):
+        out = labels.apply([], [labels.parse_compact(s, N) for s in order], N)
+        assert out == [Range(1), Range(9, "D"), Range(50, "A"), Range(53, "D", "", 45)]
+    # ranges that give the same numbering as the one before are merged
+    assert labels.apply([], [labels.parse_compact("10:D:10", N)], N) == [Range(1)]
+
+
+def test_normalize_and_spans():
+    assert labels.normalize([Range(9, "D"), Range(1, "r"), Range(9, "A")]) == [Range(1, "r"), Range(9, "A")]
+    assert labels.normalize([Range(5, "r")]) == [Range(1), Range(5, "r")]
+    assert labels.spans([Range(1, "r"), Range(9)], 20) == [(Range(1, "r"), 8), (Range(9), 20)]
+    assert labels.page_labels([], 3) == ["1", "2", "3"]
+    assert labels.describe(Range(1, "r"), 8) == "i … viii"
+    assert labels.describe(Range(5, "", "X"), 9) == "X (every page)"
+
+
+def test_read_and_write(tmp_path):
+    src = tmp_path / "a.pdf"
+    with pikepdf.new() as pdf:
+        for _ in range(N):
+            pdf.add_blank_page()
+        ranges = [Range(1, "r"), Range(9, "D"), Range(90, "A", "App-"), Range(96, "D", "", 96),
+                  Range(100, "", "Cover")]
+        labels.write_labels(pdf, ranges)
+        pdf.save(src)
+    with pikepdf.open(src) as pdf:
+        assert labels.read_labels(pdf) == ranges
+        d = pdf.Root.PageLabels.Nums[1]
+        assert d.Type == Name.PageLabel and d.S == Name.r and "/St" not in d
+        assert "/S" not in pdf.Root.PageLabels.Nums[9]  # (no number: no /S)
+        labels.write_labels(pdf, [])
+        assert "/PageLabels" not in pdf.Root
+
+
+def test_reading_odd_trees():
+    with pikepdf.new() as pdf:
+        for _ in range(10):
+            pdf.add_blank_page()
+        kid1 = pdf.make_indirect(Dictionary(Nums=Array([0, Dictionary(S=Name.r)])))
+        kid2 = pdf.make_indirect(Dictionary(Nums=Array([
+            4, Dictionary(S=Name.D, St=0),  # (a start below 1: 1)
+            6, Dictionary(S=Name.Q),  # (an unknown style: no number)
+            50, Dictionary(S=Name.D),  # (beyond the document: ignored)
+            "x", Dictionary(S=Name.D)])))  # (not a number)
+        pdf.Root.PageLabels = Dictionary(Kids=Array([kid1, kid2, kid1]))  # (kid1 twice)
+        assert labels.read_labels(pdf) == [Range(1, "r"), Range(5, "D"), Range(7, "")]
+        pdf.Root.PageLabels = Dictionary(Nums=Array([3, Dictionary(S=Name.R)]))  # (nothing at page 1)
+        assert labels.read_labels(pdf) == [Range(1), Range(4, "R")]

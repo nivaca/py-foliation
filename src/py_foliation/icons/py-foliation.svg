@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- py-foliation icon: a page whose number, "iv", is on a label tag, before
+     another page of the same document. The PNGs are made from this file by
+     tools/icons.py. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a7bc8"/>
+      <stop offset="1" stop-color="#1f4f8a"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e6ecf3"/>
+    </linearGradient>
+    <linearGradient id="tag" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f28a2e"/>
+      <stop offset="1" stop-color="#d9650a"/>
+    </linearGradient>
+    <filter id="blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+  </defs>
+
+  <rect x="16" y="16" width="480" height="480" rx="100" fill="url(#bg)"/>
+
+  <!-- the page behind -->
+  <rect x="166" y="78" width="210" height="282" fill="#cfdbea"/>
+  <!-- the page in front, with its shadow -->
+  <rect x="110" y="132" width="230" height="310" fill="#0b2140" opacity="0.5" filter="url(#blur)"/>
+  <rect x="110" y="120" width="230" height="310" fill="url(#page)"/>
+
+  <!-- its text: a heading bar and lines -->
+  <rect x="140" y="152" width="96" height="14" rx="7" fill="#b9c7d8"/>
+  <g fill="#d3dce7">
+    <rect x="140" y="188" width="170" height="10" rx="5"/>
+    <rect x="140" y="212" width="170" height="10" rx="5"/>
+    <rect x="140" y="236" width="150" height="10" rx="5"/>
+    <rect x="140" y="260" width="170" height="10" rx="5"/>
+    <rect x="140" y="284" width="120" height="10" rx="5"/>
+  </g>
+
+  <!-- the label: a tag tied to the foot of the page -->
+  <path d="M300 318 H436 a14 14 0 0 1 14 14 V420 a14 14 0 0 1 -14 14 H300 L262 376 Z"
+        fill="#0b2140" opacity="0.35" filter="url(#blur)"/>
+  <path d="M300 306 H436 a14 14 0 0 1 14 14 V408 a14 14 0 0 1 -14 14 H300 L262 364 Z" fill="url(#tag)"/>
+  <circle cx="296" cy="364" r="10" fill="#1f4f8a"/>
+  <text x="378" y="398" fill="#ffffff" font-family="DejaVu Serif, Liberation Serif, Times New Roman, serif"
+        font-weight="bold" font-size="96" text-anchor="middle">iv</text>
+</svg>

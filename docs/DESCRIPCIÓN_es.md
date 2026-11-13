@@ -1,0 +1,59 @@
+# py-foliation 0.1: descripción
+
+## Análisis
+
+py-foliation cambia las etiquetas de página de documentos PDF: la numeración que un visor de PDF muestra para sus páginas. Un libro cuyas páginas preliminares van numeradas i, ii, iii … y cuyo texto empieza de nuevo en 1, con un apéndice A, B, C … y una tapa sin número, puede mostrar esos números en el visor, en su casilla de página y en su lista de páginas, en lugar del simple 1, 2, 3 … de las páginas del archivo. Lo hizo Nicolas Vaughan en 2026.
+
+Tiene una ventana, para ver y editar las etiquetas página por página, y una línea de órdenes, para hacer lo mismo en scripts, en inglés o en español. py-foliation es software libre, bajo la Licencia Pública General de GNU, versión 3 o posterior. Acompaña a py-imposition, del mismo autor, y sigue su estructura y sus convenciones.
+
+Los requisitos quedaron claros desde el principio. Lo primero era no tocar nada más que las etiquetas: las páginas, su contenido y el resto del documento tenían que quedar como estaban. Lo segundo, que las etiquetas se pudieran escribir con rapidez en la línea de órdenes, con una forma corta para quien la conoce y otra que se explique sola, y que pudieran verse y corregirse página por página en una ventana. Además, debía leer los árboles de etiquetas que de verdad tienen los PDF, por raros que sean, y estar en inglés y en español.
+
+## Diseño
+
+El programa está dividido en módulos pequeños, cada uno con un solo trabajo. `labels.py` es la base: los intervalos de etiquetas, los números en cada estilo, la lectura de los intervalos en sus dos formas y de los números de página, el cálculo de los cambios y la lectura y escritura del árbol `/PageLabels`. `cli.py` es la línea de órdenes, con las órdenes `show`, `set`, `clear` e `interface`. La ventana está en `gui/window.py`.
+
+De los idiomas se ocupa `interface.py`, con `tr()`, que traduce cada texto del programa a partir de `locale/es.xml`, y `config.py` lee y escribe el archivo de configuración, `config.toml`, con el idioma de la interfaz; los dos vienen de py-imposition.
+
+Fuera del paquete quedan las herramientas: `tools/screenshots.py` hace las capturas de los README y `tools/icons.py` hace los iconos a partir de un SVG.
+
+## Implementación
+
+Está escrito en Python 3.12 o superior, con pikepdf (basada en QPDF), que lee y escribe los PDF. La ventana usa PySide6 (Qt 6), con QtPdf para mostrar las páginas. Son 9 módulos, unas 1600 líneas, y 4 órdenes.
+
+Un PDF guarda sus etiquetas de página en un árbol de números, `/PageLabels`, en su catálogo. Cada entrada empieza un intervalo en una página e indica su estilo (números arábigos, romanos en minúscula o en mayúscula, letras minúsculas o mayúsculas, o ningún número), un prefijo y el número de su primera página; el intervalo dura hasta que empieza el siguiente. El programa lee ese árbol como venga (en un nodo o en muchos, con entradas más allá del documento, estilos desconocidos o nodos que aparecen dos veces, cosas que tienen los archivos reales) y lo escribe de nuevo como un solo nodo sencillo.
+
+Dentro del programa, las etiquetas son una lista ordenada de intervalos, siempre con uno en la página 1. Todo cambio se hace de la misma manera: la lista se convierte en el estilo, el prefijo y el número de cada página, el cambio se hace página por página, y las páginas se vuelven a reunir en el menor número de intervalos que las dé. Así ningún cambio tiene que razonar sobre cómo se solapan los intervalos, y dos intervalos que numeran las páginas igual se vuelven uno.
+
+### La línea de órdenes
+
+`py-foliation show` lista los intervalos de un archivo, o con `--all` la etiqueta de cada página, e imprime la orden que da las mismas etiquetas a otro archivo. `set` da a un archivo nuevas etiquetas, `clear` las quita, e `interface` elige el idioma. Un intervalo se escribe de una de dos maneras: corta, `PÁGINAS:ESTILO[:INICIO[:PREFIJO]]` (`1:r`, `9:D`, `215:D:1:Ap-`), o con nombres, `--range PÁGINAS style=E start=N prefix=P`. Las páginas pueden contarse desde el final (`LAST`, `LAST-2`).
+
+Un intervalo sin última página sigue hasta el siguiente; un tramo (`90-95:A`) se pone sobre los demás, y después de él las páginas siguen con los números que habrían tenido, de modo que se puede poner un apéndice en medio de una numeración sin romperla. `set` reemplaza las etiquetas que tenía el archivo, salvo con `--keep`, y `--remove PÁGINA` quita un intervalo, y el anterior sigue sobre sus páginas. El resultado va a un archivo nuevo (`libro-labelled.pdf`), salvo con `--in-place`.
+
+### La ventana
+
+La ventana muestra los intervalos en una tabla, cada uno con su primera página, su estilo, el número en que empieza y su prefijo, que se pueden cambiar allí mismo; debajo, cada página del archivo con su etiqueta; y a la derecha, la página elegida. *Añadir un intervalo* empieza uno en la página mostrada, *Quitar el intervalo* deja que el anterior siga y *Sin etiquetas* las quita todas. Cada cambio se puede deshacer y rehacer, y la ventana muestra la línea de órdenes que da las mismas etiquetas a un archivo.
+
+*Guardar* da al archivo abierto sus nuevas etiquetas: escribe un archivo nuevo a su lado y solo entonces lo pone en su lugar, de modo que un error al guardar nunca deja un archivo roto. *Guardar como…* guarda una copia. Mientras haya cambios sin guardar, la barra de título muestra un asterisco, y la ventana pregunta antes de cerrarse o de abrir otro documento. Recuerda su tamaño y los últimos diez documentos abiertos.
+
+### Los idiomas
+
+Cada texto del programa, en la ventana y en la línea de órdenes, incluidos los mensajes propios de `argparse`, pasa por `tr()`, y las traducciones están en un solo archivo XML, `locale/es.xml`, con cada texto en inglés y en español. El idioma se elige en la ventana (*Ajustes*), con `--interface` en la línea de órdenes o en `config.toml` (`py-foliation interface es` lo guarda). El README tiene una versión en español, paralela a la inglesa, y las capturas se hacen en los dos idiomas.
+
+### Proceso
+
+El trabajo pasó por cuatro etapas: primero las etiquetas mismas, su lectura, su escritura y el cálculo de los cambios; luego la línea de órdenes, con las dos formas de escribir los intervalos; después la ventana; y por último la interfaz en español, el icono y las capturas (versión 0.1).
+
+## Validación
+
+Hay 47 pruebas automáticas (`tests/`), que se corren con `uv run pytest`. Comprueban los números en cada estilo, la lectura de los intervalos en sus dos formas y de los números de página, cómo se ponen unos intervalos sobre otros, y la lectura y escritura del árbol de etiquetas, incluidos árboles raros. La línea de órdenes se ejecuta de principio a fin sobre el documento de ejemplo, docs/example/numbers-100.pdf, cuyas páginas muestran cada una su número, y sobre entradas erróneas. La ventana se prueba sin pantalla, con la plataforma offscreen de Qt: abrir, editar, deshacer, guardar, guardar como, los cambios sin guardar y el idioma. Otras pruebas comprueban que cada texto tenga su traducción y que no sobre ninguna. Las pruebas corren con cada push en GitHub Actions.
+
+## Plataforma
+
+Funciona en Linux. Necesita Python 3.12 o superior y pikepdf, y para la ventana PySide6. Al ser Python y Qt, debería funcionar también en Windows y macOS, pero allí solo se ha probado con las pruebas automáticas. No necesita internet ni permisos de administrador.
+
+## Ambiente
+
+Lo desarrollé en Fedora Linux 45 con KDE Plasma, con Python 3.15 y uv, y con git. El icono se dibuja con Inkscape y las pruebas corren también en GitHub Actions.
+
+Desde el código fuente, `uv sync --extra gui` lo prepara; `py-foliation-gui` abre la ventana y `py-foliation` es la línea de órdenes. Los ajustes quedan en la carpeta de configuración del usuario (`~/.config/py-foliation/` en Linux).
