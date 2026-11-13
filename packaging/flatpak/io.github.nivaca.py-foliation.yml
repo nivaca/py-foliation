@@ -1,0 +1,59 @@
+# The Flatpak of py-foliation (see packaging/FLATHUB.org). Build it with
+#   flatpak run org.flatpak.Builder --user --force-clean build/flatpak packaging/flatpak/io.github.nivaca.py-foliation.yml
+# The Python modules come from python3-deps.json (tools/flatpak-deps.py);
+# PySide6 comes with the base app.
+id: io.github.nivaca.py-foliation
+runtime: org.kde.Platform
+runtime-version: '6.11'
+sdk: org.kde.Sdk
+base: io.qt.PySide.BaseApp
+base-version: '6.11'
+command: py-foliation-gui
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # PDFs are changed where they are, and File > Open recent opens them again
+  # by their paths: the file chooser's portal alone would not allow either.
+  - --filesystem=home
+build-options:
+  env:
+    BASEAPP_REMOVE_WEBENGINE: '1'  # (py-foliation uses neither QtWebEngine nor numpy)
+    BASEAPP_DISABLE_NUMPY: '1'
+cleanup-commands:
+  # The base app's cleanup takes away two things py-foliation needs: packaging
+  # (for pikepdf) and, with QtWebEngine, QtPdf (the window's preview, which
+  # doesn't need QtWebEngine). They are set aside meanwhile.
+  - mkdir -p /app/keep/lib /app/keep/arch /app/keep/site-packages
+  - mv /app/lib/libQt6Pdf.so* /app/lib/libQt6PdfWidgets.so* /app/keep/lib/
+  - mv /app/lib/*-linux-gnu/libQt6Pdf.so* /app/lib/*-linux-gnu/libQt6PdfWidgets.so* /app/keep/arch/
+  - mv /app/lib/python3*/site-packages/packaging* /app/keep/site-packages/
+  - /app/cleanup-BaseApp.sh
+  - mv /app/keep/lib/* /app/lib/ && mv /app/keep/arch/* /app/lib/*-linux-gnu/
+  - mv /app/keep/site-packages/* /app/lib/python3*/site-packages/
+  - rm -r /app/keep
+modules:
+  - python3-deps.json
+  - name: py-foliation
+    buildsystem: simple
+    build-commands:
+      - pip3 install --verbose --no-index --no-deps --no-build-isolation --prefix=${FLATPAK_DEST} .
+      - install -Dm644 packaging/io.github.nivaca.py-foliation.metainfo.xml ${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml
+      - sed -e "s/^Icon=.*/Icon=${FLATPAK_ID}/" -e "s/^StartupWMClass=.*/StartupWMClass=${FLATPAK_ID}/"
+        packaging/py-foliation.desktop > ${FLATPAK_ID}.desktop
+      - install -Dm644 ${FLATPAK_ID}.desktop ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
+      - |
+        for png in src/py_foliation/icons/linux/hicolor/*/apps/py-foliation.png; do
+          size=$(basename $(dirname $(dirname $png)))
+          install -Dm644 $png ${FLATPAK_DEST}/share/icons/hicolor/$size/apps/${FLATPAK_ID}.png
+        done
+      - install -Dm644 src/py_foliation/icons/py-foliation.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
+    sources:
+      - type: dir
+        path: ../..
+        skip:
+          - .venv
+          - build
+          - dist
+          - .flatpak-builder

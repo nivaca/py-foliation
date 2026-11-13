@@ -1,6 +1,6 @@
 # py-foliation
 
-*[Leer en español](README_es.md)*
+*[Leer en español](https://github.com/nivaca/py-foliation/blob/main/README_es.md)*
 
 py-foliation changes the **page labels** of PDF documents: the numbering a PDF
 viewer shows for their pages. A book whose front matter is numbered i, ii,
@@ -49,7 +49,7 @@ signed by [Copr](https://copr.fedorainfracloud.org/coprs/nivaca/py-foliation/).
 
 Each release also has the RPM itself, signed with the author's key, and that
 key (`RPM-GPG-KEY-py-foliation`, also in the repository as
-[`packaging/RPM-GPG-KEY-py-foliation`](packaging/RPM-GPG-KEY-py-foliation)).
+[`packaging/RPM-GPG-KEY-py-foliation`](https://github.com/nivaca/py-foliation/blob/main/packaging/RPM-GPG-KEY-py-foliation)).
 Its fingerprint is `8187 0643 CA22 1AF9 0C30 554E BE68 32CD 3599 4948`:
 
 ```bash
@@ -76,31 +76,50 @@ folders; `--uninstall` removes what it added.
 
     py-foliation-gui [file.pdf]
 
-![The window](docs/img/gui_window_en.png)
+![The window](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/gui_window_en.png)
 
 Open a PDF (or drop it on the window). The window shows the **ranges** of
 labels, each with its first page, its style (1, 2, 3; i, ii, iii; I, II,
-III; a, b, c; A, B, C; or no number), the number it starts at, and a prefix;
-below them, every page with its label; and on the right, the page chosen.
+III; a, b, c; A, B, C; folios 1r, 1v, 2r; or no number), the number it
+starts at, a prefix and a suffix; below them, every page with its label; and
+on the right, the page chosen.
 
-- **Add a range** starts a new range at the page shown;
-  **Remove the range** lets the range before go on over its pages;
-  **No labels** removes them all.
+![Folios, with thumbnails of the pages](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/gui_folios_en.png)
+
+- **Add a range** starts a new range at the page shown, and so does a
+  double-click on a page; **Remove the range** lets the range before go on
+  over its pages; **No labels** removes them all.
+- **View ▸ Thumbnails of the pages** shows the pages as thumbnails with
+  their labels, to look over a whole book at once.
+- **Go to the page labelled…** (Ctrl+L) finds a page by its label: `xii`,
+  `12v`, `A-3`.
 - **Edit ▸ Undo / Redo** go back and forth over the changes.
 - **File ▸ Save** gives the file open the new labels; **Save as…** saves a
   copy with them; **Revert to the labels of the file** drops the changes.
+- **File ▸ Copy the labels of another PDF…** takes them from another file,
+  for instance an earlier export of the same book.
+- **File ▸ Labels from a list…** reads the label of every page from a text
+  file, one on each line, and **Save the labels as a list…** writes one, to
+  edit in any editor or spreadsheet.
 - **Edit ▸ Copy command line** copies the command that gives the same labels
   to another file.
 
+Files protected by a password ask for it, and keep their protection when
+they are saved.
+
 ## The command line
 
-![The command line](docs/img/cli_en.png)
+![The command line](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/cli_en.png)
 
-    py-foliation show book.pdf                 # the ranges of labels
-    py-foliation show --all book.pdf           # the label of every page
-    py-foliation set book.pdf 1:r 9:D          # new labels -> book-labelled.pdf
-    py-foliation set book.pdf 1:r 9:D -i       # change book.pdf itself
-    py-foliation clear book.pdf -o plain.pdf   # no labels
+    py-foliation show book.pdf                     # the ranges of labels
+    py-foliation show --all book.pdf               # the label of every page
+    py-foliation show --label xii book.pdf         # the page labelled xii
+    py-foliation set book.pdf 1:r 9:D              # new labels -> book-labelled.pdf
+    py-foliation set book.pdf 1:r 9:D -i           # change book.pdf itself
+    py-foliation set *.pdf 1:r 9:D -i              # several files at once
+    py-foliation set book.pdf 1:r 9:D --dry-run    # only show what it would do
+    py-foliation copy old.pdf new.pdf -i           # the labels of old.pdf, to new.pdf
+    py-foliation clear book.pdf -o plain.pdf       # no labels
 
 A range is written `PAGES:STYLE[:START[:PREFIX]]`:
 
@@ -110,11 +129,13 @@ A range is written `PAGES:STYLE[:START[:PREFIX]]`:
 | `9:D`           | from 9 on                 | 1, 2, 3 …                    |
 | `201-214:A`     | 201 to 214                | A … N, then the old numbering goes on |
 | `215:D:1:App-`  | from 215 on               | App-1, App-2 …               |
+| `5:f:12v`       | from 5 on                 | 12v, 13r, 13v … (folios)     |
 | `LAST:-::Cover` | the last page             | Cover                        |
 
-or, with `--range`, as `PAGES [style=S] [start=N] [prefix=P]`:
+or, with `--range`, as `PAGES [style=S] [start=N] [prefix=P] [suffix=X]`:
 
     py-foliation set book.pdf --range 1-8 style=roman --range 9- style=arabic
+    py-foliation set book.pdf --range 1-4 style=roman 'prefix=[' 'suffix=]' 5:D
 
 `PAGES` is a first page (`9`) or a span (`9-200`, `9..200`, `201-`); `LAST`
 and `LAST-N` count from the end. A range without a last page goes on until
@@ -123,11 +144,37 @@ with the numbers they had.
 
 The styles are `D` or `arabic` (1, 2, 3), `r` or `roman` (i, ii, iii), `R` or
 `ROMAN` (I, II, III), `a` or `letters` (a, b, c), `A` or `LETTERS` (A, B, C),
-and `-` or `none` (the prefix only).
+`f` or `folio` (1r, 1v, 2r: the recto and verso of each leaf; the start is a
+leaf and its side, as `12v`), and `-` or `none` (the prefix only).
 
 `set` replaces the labels the file had; with `--keep` it changes only the
 pages given, and `--remove PAGE` drops the range that starts at PAGE.
 `show` prints the command that gives the labels of one file to another.
+`--password` opens protected files, which keep their protection.
+
+### Folios, suffixes and any other labels
+
+PDF numbers pages in five styles, with a prefix. Folios, for manuscripts and
+early printed books, and labels with something after the number (`[i]`,
+`12bis`) are not among them: py-foliation writes those as one label for
+each page, and recognises them again when it reads the file, so they are
+shown and edited as ranges like any other.
+
+Any numbering at all can be given page by page: `--from-file` (or
+**File ▸ Labels from a list…**) reads the label of every page, one on each
+line, and finds the fewest ranges that give them:
+
+    py-foliation show --all book.pdf > labels.txt     # edit labels.txt…
+    py-foliation set book.pdf --from-file labels.txt -i
+
+### Completion and manual
+
+`py-foliation completion bash|fish|zsh` prints the script that completes
+commands, options and files in each shell, for instance:
+
+    py-foliation completion fish > ~/.config/fish/completions/py-foliation.fish
+
+The Fedora package installs them, and the manual page (`man py-foliation`).
 
 ## Language
 
@@ -147,7 +194,12 @@ The pictures of this README are made by `uv run python tools/screenshots.py`
 
 The AppImage is made by `uv run python tools/bundle-appimage.py`, the signed
 RPM by `packaging/build-rpm.sh --sign`, and each release, on GitHub, Codeberg
-and Copr, by `uv run python tools/release.py --rpm` (see `packaging/COPR.org`).
+and Copr, by `uv run python tools/release.py --rpm` (see `packaging/COPR.org`);
+`--pypi` also uploads it to PyPI. The manual pages are made from the help of
+the command line by `uv run python tools/manpage.py` (a test checks they are
+up to date). The Flatpak's manifest and Python modules are in
+`packaging/flatpak/` (`tools/flatpak-deps.py` makes the modules from
+`uv.lock`); `packaging/FLATHUB.org` explains how to build it and submit it.
 
 ## License
 

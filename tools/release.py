@@ -2,9 +2,10 @@
 """Publish a release of py-foliation on GitHub (with gh) and Codeberg (with
 tea): the tag vVERSION (the version of pyproject.toml), with the wheel, the
 source package and the AppImage attached, and (--rpm) the signed RPM and its
-public key, also published on Copr.
+public key, also published on Copr, and (--pypi) the wheel and the source
+package on PyPI.
 
-    uv run python tools/release.py [--notes TEXT | --notes-file FILE] [--rpm [--no-copr]]
+    uv run python tools/release.py [--notes TEXT | --notes-file FILE] [--rpm [--no-copr]] [--pypi]
                                    [--no-build] [--no-appimage] [--no-tests] [--redo]
                                    [--only github|codeberg] [--dry-run] [--yes]
 
@@ -29,7 +30,10 @@ In order, each step only if it is needed:
    nivaca/py-foliation), unless --no-copr. Copr builds it for each Fedora of
    the project and signs it with its own key. Each build needs a higher
    version-release than the last, so the spec must have been bumped
-   (rpmdev-bumpspec; see packaging/COPR.org).
+   (rpmdev-bumpspec; see packaging/COPR.org);
+8. with --pypi, uploads the wheel and the source package to PyPI (uv publish,
+   with the API token in $UV_PUBLISH_TOKEN). PyPI never takes a file twice:
+   with --redo, those already there are skipped, not replaced.
 
 Before doing anything, it shows the commands it will run and asks; --yes
 doesn't ask, --dry-run only shows them. The notes of a new release are
@@ -41,6 +45,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
 import shutil
@@ -138,6 +143,9 @@ class Release:
         for tool in tools:
             if not shutil.which(tool):
                 sys.exit(f"release.py: {tool} is not installed")
+        if self.args.pypi and not os.environ.get("UV_PUBLISH_TOKEN"):
+            sys.exit("release.py: --pypi needs a PyPI API token in $UV_PUBLISH_TOKEN (make one at "
+                     "https://pypi.org/manage/account/token/)")
         if self.args.rpm:
             key = signing_key()
             have = subprocess.run(["gpg", "--batch", "--list-secret-keys", key], capture_output=True).returncode
@@ -256,6 +264,10 @@ class Release:
             sys.exit(f"release.py: there is no {srpm()} (leave out --no-build to make it)")
         self.plan(f"Copr: build the RPM (project {COPR_PROJECT})", "copr-cli", "build", COPR_PROJECT, srpm())
 
+    def pypi(self):
+        self.plan("PyPI: upload the wheel and the source package", "uv", "publish",
+                  "--check-url", "https://pypi.org/simple/", WHEEL, SDIST)
+
     def __call__(self):
         a = self.args
         self.forges = [a.only] if a.only else ["github", "codeberg"]
@@ -271,6 +283,8 @@ class Release:
             getattr(self, forge)(repos[forge])
         if a.rpm and not a.no_copr:
             self.copr()
+        if a.pypi:
+            self.pypi()
         self.run_plan()
 
 
@@ -285,6 +299,8 @@ def main(argv=None):
                         help="also the signed RPM and its public key (packaging/build-rpm.sh --sign), and a Copr "
                              "build of it")
     parser.add_argument("--no-copr", action="store_true", help="with --rpm, don't send it to Copr")
+    parser.add_argument("--pypi", action="store_true",
+                        help="also upload the wheel and the source package to PyPI ($UV_PUBLISH_TOKEN)")
     parser.add_argument("--no-build", action="store_true", help="use the files in dist/ (and build/rpm/) as they are")
     parser.add_argument("--no-appimage", action="store_true", help="without the AppImage")
     parser.add_argument("--no-tests", action="store_true", help="don't run the tests first")

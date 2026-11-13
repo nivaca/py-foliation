@@ -42,7 +42,8 @@ def test_desktop_file():
 
 def test_scripts_parse():
     assert subprocess.run(["bash", "-n", str(ROOT / "packaging/build-rpm.sh")]).returncode == 0
-    for tool in ("release.py", "bundle-appimage.py", "icons.py", "screenshots.py"):
+    for tool in ("release.py", "bundle-appimage.py", "icons.py", "screenshots.py", "manpage.py",
+                 "flatpak-deps.py"):
         compile((ROOT / "tools" / tool).read_text(), tool, "exec")
 
 
@@ -77,3 +78,37 @@ def test_signing_without_the_key_says_how_to_import_it(tmp_path):
                        env=env)
     assert r.returncode == 1
     assert f"no secret key matching {pinned_key()}" in r.stderr and "gpg --import" in r.stderr
+
+
+def test_manual_pages_are_up_to_date():
+    import sys
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "manpage.py"), "--check"], capture_output=True,
+                       text=True)
+    assert r.returncode == 0, r.stderr
+
+
+METAINFO = ROOT / "packaging/io.github.nivaca.py-foliation.metainfo.xml"
+
+
+def test_metainfo_has_this_release():
+    import xml.etree.ElementTree as ET
+    releases = ET.parse(METAINFO).getroot().find("releases")
+    assert releases[0].get("version") == __version__, "add the release to the metainfo"
+
+
+@pytest.mark.skipif(not shutil.which("appstreamcli"), reason="appstream not installed")
+def test_metainfo_is_valid():
+    r = subprocess.run(["appstreamcli", "validate", "--no-net", str(METAINFO)], capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_flatpak_wheels_are_those_of_uv_lock():
+    """python3-deps.json (tools/flatpak-deps.py) has the versions uv.lock has."""
+    import json
+    note = json.loads((ROOT / "packaging/flatpak/python3-deps.json").read_text())["x-note"]
+    lock = tomllib.loads((ROOT / "uv.lock").read_text())
+    versions = {p["name"]: p["version"] for p in lock["package"]}
+    for name in ("pikepdf", "pillow", "lxml", "packaging"):
+        assert f"{name} {versions[name]}" in note, f"{name}: run tools/flatpak-deps.py"
+    manifest = (ROOT / "packaging/flatpak/io.github.nivaca.py-foliation.yml").read_text()
+    assert "id: io.github.nivaca.py-foliation" in manifest and "python3-deps.json" in manifest

@@ -47,13 +47,17 @@ EXAMPLE = ROOT / "docs" / "example" / "numbers-100.pdf"
 
 # The labels the example is given: front matter, text, an appendix and a cover
 BOOK = ["1:r", "9:D", "90-99:A:1:App-", "LAST:-::Cover"]
+# ... and for the folios: a manuscript, its binding before and after the leaves
+FOLIOS = ["1:-::Binding", "2:f", "LAST:-::Binding"]
 
 # Each shot of the window: the page shown and the range chosen (its first page)
-SHOTS = {"window": dict(page=93, range=90)}
+SHOTS = {"window": dict(book=BOOK, page=93, range=90),
+         "folios": dict(book=FOLIOS, page=14, range=2, thumbnails=True)}
 KINDS = list(SHOTS) + ["cli"]
 
 # The user's own texts in the examples, in each language (the commands stay the same)
-LOCAL = {"es": {"90-99:A:1:App-": "90-99:A:1:Ap-", "LAST:-::Cover": "LAST:-::Tapa"}}
+LOCAL = {"es": {"90-99:A:1:App-": "90-99:A:1:Ap-", "LAST:-::Cover": "LAST:-::Tapa", "App-C": "Ap-C",
+                "1:-::Binding": "1:-::Encuadernación", "LAST:-::Binding": "LAST:-::Encuadernación"}}
 
 
 def localize(tokens: list[str], lang: str) -> list[str]:
@@ -66,6 +70,7 @@ SESSION = [
     ["show", "numbers-100.pdf"],
     ["set", "numbers-100.pdf", *BOOK, "-o", "book.pdf"],
     ["show", "book.pdf"],
+    ["show", "--label", "App-C", "book.pdf"],
 ]
 
 # The terminal: Konsole's Breeze scheme
@@ -113,7 +118,7 @@ def gui(kind: str, lang: str, out: Path, scale: float, size: tuple[int, int], da
     try:
         settings_folder(folder, lang)
         doc = folder / "book.pdf"
-        result = cli_run(["set", str(EXAMPLE), *localize(BOOK, lang), "-o", str(doc)], folder)
+        result = cli_run(["set", str(EXAMPLE), *localize(SHOTS[kind]["book"], lang), "-o", str(doc)], folder)
         if result.returncode:
             raise SystemExit(f"the example could not be given its labels: {result.stderr}")
         cmd = [sys.executable, str(Path(__file__).resolve()), "--child", kind, str(doc), str(out),
@@ -171,6 +176,9 @@ def gui_child(kind: str, doc: str, out: str, size: str, dark: bool):
             time.sleep(0.02)
 
     settle(0.3)
+    if shot.get("thumbnails"):
+        w.a_thumbs.setChecked(True)
+        settle(2)  # (the thumbnails are drawn a few at a time)
     w.refresh(select=shot["range"])
     w.show_page(shot["page"])
     w.pages.scrollToItem(w.pages.currentItem(), w.pages.ScrollHint.PositionAtCenter)

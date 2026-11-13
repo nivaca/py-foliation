@@ -22,6 +22,7 @@ BuildArch:      noarch
 
 BuildRequires:  python3-devel
 BuildRequires:  desktop-file-utils
+BuildRequires:  appstream
 # For %%check: the tests run the commands and the window (headless).
 BuildRequires:  python3-pytest
 BuildRequires:  python3-pyside6
@@ -57,9 +58,23 @@ rm %{buildroot}%{_bindir}/py-foliation-install
 desktop-file-install --dir=%{buildroot}%{_datadir}/applications packaging/py-foliation.desktop
 install -d %{buildroot}%{_datadir}/icons
 cp -pr src/py_foliation/icons/linux/hicolor %{buildroot}%{_datadir}/icons/
+# The AppStream metadata, for software centres (launched by this package's menu entry)
+install -d %{buildroot}%{_metainfodir}
+sed 's|<launchable type="desktop-id">.*</launchable>|<launchable type="desktop-id">py-foliation.desktop</launchable>|; s|<icon type="stock">.*</icon>|<icon type="stock">py-foliation</icon>|' \
+    packaging/io.github.nivaca.py-foliation.metainfo.xml > %{buildroot}%{_metainfodir}/io.github.nivaca.py-foliation.metainfo.xml
+install -Dpm 0644 packaging/man/py-foliation.1 %{buildroot}%{_mandir}/man1/py-foliation.1
+install -Dpm 0644 packaging/man/es/py-foliation.1 %{buildroot}%{_mandir}/es/man1/py-foliation.1
+# Completion of the command line, in each shell
+install -d %{buildroot}%{bash_completions_dir} %{buildroot}%{fish_completions_dir} %{buildroot}%{zsh_completions_dir}
+export PYTHONPATH=%{buildroot}%{python3_sitelib}
+%{python3} -m py_foliation completion bash > %{buildroot}%{bash_completions_dir}/py-foliation
+%{python3} -m py_foliation completion fish > %{buildroot}%{fish_completions_dir}/py-foliation.fish
+%{python3} -m py_foliation completion zsh > %{buildroot}%{zsh_completions_dir}/_py-foliation
+unset PYTHONPATH
 
 %check
 desktop-file-validate %{buildroot}%{_datadir}/applications/py-foliation.desktop
+appstreamcli validate --no-net %{buildroot}%{_metainfodir}/io.github.nivaca.py-foliation.metainfo.xml
 %pyproject_check_import -e 'py_foliation.gui*'
 # The whole test suite, on the installed package, with no settings of the
 # builder's and the window drawn offscreen.
@@ -73,6 +88,12 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
 %{_bindir}/py-foliation-gui
 %{_datadir}/applications/py-foliation.desktop
 %{_datadir}/icons/hicolor/*/apps/py-foliation.*
+%{_metainfodir}/io.github.nivaca.py-foliation.metainfo.xml
+%{_mandir}/man1/py-foliation.1*
+%lang(es) %{_mandir}/es/man1/py-foliation.1*
+%{bash_completions_dir}/py-foliation
+%{fish_completions_dir}/py-foliation.fish
+%{zsh_completions_dir}/_py-foliation
 
 %changelog
 * Thu Nov 12 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.1-1

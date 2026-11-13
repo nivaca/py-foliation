@@ -10,7 +10,7 @@ pages of the file.  Only the labels change; the pages themselves are left
 as they are.  Nicolas Vaughan made it in 2026.  It has a window, for
 seeing and editing the labels page by page, and a command line, for doing
 the same in scripts, in English or in Spanish.  Here I explain how it was
-made, in five stages.
+made, in six stages.
 
 py-foliation is free software, under the GNU General Public License,
 version 3 or later.  It is written in Python and stands on pikepdf (based
@@ -113,13 +113,47 @@ release in the same way: it runs the tests, makes the wheel, the source
 package, the AppImage and the signed RPM, tags the version, and publishes
 it on GitHub, on Codeberg and on Copr.
 
+6. Folios, lists and the rest
+-----------------------------
+
+PDF numbers pages in five styles, with a prefix, and nothing else.  The
+books py-foliation was made for need more: manuscripts and early printed
+books are counted in folios, the recto and verso of each leaf (1r, 1v, 2r
+…), and editions mark unnumbered pages in brackets ([i]) or add leaves
+(12bis).  So a range may have a sixth style, folios, and a suffix after the
+number.  Such a range is *virtual*: it is written in the file as one label
+for each page, which any viewer shows as it is, and found again when the
+file is read.  To find it, each label is read as a prefix, a number in some
+style and a suffix, in every way it can be, and the reading that goes on
+from the label before is chosen; where none does, a page keeps its label as
+text.
+
+The same reading turns any list of labels, one for each page, into the
+fewest ranges that give them: `--from-file` on the command line, and
+*Labels from a list…* in the window, read the list that `show --all` (or
+*Save the labels as a list…*) writes, so the labels can be edited in any
+editor or spreadsheet and read back.
+
+The rest came from use.  `copy` gives files the labels of another, as when
+a book is exported again; `set`, `clear` and `copy` take several files at
+once, and `--dry-run` only shows what they would do; `show --label` and
+the window's *Go to the page labelled…* find a page by its label.  The
+window can show the pages as thumbnails with their labels, and a
+double-click on a page starts a range there.  Protected PDFs are opened
+with their password, and keep their protection when they are saved (the
+first version took it away).  The command line completes its commands and
+options in bash, fish and zsh, and has a manual page, made from its own
+help so that the two always agree.  The program can also be published on
+PyPI, and there is a Flatpak, for Flathub.
+
 Testing
 -------
 
-The program has 63 automated tests (`tests/`), run with pytest.  They
+The program has 84 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
-of page numbers, how ranges are laid over each other, and the reading and
-writing of the number tree, including odd trees.  The command line is run
+of page numbers, how ranges are laid over each other, the reading and
+writing of the number tree, including odd trees, and the ranges found in
+lists of labels.  The command line is run
 from start to end on the example document, docs/example/numbers-100.pdf,
 whose pages each show their number, and on broken input.  The window is
 tested without a screen, with Qt's offscreen platform: opening, editing,

@@ -1,0 +1,222 @@
+.TH PY-FOLIATION 1 "" "py-foliation 0.1" "py-foliation"
+.SH NOMBRE
+py-foliation \- cambiar las etiquetas de página de documentos PDF
+.SH SINOPSIS
+.nf
+py-foliation [-h] [--interface {en,es}] [--version] ORDEN ...
+.fi
+.SH DESCRIPCIÓN
+.nf
+Cambia las etiquetas de página de un PDF: la numeración que un visor de PDF
+muestra para sus páginas (i, ii, iii ... 1, 2, 3 ... A-1, A-2 ...).
+
+argumentos posicionales:
+  ORDEN
+    show               mostrar las etiquetas de página de varios PDF
+    set                dar a varios PDF nuevas etiquetas de página
+    clear              quitar las etiquetas de página de varios PDF
+    copy               dar a varios PDF las etiquetas de página de otro
+    completion         imprimir el script de completado de un shell
+    interface          mostrar o elegir el idioma de la interfaz
+
+opciones:
+  -h, --help           mostrar esta ayuda y terminar
+  --interface {en,es}  el idioma de la interfaz, solo para esta ejecución
+                       (para conservar una elección, use la orden
+                       'interface')
+  --version            mostrar el número de versión del programa y terminar
+
+Ejecute 'py-foliation ORDEN -h' para ver la ayuda de una orden. 'py-
+foliation archivo.pdf' a secas muestra las etiquetas de página del archivo.
+.fi
+.SH ÓRDENES
+.SS show
+.nf
+uso: py-foliation show [-h] [--interface {en,es}] [-a | -l ETIQUETA]
+                       [--password CONTRASEÑA]
+                       ARCHIVO [ARCHIVO ...]
+
+Muestra los intervalos de etiquetas de página de varios PDF y la orden que
+se las daría a otro archivo.
+
+argumentos posicionales:
+  ARCHIVO               PDF de origen
+
+opciones:
+  -h, --help            mostrar esta ayuda y terminar
+  --interface {en,es}   el idioma de la interfaz, solo para esta ejecución
+                        (para conservar una elección, use la orden
+                        'interface')
+  -a, --all             mostrar la etiqueta de cada página
+  -l, --label ETIQUETA  mostrar las páginas con la etiqueta ETIQUETA (si no
+                        hay ninguna, las que la tienen salvo por las
+                        mayúsculas)
+  --password CONTRASEÑA
+                        la contraseña para abrir los PDF (su protección se
+                        conserva al guardarlos)
+.fi
+.SS set
+.nf
+uso: py-foliation set [-h] [--interface {en,es}]
+                      [-r PÁGINAS [CLAVE=VALOR] [PÁGINAS [CLAVE=VALOR] ...]]
+                      [-f LISTA] [-k] [--remove PÁGINA] [-o OUTPUT | -i]
+                      [-n] [--password CONTRASEÑA]
+                      ARCHIVO|INTERVALO [ARCHIVO|INTERVALO ...]
+
+Da a varios PDF nuevas etiquetas de página, intervalo por intervalo. Las que tenían se reemplazan, salvo que se indique --keep.
+
+argumentos posicionales:
+  ARCHIVO|INTERVALO     los PDF (archivos que terminan en .pdf) y los
+                        intervalos: PÁGINAS:ESTILO[:INICIO[:PREFIJO]]
+
+opciones:
+  -h, --help            mostrar esta ayuda y terminar
+  --interface {en,es}   el idioma de la interfaz, solo para esta ejecución
+                        (para conservar una elección, use la orden
+                        'interface')
+  -r, --range PÁGINAS [CLAVE=VALOR] [PÁGINAS [CLAVE=VALOR] ...]
+                        un intervalo: PÁGINAS [style=E] [start=N] [prefix=P]
+                        [suffix=X]
+  -f, --from-file LISTA
+                        las etiquetas de todas las páginas, una en cada
+                        línea (- para la entrada estándar)
+  -k, --keep            conservar las etiquetas que tiene el PDF y cambiar
+                        solo las páginas indicadas
+  --remove PÁGINA       quitar el intervalo que empieza en PÁGINA (el
+                        anterior sigue sobre sus páginas); implica --keep
+  -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
+                        <entrada>-labelled.pdf)
+  -i, --in-place        cambiar los propios archivos de entrada
+  -n, --dry-run         mostrar las etiquetas que recibirían los archivos,
+                        sin escribir nada
+  --password CONTRASEÑA
+                        la contraseña para abrir los PDF (su protección se
+                        conserva al guardarlos)
+
+Un intervalo se escribe PÁGINAS:ESTILO[:INICIO[:PREFIJO]]:
+
+  1:r            páginas desde la 1: i, ii, iii ...
+  9:D            páginas desde la 9: 1, 2, 3 ...
+  201-214:A      páginas 201 a 214: A ... N (luego sigue la numeración anterior)
+  215:D:1:Ap-    páginas desde la 215: Ap-1, Ap-2 ...
+  5:f:12v        folios desde la página 5: 12v, 13r, 13v ...
+  LAST:-::Tapa   la última página: Tapa
+
+o, con --range, PÁGINAS [style=E] [start=N] [prefix=P] [suffix=X]:
+
+  --range 9-200 style=arabic
+  --range 1-4 style=roman prefix=[ suffix=]
+
+PÁGINAS es una primera página (9) o un tramo (9-200, 9..200, 201-); LAST y
+LAST-N cuentan desde el final. Un intervalo sin última página sigue hasta el
+siguiente.
+
+Estilos: D o arabic (1, 2, 3), r o roman (números romanos en minúscula: i,
+ii, iii), R o ROMAN (I, II, III), a o letters (a, b, c), A o LETTERS (A, B,
+C), f o folio (1r, 1v, 2r: el recto y el verso de cada hoja; INICIO es una
+hoja y su lado, como 12v), - o none (solo el prefijo).
+
+Los folios y los sufijos no son estilos de etiquetas de página de PDF:
+py-foliation los escribe como una etiqueta para cada página, y los reconoce
+cuando lee el archivo.
+
+--from-file toma las etiquetas de todas las páginas, una en cada línea
+(como las escribe 'show --all', con o sin los números de página; - es la
+entrada estándar), y encuentra el menor número de intervalos que las da.
+.fi
+.SS clear
+.nf
+uso: py-foliation clear [-h] [--interface {en,es}] [-o OUTPUT | -i] [-n]
+                        [--password CONTRASEÑA]
+                        ARCHIVO [ARCHIVO ...]
+
+Quita las etiquetas de página de varios PDF: los visores numeran entonces
+sus páginas 1, 2, 3 ...
+
+argumentos posicionales:
+  ARCHIVO               PDF de origen
+
+opciones:
+  -h, --help            mostrar esta ayuda y terminar
+  --interface {en,es}   el idioma de la interfaz, solo para esta ejecución
+                        (para conservar una elección, use la orden
+                        'interface')
+  -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
+                        <entrada>-labelled.pdf)
+  -i, --in-place        cambiar los propios archivos de entrada
+  -n, --dry-run         mostrar las etiquetas que recibirían los archivos,
+                        sin escribir nada
+  --password CONTRASEÑA
+                        la contraseña para abrir los PDF (su protección se
+                        conserva al guardarlos)
+.fi
+.SS copy
+.nf
+uso: py-foliation copy [-h] [--interface {en,es}] [-o OUTPUT | -i] [-n]
+                       [--password CONTRASEÑA]
+                       ORIGEN ARCHIVO [ARCHIVO ...]
+
+Da a varios PDF las etiquetas de página de otro PDF, por ejemplo de una
+nueva exportación del mismo libro. Si tienen menos páginas, se omiten las
+etiquetas de las páginas que les faltan; si tienen más, el último intervalo
+sigue.
+
+argumentos posicionales:
+  ORIGEN                el PDF cuyas etiquetas se copian
+  ARCHIVO               los PDF que las reciben
+
+opciones:
+  -h, --help            mostrar esta ayuda y terminar
+  --interface {en,es}   el idioma de la interfaz, solo para esta ejecución
+                        (para conservar una elección, use la orden
+                        'interface')
+  -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
+                        <entrada>-labelled.pdf)
+  -i, --in-place        cambiar los propios archivos de entrada
+  -n, --dry-run         mostrar las etiquetas que recibirían los archivos,
+                        sin escribir nada
+  --password CONTRASEÑA
+                        la contraseña para abrir los PDF (su protección se
+                        conserva al guardarlos)
+.fi
+.SS completion
+.nf
+uso: py-foliation completion [-h] [--interface {en,es}] SHELL
+
+Imprime el script que completa las órdenes, las opciones y los archivos de
+py-foliation en SHELL. Por ejemplo: py-foliation completion fish >
+~/.config/fish/completions/py-foliation.fish
+
+argumentos posicionales:
+  SHELL                bash, fish o zsh
+
+opciones:
+  -h, --help           mostrar esta ayuda y terminar
+  --interface {en,es}  el idioma de la interfaz, solo para esta ejecución
+                       (para conservar una elección, use la orden
+                       'interface')
+.fi
+.SS interface
+.nf
+uso: py-foliation interface [-h] [--interface {en,es}] [{en,es}]
+
+El idioma de la ayuda, los mensajes y la ventana. La elección se guarda en
+el archivo de configuración; --interface CODE la cambia solo para una
+ejecución.
+
+argumentos posicionales:
+  {en,es}              el idioma que se usará de ahora en adelante; sin él,
+                       se listan los idiomas y se marca el que está en uso
+
+opciones:
+  -h, --help           mostrar esta ayuda y terminar
+  --interface {en,es}  el idioma de la interfaz, solo para esta ejecución
+                       (para conservar una elección, use la orden
+                       'interface')
+.fi
+.SH ARCHIVOS
+El archivo de configuración, con el idioma de la interfaz: ~/.config/py-foliation/config.toml (o $PY_FOLIATION_CONFIG/config.toml).
+.SH VÉASE TAMBIÉN
+La ventana: py-foliation-gui [archivo.pdf].
+.SH AUTOR
+Nicolas Vaughan <https://nicolasvaughan.org>

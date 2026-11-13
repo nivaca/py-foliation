@@ -27,7 +27,7 @@ def test_range_labels_and_specs():
     assert r.spec() == "215:D:1:App-"
     assert Range(9).spec() == "9:D"
     assert Range(1, "r", start=5).spec() == "1:r:5"
-    assert Range(100, "", "Cover").spec() == "100:-:1:Cover"
+    assert Range(100, "", "Cover").spec() == "100:-::Cover"
     assert Range(100, "", "Cover").label(100) == "Cover"
 
 
@@ -129,3 +129,66 @@ def test_reading_odd_trees():
         assert labels.read_labels(pdf) == [Range(1, "r"), Range(5, "D"), Range(7, "")]
         pdf.Root.PageLabels = Dictionary(Nums=Array([3, Dictionary(S=Name.R)]))  # (nothing at page 1)
         assert labels.read_labels(pdf) == [Range(1), Range(4, "R")]
+
+
+# =========================================================================== folios, suffixes, lists
+
+
+def test_folios():
+    assert [labels.to_folio(s) for s in (1, 2, 3, 24)] == ["1r", "1v", "2r", "12v"]
+    r = labels.parse_compact("5-90:f:12v", N).range
+    assert r == Range(5, "f", "", 24) and r.virtual
+    assert [r.label(p) for p in (5, 6, 7)] == ["12v", "13r", "13v"]
+    assert r.spec() == "5:f:12v" and labels.parse_compact(r.spec(), N).range == r
+    assert labels.parse_compact("5:folio", N).range == Range(5, "f", "", 1)
+    assert labels.parse_named(["5", "style=folio", "start=3"], N).range.start == 5  # (3 = 3r)
+    with pytest.raises(LabelError, match="leaf and its side"):
+        labels.parse_compact("5:f:3x", N)
+
+
+def test_suffixes():
+    r = labels.parse_named(["1-4", "style=roman", "prefix=[", "suffix=]"], N).range
+    assert r.label(2) == "[ii]" and r.virtual
+    assert r.tokens() == ["--range", "1", "style=roman", "prefix=[", "suffix=]"]
+    assert labels.parse_named(r.tokens()[1:], N).range == r
+    assert Range(3, "", "x", 1, "y") == Range(3, "", "xy")  # (no number: one text)
+
+
+def test_from_labels():
+    book = ["[i]", "[ii]", "iii", "iv", "1", "2", "3", "3bis", "4", "A-1", "A-2", "1r", "1v", "2r",
+            "5r", "5v", "Cover"]
+    ranges = labels.from_labels(book)
+    assert labels.page_labels(ranges, len(book)) == book
+    assert ranges == [Range(1, "r", "[", 1, "]"), Range(3, "r", "", 3), Range(5), Range(8, "", "3bis"),
+                      Range(9, "D", "", 4), Range(10, "D", "A-"), Range(12, "f"), Range(15, "f", "", 9),
+                      Range(17, "", "Cover")]
+    assert labels.from_labels(["c", "d", "e"]) == [Range(1, "a", "", 3)]  # (letters, not roman 100, 500)
+    assert labels.from_labels(["x"]) == [Range(1, "r", "", 10)]
+    assert labels.from_labels(["", ""]) == [Range(1, "", "")]
+    assert labels.from_labels(["x", "x", "x", "4"]) == [Range(1, "", "x"), Range(4, "D", "", 4)]
+    for odd in (["007", "008"], ["1.1", "1.2", "2.1"], ["iiii"], ["Chapter v", "Chapter vi"]):
+        assert labels.page_labels(labels.from_labels(odd), len(odd)) == odd
+
+
+def test_virtual_ranges_in_the_file(tmp_path):
+    ranges = [Range(1, "r", "[", 1, "]"), Range(5, "D"), Range(50, "f", "", 3), Range(98, "", "Cover")]
+    with pikepdf.new() as pdf:
+        for _ in range(N):
+            pdf.add_blank_page()
+        labels.write_labels(pdf, ranges)
+        nums = pdf.Root.PageLabels.Nums
+        assert len(nums) == 2 * (4 + 1 + 48 + 1)  # (one entry for each page of the virtual ranges)
+        assert str(nums[1].P) == "[i]" and "/S" not in nums[1]
+        assert str(nums[2 * 5 + 1].P) == "2r"
+        pdf.save(tmp_path / "v.pdf")
+    with pikepdf.open(tmp_path / "v.pdf") as pdf:
+        assert labels.read_labels(pdf) == ranges
+        assert len(labels.read_native(pdf)) == 54
+
+
+def test_find_label():
+    ranges = [Range(1, "r"), Range(9)]
+    assert labels.find_label(ranges, N, "xii") == []
+    assert labels.find_label(ranges, N, "vii") == [7]
+    assert labels.find_label(ranges, N, "VII") == [7]  # (but for capitals)
+    assert labels.find_label(ranges, N, "7") == [15]

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata of py-foliation, for software centres and Flathub.
+     The RPM installs it with the launchable changed to py-foliation.desktop. -->
+<component type="desktop-application">
+  <id>io.github.nivaca.py-foliation</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>py-foliation</name>
+  <summary>Change the page labels of PDF documents</summary>
+  <summary xml:lang="es">Cambiar las etiquetas de página de documentos PDF</summary>
+  <developer id="io.github.nivaca">
+    <name>Nicolas Vaughan</name>
+  </developer>
+  <description>
+    <p>
+      py-foliation changes the page labels of PDF documents: the numbering a PDF viewer shows for
+      their pages. A book whose front matter is numbered i, ii, iii and whose text starts again at 1
+      can show those numbers in the viewer, instead of the plain numbers of the pages of the file.
+      Only the labels change; the pages themselves are left as they are.
+    </p>
+    <p xml:lang="es">
+      py-foliation cambia las etiquetas de página de documentos PDF: la numeración que un visor de
+      PDF muestra para sus páginas. Un libro cuyas páginas preliminares van numeradas i, ii, iii y
+      cuyo texto empieza de nuevo en 1 puede mostrar esos números en el visor, en lugar de los
+      números de las páginas del archivo. Solo cambian las etiquetas; las páginas quedan como están.
+    </p>
+    <ul>
+      <li>Arabic and roman numerals, letters, prefixes, and labels with no number</li>
+      <li xml:lang="es">Números arábigos y romanos, letras, prefijos y etiquetas sin número</li>
+      <li>Folios (1r, 1v, 2r …) for manuscripts and early printed books, and labels with a suffix, as [i] or 12bis</li>
+      <li xml:lang="es">Folios (1r, 1v, 2r …) para manuscritos e impresos antiguos, y etiquetas con sufijo, como [i] o 12bis</li>
+      <li>Every page with its label, as a list or as thumbnails, and a preview</li>
+      <li xml:lang="es">Cada página con su etiqueta, en lista o en miniaturas, y una vista previa</li>
+      <li>Labels from a list, one for each page, and copied from another PDF</li>
+      <li xml:lang="es">Etiquetas de una lista, una para cada página, y copiadas de otro PDF</li>
+      <li>A command line with the same features, in English or Spanish</li>
+      <li xml:lang="es">Una línea de órdenes con las mismas funciones, en inglés o en español</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.nivaca.py-foliation.desktop</launchable>
+  <icon type="stock">io.github.nivaca.py-foliation</icon>
+  <categories>
+    <category>Office</category>
+    <category>Publishing</category>
+  </categories>
+  <keywords>
+    <keyword>page labels</keyword>
+    <keyword>page numbers</keyword>
+    <keyword>foliation</keyword>
+    <keyword>pagination</keyword>
+    <keyword>PDF</keyword>
+    <keyword xml:lang="es">etiquetas de página</keyword>
+    <keyword xml:lang="es">foliación</keyword>
+    <keyword xml:lang="es">paginación</keyword>
+  </keywords>
+  <url type="homepage">https://github.com/nivaca/py-foliation</url>
+  <url type="bugtracker">https://github.com/nivaca/py-foliation/issues</url>
+  <url type="vcs-browser">https://github.com/nivaca/py-foliation</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>The ranges of labels, every page with its label, and the page chosen</caption>
+      <image>https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/gui_window_en.png</image>
+    </screenshot>
+  </screenshots>
+  <provides>
+    <binary>py-foliation</binary>
+    <binary>py-foliation-gui</binary>
+  </provides>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1" date="2026-11-12">
+      <description>
+        <p>The first release: the window and the command line, in English and Spanish.</p>
+      </description>
+    </release>
+  </releases>
+</component>

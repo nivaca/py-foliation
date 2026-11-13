@@ -144,3 +144,71 @@ def test_icon(app):
     from py_foliation.gui import app_icon
     icon = app_icon()
     assert not icon.isNull() and len(icon.availableSizes()) >= 10
+
+
+def test_folios_and_suffixes(app, window, book):
+    window.open_path(book)
+    window._edit(1, style="f", start=23)  # (the range of page 9: folios from 12r)
+    settle(app)
+    assert window.ranges[1] == Range(9, "f", "", 23)
+    assert window.pages.item(9).text().split() == ["10", "12v"]
+    spin = window.table.cellWidget(1, 2)
+    assert spin.text() == "12r" and spin.valueFromText("30v") == 60
+    window._edit(0, prefix="[", suffix="]")
+    settle(app)
+    assert window.pages.item(1).text().split() == ["2", "[ii]"]
+    assert window.save()
+    assert ranges_of(book) == window.ranges  # (written one label for each page, and read back)
+    assert "--range 1 style=roman" in window.cmd_line.text()
+
+
+def test_password(app, window, book, monkeypatch):
+    locked = book.with_name("locked.pdf")
+    with pikepdf.open(book) as pdf:
+        pdf.save(locked, encryption=pikepdf.Encryption(owner="o", user="u"))
+    answers = iter(["wrong", "u"])
+    monkeypatch.setattr(type(window), "ask_password", lambda self, path, again=False: next(answers))
+    assert window.open_path(locked)
+    assert window.password == "u" and window.ranges == [Range(1, "r"), Range(9, "D")]
+    window.clear_labels()
+    assert window.save()
+    with pikepdf.open(locked, password="u") as pdf:  # (still protected)
+        assert pdf.is_encrypted and labels.read_labels(pdf) == []
+    monkeypatch.setattr(type(window), "ask_password", lambda self, path, again=False: None)
+    assert not window.open_path(locked) and window.path == locked  # (cancelled: the document stays)
+
+
+def test_copy_and_lists(app, window, book, tmp_path):
+    other = tmp_path / "other.pdf"
+    shutil.copyfile(EXAMPLE, other)
+    window.open_path(other)
+    assert window.copy_from(book)
+    assert window.ranges == [Range(1, "r"), Range(9, "D")] and window.is_modified()
+    listed = tmp_path / "labels.txt"
+    assert window.export_list(listed)
+    lines = listed.read_text().splitlines()
+    assert lines[:2] == ["i", "ii"] and len(lines) == 100
+    lines[49] = "Map"
+    listed.write_text("\n".join(lines))
+    assert window.import_list(listed)
+    assert window.ranges == [Range(1, "r"), Range(9, "D"), Range(50, "", "Map"), Range(51, "D", "", 43)]
+    listed.write_text("a\nb\n")
+    assert not window.import_list(listed) and "2 labels" in window.statusBar().currentMessage()
+
+
+def test_pages_list(app, window, book):
+    window.open_path(book)
+    window.start_range_at(30)
+    assert window.ranges[-1] == Range(30) and window.table.currentRow() == 2
+    window.start_range_at(9)  # (a range starts there: it is chosen)
+    assert window.table.currentRow() == 1 and len(window.ranges) == 3
+    assert window.go_to_label("iv") and window.current_page() == 4
+    assert window.go_to_label("1") and window.current_page() == 9
+    assert window.go_to_label("1") and window.current_page() == 30  # (Enter again: the next one)
+    assert not window.go_to_label("xcix")
+    window.a_thumbs.setChecked(True)
+    for _ in range(40):
+        app.processEvents()
+    assert len(window._thumbs) == 100 and not window.pages.item(0).icon().isNull()
+    assert window.pages.item(3).text() == "4\niv"
+    window.a_thumbs.setChecked(False)

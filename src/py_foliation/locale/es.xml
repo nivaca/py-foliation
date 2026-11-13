@@ -8,33 +8,10 @@
     <tr>Un intervalo se escribe PÁGINAS:ESTILO[:INICIO[:PREFIJO]]:</tr>
   </text>
   <text>
-    <en>1:r pages from 1 on: i, ii, iii ... 9:D pages from 9 on: 1, 2, 3 ... 201-214:A pages 201 to 214: A ... N (then the old numbering goes on) 215:D:1:App- pages from 215 on: App-1, App-2 ... LAST:-::Cover the last page: Cover</en>
-    <tr>  1:r            páginas desde la 1: i, ii, iii ...
-  9:D            páginas desde la 9: 1, 2, 3 ...
-  201-214:A      páginas 201 a 214: A ... N (luego sigue la numeración anterior)
-  215:D:1:Ap-    páginas desde la 215: Ap-1, Ap-2 ...
-  LAST:-::Tapa   la última página: Tapa</tr>
-  </text>
-  <text>
-    <en>or, with --range, PAGES [style=S] [start=N] [prefix=P]:</en>
-    <tr>o, con --range, PÁGINAS [style=E] [start=N] [prefix=P]:</tr>
-  </text>
-  <text>
-    <en>--range 9-200 style=arabic --range 215- style=arabic start=1 prefix=App-</en>
-    <tr>  --range 9-200 style=arabic
-  --range 215- style=arabic start=1 prefix=Ap-</tr>
-  </text>
-  <text>
     <en>PAGES is a first page (9) or a span (9-200, 9..200, 201-); LAST and LAST-N count from the end. A range without a last page goes on until the next one.</en>
     <tr>PÁGINAS es una primera página (9) o un tramo (9-200, 9..200, 201-); LAST y
 LAST-N cuentan desde el final. Un intervalo sin última página sigue hasta el
 siguiente.</tr>
-  </text>
-  <text>
-    <en>Styles: D or arabic (1, 2, 3), r or roman (i, ii, iii), R or ROMAN (I, II, III), a or letters (a, b, c), A or LETTERS (A, B, C), - or none (the prefix only).</en>
-    <tr>Estilos: D o arabic (1, 2, 3), r o roman (números romanos en minúscula: i,
-ii, iii), R o ROMAN (I, II, III), a o letters (a, b, c), A o LETTERS (A, B,
-C), - o none (solo el prefijo).</tr>
   </text>
   <text>
     <en>{path}: {count} page</en>
@@ -74,15 +51,7 @@ C), - o none (solo el prefijo).</tr>
   </text>
   <text>
     <en>COMMAND</en>
-    <tr>COMMAND</tr>
-  </text>
-  <text>
-    <en>show the page labels of a PDF</en>
-    <tr>mostrar las etiquetas de página de un PDF</tr>
-  </text>
-  <text>
-    <en>Show the ranges of page labels of a PDF, and the command that would give them to another file.</en>
-    <tr>Muestra los intervalos de etiquetas de página de un PDF y la orden que se las daría a otro archivo.</tr>
+    <tr>ORDEN</tr>
   </text>
   <text>
     <en>source PDF</en>
@@ -93,28 +62,8 @@ C), - o none (solo el prefijo).</tr>
     <tr>mostrar la etiqueta de cada página</tr>
   </text>
   <text>
-    <en>give a PDF new page labels</en>
-    <tr>dar a un PDF nuevas etiquetas de página</tr>
-  </text>
-  <text>
-    <en>Give a PDF new page labels, range by range. The labels it had are replaced, unless --keep is given.</en>
-    <tr>Da a un PDF nuevas etiquetas de página, intervalo por intervalo. Las que tenía se reemplazan, salvo que se indique --keep.</tr>
-  </text>
-  <text>
-    <en>RANGE</en>
-    <tr>INTERVALO</tr>
-  </text>
-  <text>
-    <en>a range: PAGES:STYLE[:START[:PREFIX]]</en>
-    <tr>un intervalo: PÁGINAS:ESTILO[:INICIO[:PREFIJO]]</tr>
-  </text>
-  <text>
     <en>PAGES [KEY=VALUE]</en>
     <tr>PÁGINAS [CLAVE=VALOR]</tr>
-  </text>
-  <text>
-    <en>a range: PAGES [style=S] [start=N] [prefix=P]</en>
-    <tr>un intervalo: PÁGINAS [style=E] [start=N] [prefix=P]</tr>
   </text>
   <text>
     <en>keep the labels the PDF has, changing only the pages given</en>
@@ -127,14 +76,6 @@ C), - o none (solo el prefijo).</tr>
   <text>
     <en>drop the range that starts at PAGE (the one before goes on over its pages); implies --keep</en>
     <tr>quitar el intervalo que empieza en PÁGINA (el anterior sigue sobre sus páginas); implica --keep</tr>
-  </text>
-  <text>
-    <en>remove the page labels of a PDF</en>
-    <tr>quitar las etiquetas de página de un PDF</tr>
-  </text>
-  <text>
-    <en>Remove the page labels of a PDF: viewers then number its pages 1, 2, 3 ...</en>
-    <tr>Quita las etiquetas de página de un PDF: los visores numeran entonces sus páginas 1, 2, 3 ...</tr>
   </text>
   <text>
     <en>show or choose the language of the interface</en>
@@ -183,14 +124,6 @@ C), - o none (solo el prefijo).</tr>
   <text>
     <en>the language {code} cannot be used: {error}</en>
     <tr>no se puede usar el idioma {code}: {error}</tr>
-  </text>
-  <text>
-    <en>output PDF (default: &lt;input&gt;-labelled.pdf)</en>
-    <tr>PDF de salida (por defecto: &lt;entrada&gt;-labelled.pdf)</tr>
-  </text>
-  <text>
-    <en>change the input file itself</en>
-    <tr>cambiar el propio archivo de entrada</tr>
   </text>
   <text>
     <en>{path} is protected by a password</en>
@@ -493,10 +426,6 @@ C), - o none (solo el prefijo).</tr>
     <tr>{label} (todas las páginas)</tr>
   </text>
   <text>
-    <en>{token!r} is not one of style=, start= or prefix=</en>
-    <tr>{token!r} no es ninguno de style=, start= o prefix=</tr>
-  </text>
-  <text>
     <en>no range starts at page {page} (ranges start at: {pages})</en>
     <tr>ningún intervalo empieza en la página {page} (los intervalos empiezan en: {pages})</tr>
   </text>
@@ -743,5 +672,306 @@ C), - o none (solo el prefijo).</tr>
   <text>
     <en>{app} exists and was not made by py-foliation-install; move it away first</en>
     <tr>{app} existe y no lo creó py-foliation-install; muévalo antes a otro lugar</tr>
+  </text>
+  <text>
+    <en>&amp;View</en>
+    <tr>&amp;Ver</tr>
+  </text>
+  <text>
+    <en>(it has {count} pages)</en>
+    <tr>(tiene {count} páginas)</tr>
+  </text>
+  <text>
+    <en>--from-file takes the labels of all the pages, one on each line (as 'show --all' writes them, with or without the page numbers; - is the standard input), and finds the fewest ranges that give them.</en>
+    <tr>--from-file toma las etiquetas de todas las páginas, una en cada línea
+(como las escribe 'show --all', con o sin los números de página; - es la
+entrada estándar), y encuentra el menor número de intervalos que las da.</tr>
+  </text>
+  <text>
+    <en>--output takes one input only; with several, each is saved as &lt;input&gt;-labelled.pdf, or changed with --in-place</en>
+    <tr>--output admite una sola entrada; con varias, cada una se guarda como &lt;entrada&gt;-labelled.pdf, o se cambia con --in-place</tr>
+  </text>
+  <text>
+    <en>--range 9-200 style=arabic --range 1-4 style=roman prefix=[ suffix=]</en>
+    <tr>  --range 9-200 style=arabic
+  --range 1-4 style=roman prefix=[ suffix=]</tr>
+  </text>
+  <text>
+    <en>1:r pages from 1 on: i, ii, iii ... 9:D pages from 9 on: 1, 2, 3 ... 201-214:A pages 201 to 214: A ... N (then the old numbering goes on) 215:D:1:App- pages from 215 on: App-1, App-2 ... 5:f:12v folios from page 5 on: 12v, 13r, 13v ... LAST:-::Cover the last page: Cover</en>
+    <tr>  1:r            páginas desde la 1: i, ii, iii ...
+  9:D            páginas desde la 9: 1, 2, 3 ...
+  201-214:A      páginas 201 a 214: A ... N (luego sigue la numeración anterior)
+  215:D:1:Ap-    páginas desde la 215: Ap-1, Ap-2 ...
+  5:f:12v        folios desde la página 5: 12v, 13r, 13v ...
+  LAST:-::Tapa   la última página: Tapa</tr>
+  </text>
+  <text>
+    <en>1r, 1v, 2r (folios)</en>
+    <tr>1r, 1v, 2r (folios)</tr>
+  </text>
+  <text>
+    <en>A text file with the label of each page, one on each line</en>
+    <tr>Un archivo de texto con la etiqueta de cada página, una en cada línea</tr>
+  </text>
+  <text>
+    <en>A text file with the label of each page, one on each line, to edit and read back</en>
+    <tr>Un archivo de texto con la etiqueta de cada página, una en cada línea, para editarlo y volver a leerlo</tr>
+  </text>
+  <text>
+    <en>Copy the labels of another PDF</en>
+    <tr>Copiar las etiquetas de otro PDF</tr>
+  </text>
+  <text>
+    <en>Copy the labels of another PDF…</en>
+    <tr>Copiar las etiquetas de otro PDF…</tr>
+  </text>
+  <text>
+    <en>Double-click a page to start a range at it</en>
+    <tr>Haga doble clic en una página para empezar un intervalo en ella</tr>
+  </text>
+  <text>
+    <en>FILE</en>
+    <tr>ARCHIVO</tr>
+  </text>
+  <text>
+    <en>FILE|RANGE</en>
+    <tr>ARCHIVO|INTERVALO</tr>
+  </text>
+  <text>
+    <en>FROM</en>
+    <tr>ORIGEN</tr>
+  </text>
+  <text>
+    <en>Folios and suffixes are not page label styles of PDF: py-foliation writes them as one label for each page, and recognises them when it reads the file.</en>
+    <tr>Los folios y los sufijos no son estilos de etiquetas de página de PDF:
+py-foliation los escribe como una etiqueta para cada página, y los reconoce
+cuando lee el archivo.</tr>
+  </text>
+  <text>
+    <en>For instance, of an earlier export of the same book</en>
+    <tr>Por ejemplo, de una exportación anterior del mismo libro</tr>
+  </text>
+  <text>
+    <en>Give PDFs new page labels, range by range. The labels they had are replaced, unless --keep is given.</en>
+    <tr>Da a varios PDF nuevas etiquetas de página, intervalo por intervalo. Las que tenían se reemplazan, salvo que se indique --keep.</tr>
+  </text>
+  <text>
+    <en>Give PDFs the page labels of another PDF, for instance a new export of the same book. If they have fewer pages, the labels of the pages they lack are left out; if they have more, the last range goes on.</en>
+    <tr>Da a varios PDF las etiquetas de página de otro PDF, por ejemplo de una nueva exportación del mismo libro. Si tienen menos páginas, se omiten las etiquetas de las páginas que les faltan; si tienen más, el último intervalo sigue.</tr>
+  </text>
+  <text>
+    <en>Go to the page labelled…</en>
+    <tr>Ir a la página con la etiqueta…</tr>
+  </text>
+  <text>
+    <en>LABEL</en>
+    <tr>ETIQUETA</tr>
+  </text>
+  <text>
+    <en>LIST</en>
+    <tr>LISTA</tr>
+  </text>
+  <text>
+    <en>Labels copied from {path}</en>
+    <tr>Etiquetas copiadas de {path}</tr>
+  </text>
+  <text>
+    <en>Labels from a list</en>
+    <tr>Etiquetas de una lista</tr>
+  </text>
+  <text>
+    <en>Labels from a list…</en>
+    <tr>Etiquetas de una lista…</tr>
+  </text>
+  <text>
+    <en>Labels read from {path}</en>
+    <tr>Etiquetas leídas de {path}</tr>
+  </text>
+  <text>
+    <en>No page is labelled {label}</en>
+    <tr>Ninguna página tiene la etiqueta {label}</tr>
+  </text>
+  <text>
+    <en>PASSWORD</en>
+    <tr>CONTRASEÑA</tr>
+  </text>
+  <text>
+    <en>Page {page}, labelled {label}</en>
+    <tr>Página {page}, con la etiqueta {label}</tr>
+  </text>
+  <text>
+    <en>Password</en>
+    <tr>Contraseña</tr>
+  </text>
+  <text>
+    <en>Print the script that completes py-foliation's commands, options and files in SHELL. For instance: py-foliation completion fish &gt; ~/.config/fish/completions/py-foliation.fish</en>
+    <tr>Imprime el script que completa las órdenes, las opciones y los archivos de py-foliation en SHELL. Por ejemplo: py-foliation completion fish &gt; ~/.config/fish/completions/py-foliation.fish</tr>
+  </text>
+  <text>
+    <en>Remove the page labels of PDFs: viewers then number their pages 1, 2, 3 ...</en>
+    <tr>Quita las etiquetas de página de varios PDF: los visores numeran entonces sus páginas 1, 2, 3 ...</tr>
+  </text>
+  <text>
+    <en>SHELL</en>
+    <tr>SHELL</tr>
+  </text>
+  <text>
+    <en>Save the labels as a list</en>
+    <tr>Guardar las etiquetas como lista</tr>
+  </text>
+  <text>
+    <en>Save the labels as a list…</en>
+    <tr>Guardar las etiquetas como lista…</tr>
+  </text>
+  <text>
+    <en>Show the ranges of page labels of PDFs, and the command that would give them to another file.</en>
+    <tr>Muestra los intervalos de etiquetas de página de varios PDF y la orden que se las daría a otro archivo.</tr>
+  </text>
+  <text>
+    <en>Styles: D or arabic (1, 2, 3), r or roman (i, ii, iii), R or ROMAN (I, II, III), a or letters (a, b, c), A or LETTERS (A, B, C), f or folio (1r, 1v, 2r: the recto and verso of each leaf; START is a leaf and its side, as 12v), - or none (the prefix only).</en>
+    <tr>Estilos: D o arabic (1, 2, 3), r o roman (números romanos en minúscula: i,
+ii, iii), R o ROMAN (I, II, III), a o letters (a, b, c), A o LETTERS (A, B,
+C), f o folio (1r, 1v, 2r: el recto y el verso de cada hoja; INICIO es una
+hoja y su lado, como 12v), - o none (solo el prefijo).</tr>
+  </text>
+  <text>
+    <en>Suffix</en>
+    <tr>Sufijo</tr>
+  </text>
+  <text>
+    <en>Text files (*.txt);;All files (*)</en>
+    <tr>Archivos de texto (*.txt);;Todos los archivos (*)</tr>
+  </text>
+  <text>
+    <en>Text put after the number of each page (PDF has no suffixes: such labels are written one for each page)</en>
+    <tr>Texto que se pone después del número de cada página (PDF no tiene sufijos: esas etiquetas se escriben una para cada página)</tr>
+  </text>
+  <text>
+    <en>That password is not right. The password of {name}:</en>
+    <tr>Esa contraseña no es correcta. La contraseña de {name}:</tr>
+  </text>
+  <text>
+    <en>The leaf and side of the first page of the range (12r, 12v)</en>
+    <tr>La hoja y el lado de la primera página del intervalo (12r, 12v)</tr>
+  </text>
+  <text>
+    <en>Thumbnails of the pages</en>
+    <tr>Miniaturas de las páginas</tr>
+  </text>
+  <text>
+    <en>Type a label (xii, 12v, A-3) and press Enter; Enter again goes to the next page with that label</en>
+    <tr>Escriba una etiqueta (xii, 12v, A-3) y pulse Intro; otro Intro va a la siguiente página con esa etiqueta</tr>
+  </text>
+  <text>
+    <en>a range: PAGES [style=S] [start=N] [prefix=P] [suffix=X]</en>
+    <tr>un intervalo: PÁGINAS [style=E] [start=N] [prefix=P] [suffix=X]</tr>
+  </text>
+  <text>
+    <en>bash, fish or zsh</en>
+    <tr>bash, fish o zsh</tr>
+  </text>
+  <text>
+    <en>change the input files themselves</en>
+    <tr>cambiar los propios archivos de entrada</tr>
+  </text>
+  <text>
+    <en>e.g. ]</en>
+    <tr>p. ej. ]</tr>
+  </text>
+  <text>
+    <en>give PDFs new page labels</en>
+    <tr>dar a varios PDF nuevas etiquetas de página</tr>
+  </text>
+  <text>
+    <en>give PDFs the page labels of another</en>
+    <tr>dar a varios PDF las etiquetas de página de otro</tr>
+  </text>
+  <text>
+    <en>no PDF given (the files must end in .pdf)</en>
+    <tr>no se indicó ningún PDF (los archivos deben terminar en .pdf)</tr>
+  </text>
+  <text>
+    <en>no page is labelled {label!r}</en>
+    <tr>ninguna página tiene la etiqueta {label!r}</tr>
+  </text>
+  <text>
+    <en>or, with --range, PAGES [style=S] [start=N] [prefix=P] [suffix=X]:</en>
+    <tr>o, con --range, PÁGINAS [style=E] [start=N] [prefix=P] [suffix=X]:</tr>
+  </text>
+  <text>
+    <en>output PDF, with one input only (default: &lt;input&gt;-labelled.pdf)</en>
+    <tr>PDF de salida, con una sola entrada (por defecto: &lt;entrada&gt;-labelled.pdf)</tr>
+  </text>
+  <text>
+    <en>print the completion script of a shell</en>
+    <tr>imprimir el script de completado de un shell</tr>
+  </text>
+  <text>
+    <en>remove the page labels of PDFs</en>
+    <tr>quitar las etiquetas de página de varios PDF</tr>
+  </text>
+  <text>
+    <en>show the labels the files would get, without writing anything</en>
+    <tr>mostrar las etiquetas que recibirían los archivos, sin escribir nada</tr>
+  </text>
+  <text>
+    <en>show the page labels of PDFs</en>
+    <tr>mostrar las etiquetas de página de varios PDF</tr>
+  </text>
+  <text>
+    <en>show the pages labelled LABEL (if none, those labelled so but for capitals)</en>
+    <tr>mostrar las páginas con la etiqueta ETIQUETA (si no hay ninguna, las que la tienen salvo por las mayúsculas)</tr>
+  </text>
+  <text>
+    <en>the PDF whose labels are copied</en>
+    <tr>el PDF cuyas etiquetas se copian</tr>
+  </text>
+  <text>
+    <en>the PDFs (files ending in .pdf), and the ranges: PAGES:STYLE[:START[:PREFIX]]</en>
+    <tr>los PDF (archivos que terminan en .pdf) y los intervalos: PÁGINAS:ESTILO[:INICIO[:PREFIJO]]</tr>
+  </text>
+  <text>
+    <en>the PDFs that get them</en>
+    <tr>los PDF que las reciben</tr>
+  </text>
+  <text>
+    <en>the labels of all the pages, one on each line (- for the standard input)</en>
+    <tr>las etiquetas de todas las páginas, una en cada línea (- para la entrada estándar)</tr>
+  </text>
+  <text>
+    <en>the list has {labels} labels, but the document has {count} pages</en>
+    <tr>la lista tiene {labels} etiquetas, pero el documento tiene {count} páginas</tr>
+  </text>
+  <text>
+    <en>the password to open the PDFs (their protection is kept when they are saved)</en>
+    <tr>la contraseña para abrir los PDF (su protección se conserva al guardarlos)</tr>
+  </text>
+  <text>
+    <en>the start of folios in {spec!r} must be a leaf and its side, as 12r or 12v</en>
+    <tr>el inicio de los folios en {spec!r} debe ser una hoja y su lado, como 12r o 12v</tr>
+  </text>
+  <text>
+    <en>{name} is protected. Its password:</en>
+    <tr>{name} está protegido. Su contraseña:</tr>
+  </text>
+  <text>
+    <en>{path} cannot be read: {error}</en>
+    <tr>no se puede leer {path}: {error}</tr>
+  </text>
+  <text>
+    <en>{path} is protected by a password (give it with --password)</en>
+    <tr>{path} está protegido con contraseña (indíquela con --password)</tr>
+  </text>
+  <text>
+    <en>{path} would get ({count} page):</en>
+    <tr>{path} recibiría ({count} página):</tr>
+  </text>
+  <text>
+    <en>{path} would get ({count} pages):</en>
+    <tr>{path} recibiría ({count} páginas):</tr>
+  </text>
+  <text>
+    <en>{token!r} is not one of style=, start=, prefix= or suffix=</en>
+    <tr>{token!r} no es ninguno de style=, start=, prefix= o suffix=</tr>
   </text>
 </interface>

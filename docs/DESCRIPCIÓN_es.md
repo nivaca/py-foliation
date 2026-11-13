@@ -10,7 +10,7 @@ Los requisitos quedaron claros desde el principio. Lo primero era no tocar nada 
 
 ## Diseño
 
-El programa está dividido en módulos pequeños, cada uno con un solo trabajo. `labels.py` es la base: los intervalos de etiquetas, los números en cada estilo, la lectura de los intervalos en sus dos formas y de los números de página, el cálculo de los cambios y la lectura y escritura del árbol `/PageLabels`. `cli.py` es la línea de órdenes, con las órdenes `show`, `set`, `clear` e `interface`. La ventana está en `gui/window.py`.
+El programa está dividido en módulos pequeños, cada uno con un solo trabajo. `labels.py` es la base: los intervalos de etiquetas, los números en cada estilo, la lectura de los intervalos en sus dos formas y de los números de página, el cálculo de los cambios y la lectura y escritura del árbol `/PageLabels`. `cli.py` es la línea de órdenes, con las órdenes `show`, `set`, `clear`, `copy`, `completion` e `interface`, y `completion.py` hace a partir de ella los scripts de completado de bash, fish y zsh. La ventana está en `gui/window.py`.
 
 De los idiomas se ocupa `interface.py`, con `tr()`, que traduce cada texto del programa a partir de `locale/es.xml`, y `config.py` lee y escribe el archivo de configuración, `config.toml`, con el idioma de la interfaz; los dos vienen de py-imposition, como `install.py`, que añade la entrada del menú de aplicaciones en Linux, Windows y macOS.
 
@@ -18,7 +18,7 @@ Fuera del paquete quedan las herramientas: `tools/screenshots.py` hace las captu
 
 ## Implementación
 
-Está escrito en Python 3.12 o superior, con pikepdf (basada en QPDF), que lee y escribe los PDF. La ventana usa PySide6 (Qt 6), con QtPdf para mostrar las páginas. Son 10 módulos, unas 1950 líneas, y 4 órdenes.
+Está escrito en Python 3.12 o superior, con pikepdf (basada en QPDF), que lee y escribe los PDF. La ventana usa PySide6 (Qt 6), con QtPdf para mostrar las páginas. Son 11 módulos, unas 2600 líneas, y 6 órdenes.
 
 Un PDF guarda sus etiquetas de página en un árbol de números, `/PageLabels`, en su catálogo. Cada entrada empieza un intervalo en una página e indica su estilo (números arábigos, romanos en minúscula o en mayúscula, letras minúsculas o mayúsculas, o ningún número), un prefijo y el número de su primera página; el intervalo dura hasta que empieza el siguiente. El programa lee ese árbol como venga (en un nodo o en muchos, con entradas más allá del documento, estilos desconocidos o nodos que aparecen dos veces, cosas que tienen los archivos reales) y lo escribe de nuevo como un solo nodo sencillo.
 
@@ -36,19 +36,27 @@ La ventana muestra los intervalos en una tabla, cada uno con su primera página,
 
 *Guardar* da al archivo abierto sus nuevas etiquetas: escribe un archivo nuevo a su lado y solo entonces lo pone en su lugar, de modo que un error al guardar nunca deja un archivo roto. *Guardar como…* guarda una copia. Mientras haya cambios sin guardar, la barra de título muestra un asterisco, y la ventana pregunta antes de cerrarse o de abrir otro documento. Recuerda su tamaño y los últimos diez documentos abiertos.
 
+### Folios, sufijos y listas
+
+PDF numera las páginas en cinco estilos, con un prefijo, y nada más. Los libros para los que se hizo py-foliation necesitan más: los manuscritos y los impresos antiguos se cuentan en folios, el recto y el verso de cada hoja (1r, 1v, 2r …), y las ediciones marcan entre corchetes las páginas sin número ([i]) o añaden hojas (12bis). Por eso un intervalo puede tener un sexto estilo, los folios, y un sufijo después del número. Un intervalo así es *virtual*: se escribe en el archivo como una etiqueta para cada página, que cualquier visor muestra tal cual, y se encuentra de nuevo al leer el archivo. Para encontrarlo, cada etiqueta se lee como un prefijo, un número en algún estilo y un sufijo, de todas las maneras posibles, y se elige la lectura que continúa la etiqueta anterior; donde ninguna lo hace, la página conserva su etiqueta como texto.
+
+La misma lectura convierte cualquier lista de etiquetas, una para cada página, en el menor número de intervalos que las da: `--from-file` en la línea de órdenes, y *Etiquetas de una lista…* en la ventana, leen la lista que escribe `show --all` (o *Guardar las etiquetas como lista…*), de modo que las etiquetas pueden editarse en cualquier editor u hoja de cálculo y volver a leerse.
+
+Lo demás lo pidió el uso. `copy` da a unos archivos las etiquetas de otro, como cuando un libro se exporta de nuevo; `set`, `clear` y `copy` aceptan varios archivos a la vez, y `--dry-run` solo muestra lo que harían; `show --label` y *Ir a la página con la etiqueta…* de la ventana buscan una página por su etiqueta. La ventana puede mostrar las páginas en miniatura con sus etiquetas, y un doble clic en una página empieza allí un intervalo. Los PDF protegidos se abren con su contraseña y conservan su protección al guardarlos (la primera versión se la quitaba). La línea de órdenes completa sus órdenes y opciones en bash, fish y zsh, y tiene una página de manual, hecha a partir de su propia ayuda para que ambas coincidan siempre. El programa puede publicarse también en PyPI, y hay un Flatpak, para Flathub.
+
 ### Los idiomas
 
 Cada texto del programa, en la ventana y en la línea de órdenes, incluidos los mensajes propios de `argparse`, pasa por `tr()`, y las traducciones están en un solo archivo XML, `locale/es.xml`, con cada texto en inglés y en español. El idioma se elige en la ventana (*Ajustes*), con `--interface` en la línea de órdenes o en `config.toml` (`py-foliation interface es` lo guarda). El README tiene una versión en español, paralela a la inglesa, y las capturas se hacen en los dos idiomas.
 
 ### Proceso y distribución
 
-El trabajo pasó por cinco etapas: primero las etiquetas mismas, su lectura, su escritura y el cálculo de los cambios; luego la línea de órdenes, con las dos formas de escribir los intervalos; después la ventana; la interfaz en español, el icono y las capturas; y por último los paquetes (versión 0.1).
+El trabajo pasó por seis etapas: primero las etiquetas mismas, su lectura, su escritura y el cálculo de los cambios; luego la línea de órdenes, con las dos formas de escribir los intervalos; después la ventana; la interfaz en español, el icono y las capturas; los paquetes (versión 0.1); y por último los folios, los sufijos, las listas de etiquetas y lo que pidió el uso.
 
 La AppImage lleva su propio Python, con py-foliation, pikepdf y PySide6, y funciona en casi cualquier Linux; su primer argumento decide entre la ventana y la línea de órdenes. Antes de guardarla se arranca una vez con una carpeta personal vacía, para que no dependa de nada instalado en el equipo donde se hizo. Para Fedora hay un RPM, hecho con el Python, pikepdf y PySide6 de Fedora, que corre todas las pruebas mientras se construye y se firma con la clave del autor. `tools/release.py` publica cada versión de la misma manera: corre las pruebas, hace la wheel, el paquete fuente, la AppImage y el RPM firmado, etiqueta la versión y la publica en GitHub, en Codeberg y en Copr.
 
 ## Validación
 
-Hay 63 pruebas automáticas (`tests/`), que se corren con `uv run pytest`. Comprueban los números en cada estilo, la lectura de los intervalos en sus dos formas y de los números de página, cómo se ponen unos intervalos sobre otros, y la lectura y escritura del árbol de etiquetas, incluidos árboles raros. La línea de órdenes se ejecuta de principio a fin sobre el documento de ejemplo, docs/example/numbers-100.pdf, cuyas páginas muestran cada una su número, y sobre entradas erróneas. La ventana se prueba sin pantalla, con la plataforma offscreen de Qt: abrir, editar, deshacer, guardar, guardar como, los cambios sin guardar y el idioma. Otras pruebas comprueban que cada texto tenga su traducción y que no sobre ninguna, el instalador del menú en cada sistema, los archivos de empaquetado y la clave de firma. Las pruebas corren con cada push en GitHub Actions.
+Hay 84 pruebas automáticas (`tests/`), que se corren con `uv run pytest`. Comprueban los números en cada estilo, la lectura de los intervalos en sus dos formas y de los números de página, cómo se ponen unos intervalos sobre otros, la lectura y escritura del árbol de etiquetas, incluidos árboles raros, y los intervalos que se encuentran en listas de etiquetas. La línea de órdenes se ejecuta de principio a fin sobre el documento de ejemplo, docs/example/numbers-100.pdf, cuyas páginas muestran cada una su número, y sobre entradas erróneas. La ventana se prueba sin pantalla, con la plataforma offscreen de Qt: abrir, editar, deshacer, guardar, guardar como, los cambios sin guardar y el idioma. Otras pruebas comprueban que cada texto tenga su traducción y que no sobre ninguna, el instalador del menú en cada sistema, los archivos de empaquetado y la clave de firma. Las pruebas corren con cada push en GitHub Actions.
 
 ## Plataforma
 

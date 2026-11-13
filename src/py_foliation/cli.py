@@ -1,8 +1,9 @@
-"""The command line: py-foliation show / set / clear / interface."""
+"""The command line: py-foliation show / set / clear / copy / completion / interface."""
 
 from __future__ import annotations
 
 import argparse
+import re
 import shlex
 import sys
 from pathlib import Path
@@ -14,7 +15,7 @@ from . import config, interface, labels
 from .interface import N_, ntr, tr
 from .labels import LabelError
 
-COMMANDS = ("show", "set", "clear", "interface")
+COMMANDS = ("show", "set", "clear", "copy", "completion", "interface")
 
 SET_EPILOG = N_("""A range is written PAGES:STYLE[:START[:PREFIX]]:
 
@@ -22,19 +23,29 @@ SET_EPILOG = N_("""A range is written PAGES:STYLE[:START[:PREFIX]]:
   9:D            pages from 9 on: 1, 2, 3 ...
   201-214:A      pages 201 to 214: A ... N (then the old numbering goes on)
   215:D:1:App-   pages from 215 on: App-1, App-2 ...
+  5:f:12v        folios from page 5 on: 12v, 13r, 13v ...
   LAST:-::Cover  the last page: Cover
 
-or, with --range, PAGES [style=S] [start=N] [prefix=P]:
+or, with --range, PAGES [style=S] [start=N] [prefix=P] [suffix=X]:
 
   --range 9-200 style=arabic
-  --range 215- style=arabic start=1 prefix=App-
+  --range 1-4 style=roman prefix=[ suffix=]
 
 PAGES is a first page (9) or a span (9-200, 9..200, 201-); LAST and LAST-N
 count from the end. A range without a last page goes on until the next one.
 
 Styles: D or arabic (1, 2, 3), r or roman (i, ii, iii), R or ROMAN (I, II,
-III), a or letters (a, b, c), A or LETTERS (A, B, C), - or none (the prefix
-only).""")
+III), a or letters (a, b, c), A or LETTERS (A, B, C), f or folio (1r, 1v,
+2r: the recto and verso of each leaf; START is a leaf and its side, as
+12v), - or none (the prefix only).
+
+Folios and suffixes are not page label styles of PDF: py-foliation writes
+them as one label for each page, and recognises them when it reads the
+file.
+
+--from-file takes the labels of all the pages, one on each line (as
+'show --all' writes them, with or without the page numbers; - is the
+standard input), and finds the fewest ranges that give them.""")
 
 
 def interface_option(argv: list[str]) -> str | None:
@@ -68,26 +79,40 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command", metavar=tr("COMMAND"))
 
+    def password(sp):
+        sp.add_argument("--password", default="", metavar=tr("PASSWORD"),
+                        help=tr("the password to open the PDFs (their protection is kept when they are saved)"))
+
     def output_options(sp):
         g = sp.add_mutually_exclusive_group()
-        g.add_argument("-o", "--output", type=Path, help=tr("output PDF (default: <input>-labelled.pdf)"))
-        g.add_argument("-i", "--in-place", action="store_true", help=tr("change the input file itself"))
+        g.add_argument("-o", "--output", type=Path,
+                       help=tr("output PDF, with one input only (default: <input>-labelled.pdf)"))
+        g.add_argument("-i", "--in-place", action="store_true", help=tr("change the input files themselves"))
+        sp.add_argument("-n", "--dry-run", action="store_true",
+                        help=tr("show the labels the files would get, without writing anything"))
+        password(sp)
 
-    sp = sub.add_parser("show", parents=[common], help=tr("show the page labels of a PDF"),
-                        description=tr("Show the ranges of page labels of a PDF, and the command that "
+    sp = sub.add_parser("show", parents=[common], help=tr("show the page labels of PDFs"),
+                        description=tr("Show the ranges of page labels of PDFs, and the command that "
                                        "would give them to another file."))
-    sp.add_argument("input", type=Path, help=tr("source PDF"))
-    sp.add_argument("-a", "--all", action="store_true", help=tr("show the label of every page"))
+    sp.add_argument("inputs", nargs="+", type=Path, metavar=tr("FILE"), help=tr("source PDF"))
+    g = sp.add_mutually_exclusive_group()
+    g.add_argument("-a", "--all", action="store_true", help=tr("show the label of every page"))
+    g.add_argument("-l", "--label", metavar=tr("LABEL"),
+                   help=tr("show the pages labelled LABEL (if none, those labelled so but for capitals)"))
+    password(sp)
 
-    sp = sub.add_parser("set", parents=[common], help=tr("give a PDF new page labels"),
-                        description=tr("Give a PDF new page labels, range by range. The labels it had are "
+    sp = sub.add_parser("set", parents=[common], help=tr("give PDFs new page labels"),
+                        description=tr("Give PDFs new page labels, range by range. The labels they had are "
                                        "replaced, unless --keep is given."),
                         epilog=translate_paragraphs(SET_EPILOG), formatter_class=argparse.RawDescriptionHelpFormatter)
-    sp.add_argument("input", type=Path, help=tr("source PDF"))
-    sp.add_argument("ranges", nargs="*", metavar=tr("RANGE"), help=tr("a range: PAGES:STYLE[:START[:PREFIX]]"))
+    sp.add_argument("items", nargs="+", metavar=tr("FILE|RANGE"),
+                    help=tr("the PDFs (files ending in .pdf), and the ranges: PAGES:STYLE[:START[:PREFIX]]"))
     sp.add_argument("-r", "--range", dest="named", nargs="+", action="append", default=[],
                     metavar=tr("PAGES [KEY=VALUE]"),
-                    help=tr("a range: PAGES [style=S] [start=N] [prefix=P]"))
+                    help=tr("a range: PAGES [style=S] [start=N] [prefix=P] [suffix=X]"))
+    sp.add_argument("-f", "--from-file", metavar=tr("LIST"),
+                    help=tr("the labels of all the pages, one on each line (- for the standard input)"))
     sp.add_argument("-k", "--keep", action="store_true",
                     help=tr("keep the labels the PDF has, changing only the pages given"))
     sp.add_argument("--remove", type=int, action="append", default=[], metavar=tr("PAGE"),
@@ -95,11 +120,26 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
                             "implies --keep"))
     output_options(sp)
 
-    sp = sub.add_parser("clear", parents=[common], help=tr("remove the page labels of a PDF"),
-                        description=tr("Remove the page labels of a PDF: viewers then number its pages "
+    sp = sub.add_parser("clear", parents=[common], help=tr("remove the page labels of PDFs"),
+                        description=tr("Remove the page labels of PDFs: viewers then number their pages "
                                        "1, 2, 3 ..."))
-    sp.add_argument("input", type=Path, help=tr("source PDF"))
+    sp.add_argument("inputs", nargs="+", type=Path, metavar=tr("FILE"), help=tr("source PDF"))
     output_options(sp)
+
+    sp = sub.add_parser("copy", parents=[common], help=tr("give PDFs the page labels of another"),
+                        description=tr("Give PDFs the page labels of another PDF, for instance a new export "
+                                       "of the same book. If they have fewer pages, the labels of the pages "
+                                       "they lack are left out; if they have more, the last range goes on."))
+    sp.add_argument("source", type=Path, metavar=tr("FROM"), help=tr("the PDF whose labels are copied"))
+    sp.add_argument("inputs", nargs="+", type=Path, metavar=tr("FILE"), help=tr("the PDFs that get them"))
+    output_options(sp)
+
+    sp = sub.add_parser("completion", parents=[common], help=tr("print the completion script of a shell"),
+                        description=tr("Print the script that completes py-foliation's commands, options and "
+                                       "files in SHELL. For instance: py-foliation completion fish > "
+                                       "~/.config/fish/completions/py-foliation.fish"))
+    sp.add_argument("shell", choices=["bash", "fish", "zsh"], metavar=tr("SHELL"),
+                    help=tr("bash, fish or zsh"))
 
     sp = sub.add_parser("interface", parents=[common], help=tr("show or choose the language of the interface"),
                         description=tr("The language of the help, the messages and the window. The choice is "
@@ -111,110 +151,196 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
     return parser
 
 
-# =========================================================================== commands
+# =========================================================================== files
 
 
-def open_pdf(path: Path, in_place: bool = False) -> Pdf:
+def open_pdf(path: Path, in_place: bool = False, password: str = "") -> Pdf:
     if not path.is_file():
         raise LabelError(tr("{path} not found", path=path))
     try:
-        return Pdf.open(path, allow_overwriting_input=in_place)
+        return Pdf.open(path, allow_overwriting_input=in_place, password=password)
     except pikepdf.PasswordError:
-        raise LabelError(tr("{path} is protected by a password", path=path)) from None
+        raise LabelError(tr("{path} is protected by a password (give it with --password)", path=path)) from None
     except pikepdf.PdfError as e:
         raise LabelError(tr("{path} cannot be read as a PDF: {error}", path=path, error=e)) from None
 
 
+def save_pdf(pdf: Pdf, out: Path) -> None:
+    """Save PDF as OUT, keeping its protection if it has one."""
+    try:
+        pdf.save(out, encryption=True if pdf.is_encrypted else None)
+    except OSError as e:
+        raise LabelError(tr("{path} cannot be written: {error}", path=out, error=e)) from None
+
+
 def set_command(input: Path, ranges: list[labels.Range]) -> str:
     """The command line that gives a file these RANGES."""
-    if not labels.normalize(ranges):
+    ranges = labels.normalize(ranges)
+    if not ranges:
         return shlex.join(["py-foliation", "clear", str(input)])
-    return shlex.join(["py-foliation", "set", str(input)] + [r.spec() for r in labels.normalize(ranges)])
+    tokens = [t for r in ranges if not r.suffix for t in r.tokens()]
+    tokens += [t for r in ranges if r.suffix for t in r.tokens()]  # (--range ... last: it takes the rest)
+    return shlex.join(["py-foliation", "set", str(input)] + tokens)
+
+
+def read_list(name: str) -> list[str]:
+    """The labels of a list (a file, or - for the standard input): one on each
+    line, or as 'show --all' writes them, after the page numbers."""
+    try:
+        text = sys.stdin.read() if name == "-" else Path(name).read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeDecodeError) as e:
+        raise LabelError(tr("{path} cannot be read: {error}", path=name, error=e)) from None
+    lines = text.splitlines()
+    while lines and not lines[-1].strip():
+        lines.pop()
+    numbered = [re.fullmatch(r"\s*(\d+)(?:  (.*))?", line) for line in lines]
+    if lines and all(numbered) and [int(m[1]) for m in numbered] == list(range(1, len(lines) + 1)):
+        return [m[2] or "" for m in numbered]
+    return lines
+
+
+def pages_text(r: labels.Range, last: int) -> str:
+    return tr("pages {first}-{last}", first=r.page, last=last) if last > r.page \
+        else tr("page {first}", first=r.page)
+
+
+# =========================================================================== commands
 
 
 def show(a) -> int:
-    with open_pdf(a.input) as pdf:
-        n = len(pdf.pages)
-        ranges = labels.read_labels(pdf)
-    if a.all:
-        for page, label in enumerate(labels.page_labels(ranges, n), 1):
-            print(f"{page:>6}  {label}")
-        return 0
-    print(ntr("{path}: {count} page", "{path}: {count} pages", n, path=a.input))
+    failed = False
+    for k, path in enumerate(a.inputs):
+        if k and not (a.all or a.label is not None):
+            print()
+        try:
+            with open_pdf(path, password=a.password) as pdf:
+                n = len(pdf.pages)
+                ranges = labels.read_labels(pdf)
+        except LabelError as e:
+            print(tr("error: {error}", error=e), file=sys.stderr)
+            failed = True
+            continue
+        prefix = f"{path}: " if len(a.inputs) > 1 else ""
+        if a.all:
+            for page, label in enumerate(labels.page_labels(ranges, n), 1):
+                print(f"{prefix}{page:>6}  {label}")
+        elif a.label is not None:
+            pages = labels.find_label(ranges, n, a.label)
+            if pages:
+                print(prefix + ", ".join(map(str, pages)))
+            else:
+                print(prefix + tr("no page is labelled {label!r}", label=a.label), file=sys.stderr)
+                failed = True
+        else:
+            print_ranges(path, ranges, n)
+    return 1 if failed else 0
+
+
+def print_ranges(path: Path, ranges: list[labels.Range], n: int) -> None:
+    print(ntr("{path}: {count} page", "{path}: {count} pages", n, path=path))
     if not ranges:
         print(tr("No page labels: viewers number the pages 1, 2, 3 ..."))
-        return 0
-    rows = [(tr("pages {first}-{last}", first=r.page, last=last) if last > r.page
-             else tr("page {first}", first=r.page), labels.describe(r, last), r.spec())
-            for r, last in labels.spans(ranges, n)]
+        return
+    rows = [(pages_text(r, last), labels.describe(r, last), r.spec()) for r, last in labels.spans(ranges, n)]
     w1 = max(len(x[0]) for x in rows)
     w2 = max(len(x[1]) for x in rows)
     for pages, desc, spec in rows:
         print(f"  {pages:<{w1}}  {desc:<{w2}}  {spec}")
     print(tr("To give these labels to another file:"))
     print("  " + set_command(Path("FILE.pdf"), ranges).replace("FILE.pdf", tr("FILE.pdf")))
-    return 0
 
 
 def split_named(groups: list[list[str]]) -> tuple[list[list[str]], list[str]]:
-    """The --range groups, and the compact ranges given after one of them
-    (``--range 9-200 style=roman 201:D``: argparse gives 201:D to --range)."""
-    named, compact = [], []
+    """The --range groups, and what was given after one of them that is not
+    KEY=VALUE (``--range 9-200 style=roman 201:D book.pdf``: argparse gives
+    201:D and book.pdf to --range)."""
+    named, rest = [], []
     for group in groups:
-        rest = [t for t in group[1:] if "=" not in t]
         named.append([group[0]] + [t for t in group[1:] if "=" in t])
-        compact += rest
-    return named, compact
+        rest += [t for t in group[1:] if "=" not in t]
+    return named, rest
 
 
-def output_path(a) -> Path:
+def is_file(item: str) -> bool:
+    return item.lower().endswith(".pdf") or (":" not in item and Path(item).is_file())
+
+
+def output_path(a, path: Path) -> Path:
     if a.in_place:
-        return a.input
-    return a.output or a.input.with_name(a.input.stem + "-labelled.pdf")
+        return path
+    return a.output or path.with_name(path.stem + "-labelled.pdf")
 
 
-def save(pdf: Pdf, a) -> Path:
-    out = output_path(a)
-    if not a.in_place and out.resolve() == a.input.resolve():
-        raise LabelError(tr("the output is the input file; use --in-place to change it"))
-    try:
-        pdf.save(out)
-    except OSError as e:
-        raise LabelError(tr("{path} cannot be written: {error}", path=out, error=e)) from None
-    return out
+def change(a, inputs: list[Path], make) -> int:
+    """Give each of INPUTS the labels MAKE(pdf, n) returns, and save it (or, with
+    --dry-run, only say what it would be)."""
+    if a.output is not None and len(inputs) > 1:
+        raise LabelError(tr("--output takes one input only; with several, each is saved as "
+                            "<input>-labelled.pdf, or changed with --in-place"))
+    failed = False
+    for path in inputs:
+        try:
+            with open_pdf(path, a.in_place and not a.dry_run, a.password) as pdf:
+                n = len(pdf.pages)
+                ranges = make(pdf, n)
+                out = output_path(a, path)
+                if a.dry_run:
+                    print(ntr("{path} would get ({count} page):", "{path} would get ({count} pages):", n,
+                              path=out))
+                else:
+                    if not a.in_place and out.resolve() == path.resolve():
+                        raise LabelError(tr("the output is the input file; use --in-place to change it"))
+                    labels.write_labels(pdf, ranges)
+                    save_pdf(pdf, out)
+                    print(ntr("Wrote {path} ({count} page)", "Wrote {path} ({count} pages)", n, path=out))
+        except LabelError as e:
+            print(tr("error: {error}", error=e), file=sys.stderr)
+            failed = True
+            continue
+        for r, last in labels.spans(ranges, n):
+            print(f"  {pages_text(r, last)}: {labels.describe(r, last)}")
+    return 1 if failed else 0
 
 
 def set_labels(a) -> int:
-    named, compact = split_named(a.named)
-    if not (a.ranges or compact or named or a.remove):
+    named, rest = split_named(a.named)
+    items = a.items + rest
+    inputs = [Path(t) for t in items if is_file(t)]
+    compact = [t for t in items if not is_file(t)]
+    if not inputs:
+        raise LabelError(tr("no PDF given (the files must end in .pdf)"))
+    if not (compact or named or a.remove or a.from_file):
         raise LabelError(tr("no ranges given (see py-foliation set -h)"))
-    with open_pdf(a.input, a.in_place) as pdf:
-        n = len(pdf.pages)
-        requests = [labels.parse_compact(s, n) for s in a.ranges + compact]
-        requests += [labels.parse_named(g, n) for g in named]
-        base = labels.read_labels(pdf) if a.keep or a.remove else []
-        ranges = labels.apply(base, requests, n, a.remove)
-        labels.write_labels(pdf, ranges)
-        out = save(pdf, a)
-    report(out, ranges, n)
-    return 0
+    listed = read_list(a.from_file) if a.from_file else None
+
+    def make(pdf, n):
+        if listed is not None:
+            if len(listed) != n:
+                raise LabelError(tr("the list has {labels} labels, but the document has {count} pages",
+                                    labels=len(listed), count=n))
+            base = labels.from_labels(listed)
+        else:
+            base = labels.read_labels(pdf) if a.keep or a.remove else []
+        requests = [labels.parse_compact(s, n) for s in compact] + [labels.parse_named(g, n) for g in named]
+        return labels.apply(base, requests, n, a.remove)
+
+    return change(a, inputs, make)
 
 
 def clear(a) -> int:
-    with open_pdf(a.input, a.in_place) as pdf:
-        n = len(pdf.pages)
-        labels.write_labels(pdf, [])
-        out = save(pdf, a)
-    report(out, [], n)
+    return change(a, a.inputs, lambda pdf, n: [])
+
+
+def copy(a) -> int:
+    with open_pdf(a.source, password=a.password) as pdf:
+        source = labels.read_labels(pdf)
+    return change(a, a.inputs, lambda pdf, n: [r for r in source if r.page <= n])
+
+
+def completion(a) -> int:
+    from .completion import script
+    print(script(a.shell, build_parser()), end="")
     return 0
-
-
-def report(out: Path, ranges: list[labels.Range], n: int) -> None:
-    print(ntr("Wrote {path} ({count} page)", "Wrote {path} ({count} pages)", n, path=out))
-    for r, last in labels.spans(ranges, n):
-        pages = tr("pages {first}-{last}", first=r.page, last=last) if last > r.page \
-            else tr("page {first}", first=r.page)
-        print(f"  {pages}: {labels.describe(r, last)}")
 
 
 def choose_interface(a) -> int:
@@ -241,18 +367,25 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     interface.use_configured(interface_option(argv))
     interface.translate_argparse()
-    # "py-foliation file.pdf" -> show
+    # "py-foliation file.pdf ..." -> show
     words = [t for i, t in enumerate(argv) if not t.startswith("-") and (i == 0 or argv[i - 1] != "--interface")]
     first = words[0] if words else None
     if first and first not in COMMANDS and first.lower().endswith(".pdf"):
         argv.insert(argv.index(first), "show")
     parser = build_parser()
-    a = parser.parse_args(argv)
+    a, extra = parser.parse_known_args(argv)
+    # (argparse takes the positionals of 'set' in one go: those after an option are left over)
+    if extra and a.command == "set" and not any(t.startswith("-") and t != "-" for t in extra):
+        a.items += extra
+    elif extra:
+        parser.error(tr("unrecognized arguments: %s") % " ".join(extra))
     if not a.command:
         parser.print_help()
         return 1
+    commands = {"show": show, "set": set_labels, "clear": clear, "copy": copy, "completion": completion,
+                "interface": choose_interface}
     try:
-        return {"show": show, "set": set_labels, "clear": clear, "interface": choose_interface}[a.command](a)
+        return commands[a.command](a)
     except LabelError as e:
         print(tr("error: {error}", error=e), file=sys.stderr)
         return 1

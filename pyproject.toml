@@ -9,9 +9,30 @@ authors = [
     { name = "Nicolas Vaughan", email = "nivaca@fastmail.com" }
 ]
 requires-python = ">=3.12"
+keywords = ["pdf", "page labels", "page numbers", "foliation", "pagination", "roman numerals", "folios"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: English",
+    "Natural Language :: Spanish",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Office/Business",
+    "Topic :: Printing",
+    "Topic :: Text Processing",
+]
 dependencies = [
     "pikepdf>=10.8",
 ]
+
+[project.urls]
+Homepage = "https://github.com/nivaca/py-foliation"
+Source = "https://github.com/nivaca/py-foliation"
+Mirror = "https://codeberg.org/nivaca/py-foliation"
+Issues = "https://github.com/nivaca/py-foliation/issues"
+Releases = "https://github.com/nivaca/py-foliation/releases"
 
 [project.scripts]
 py-foliation = "py_foliation:main"

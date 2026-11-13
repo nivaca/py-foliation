@@ -6,6 +6,7 @@ start with ``py-foliation-gui [file.pdf]``.
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -39,7 +40,8 @@ def main(argv: list[str] | None = None) -> int:
     app = QApplication.instance() or QApplication([sys.argv[0]] + argv)
     app.setApplicationName("py-foliation")
     app.setOrganizationName("py-foliation")
-    app.setDesktopFileName("py-foliation")
+    # (the name of the menu entry: Wayland's app id; in the Flatpak, its id)
+    app.setDesktopFileName(os.environ.get("FLATPAK_ID") or "py-foliation")
     app.setWindowIcon(app_icon())
     install_qt_translations()
     win = MainWindow()

@@ -1,0 +1,205 @@
+.TH PY-FOLIATION 1 "" "py-foliation 0.1" "py-foliation"
+.SH NAME
+py-foliation \- change the page labels of PDF documents
+.SH SYNOPSIS
+.nf
+py-foliation [-h] [--interface {en,es}] [--version] COMMAND ...
+.fi
+.SH DESCRIPTION
+.nf
+Change the page labels of a PDF: the numbering a PDF viewer shows for its
+pages (i, ii, iii ... 1, 2, 3 ... A-1, A-2 ...).
+
+positional arguments:
+  COMMAND
+    show               show the page labels of PDFs
+    set                give PDFs new page labels
+    clear              remove the page labels of PDFs
+    copy               give PDFs the page labels of another
+    completion         print the completion script of a shell
+    interface          show or choose the language of the interface
+
+options:
+  -h, --help           show this help message and exit
+  --interface {en,es}  the language of the interface, for this run only (to
+                       keep a choice, use the 'interface' command)
+  --version            show program's version number and exit
+
+Run 'py-foliation COMMAND -h' for help on a command. 'py-foliation file.pdf'
+on its own shows the page labels of the file.
+.fi
+.SH COMMANDS
+.SS show
+.nf
+usage: py-foliation show [-h] [--interface {en,es}] [-a | -l LABEL]
+                         [--password PASSWORD]
+                         FILE [FILE ...]
+
+Show the ranges of page labels of PDFs, and the command that would give them
+to another file.
+
+positional arguments:
+  FILE                 source PDF
+
+options:
+  -h, --help           show this help message and exit
+  --interface {en,es}  the language of the interface, for this run only (to
+                       keep a choice, use the 'interface' command)
+  -a, --all            show the label of every page
+  -l, --label LABEL    show the pages labelled LABEL (if none, those
+                       labelled so but for capitals)
+  --password PASSWORD  the password to open the PDFs (their protection is
+                       kept when they are saved)
+.fi
+.SS set
+.nf
+usage: py-foliation set [-h] [--interface {en,es}]
+                        [-r PAGES [KEY=VALUE] [PAGES [KEY=VALUE] ...]]
+                        [-f LIST] [-k] [--remove PAGE] [-o OUTPUT | -i] [-n]
+                        [--password PASSWORD]
+                        FILE|RANGE [FILE|RANGE ...]
+
+Give PDFs new page labels, range by range. The labels they had are replaced, unless --keep is given.
+
+positional arguments:
+  FILE|RANGE            the PDFs (files ending in .pdf), and the ranges:
+                        PAGES:STYLE[:START[:PREFIX]]
+
+options:
+  -h, --help            show this help message and exit
+  --interface {en,es}   the language of the interface, for this run only (to
+                        keep a choice, use the 'interface' command)
+  -r, --range PAGES [KEY=VALUE] [PAGES [KEY=VALUE] ...]
+                        a range: PAGES [style=S] [start=N] [prefix=P]
+                        [suffix=X]
+  -f, --from-file LIST  the labels of all the pages, one on each line (- for
+                        the standard input)
+  -k, --keep            keep the labels the PDF has, changing only the pages
+                        given
+  --remove PAGE         drop the range that starts at PAGE (the one before
+                        goes on over its pages); implies --keep
+  -o, --output OUTPUT   output PDF, with one input only (default:
+                        <input>-labelled.pdf)
+  -i, --in-place        change the input files themselves
+  -n, --dry-run         show the labels the files would get, without writing
+                        anything
+  --password PASSWORD   the password to open the PDFs (their protection is
+                        kept when they are saved)
+
+A range is written PAGES:STYLE[:START[:PREFIX]]:
+
+  1:r            pages from 1 on: i, ii, iii ...
+  9:D            pages from 9 on: 1, 2, 3 ...
+  201-214:A      pages 201 to 214: A ... N (then the old numbering goes on)
+  215:D:1:App-   pages from 215 on: App-1, App-2 ...
+  5:f:12v        folios from page 5 on: 12v, 13r, 13v ...
+  LAST:-::Cover  the last page: Cover
+
+or, with --range, PAGES [style=S] [start=N] [prefix=P] [suffix=X]:
+
+  --range 9-200 style=arabic
+  --range 1-4 style=roman prefix=[ suffix=]
+
+PAGES is a first page (9) or a span (9-200, 9..200, 201-); LAST and LAST-N
+count from the end. A range without a last page goes on until the next one.
+
+Styles: D or arabic (1, 2, 3), r or roman (i, ii, iii), R or ROMAN (I, II,
+III), a or letters (a, b, c), A or LETTERS (A, B, C), f or folio (1r, 1v,
+2r: the recto and verso of each leaf; START is a leaf and its side, as
+12v), - or none (the prefix only).
+
+Folios and suffixes are not page label styles of PDF: py-foliation writes
+them as one label for each page, and recognises them when it reads the
+file.
+
+--from-file takes the labels of all the pages, one on each line (as
+\&'show --all' writes them, with or without the page numbers; - is the
+standard input), and finds the fewest ranges that give them.
+.fi
+.SS clear
+.nf
+usage: py-foliation clear [-h] [--interface {en,es}] [-o OUTPUT | -i] [-n]
+                          [--password PASSWORD]
+                          FILE [FILE ...]
+
+Remove the page labels of PDFs: viewers then number their pages 1, 2, 3 ...
+
+positional arguments:
+  FILE                 source PDF
+
+options:
+  -h, --help           show this help message and exit
+  --interface {en,es}  the language of the interface, for this run only (to
+                       keep a choice, use the 'interface' command)
+  -o, --output OUTPUT  output PDF, with one input only (default:
+                       <input>-labelled.pdf)
+  -i, --in-place       change the input files themselves
+  -n, --dry-run        show the labels the files would get, without writing
+                       anything
+  --password PASSWORD  the password to open the PDFs (their protection is
+                       kept when they are saved)
+.fi
+.SS copy
+.nf
+usage: py-foliation copy [-h] [--interface {en,es}] [-o OUTPUT | -i] [-n]
+                         [--password PASSWORD]
+                         FROM FILE [FILE ...]
+
+Give PDFs the page labels of another PDF, for instance a new export of the
+same book. If they have fewer pages, the labels of the pages they lack are
+left out; if they have more, the last range goes on.
+
+positional arguments:
+  FROM                 the PDF whose labels are copied
+  FILE                 the PDFs that get them
+
+options:
+  -h, --help           show this help message and exit
+  --interface {en,es}  the language of the interface, for this run only (to
+                       keep a choice, use the 'interface' command)
+  -o, --output OUTPUT  output PDF, with one input only (default:
+                       <input>-labelled.pdf)
+  -i, --in-place       change the input files themselves
+  -n, --dry-run        show the labels the files would get, without writing
+                       anything
+  --password PASSWORD  the password to open the PDFs (their protection is
+                       kept when they are saved)
+.fi
+.SS completion
+.nf
+usage: py-foliation completion [-h] [--interface {en,es}] SHELL
+
+Print the script that completes py-foliation's commands, options and files
+in SHELL. For instance: py-foliation completion fish >
+~/.config/fish/completions/py-foliation.fish
+
+positional arguments:
+  SHELL                bash, fish or zsh
+
+options:
+  -h, --help           show this help message and exit
+  --interface {en,es}  the language of the interface, for this run only (to
+                       keep a choice, use the 'interface' command)
+.fi
+.SS interface
+.nf
+usage: py-foliation interface [-h] [--interface {en,es}] [{en,es}]
+
+The language of the help, the messages and the window. The choice is kept in
+the configuration file; --interface CODE changes it for one run only.
+
+positional arguments:
+  {en,es}              the language to use from now on; without it, the
+                       languages are listed and the one in use is marked
+
+options:
+  -h, --help           show this help message and exit
+  --interface {en,es}  the language of the interface, for this run only (to
+                       keep a choice, use the 'interface' command)
+.fi
+.SH FILES
+The configuration file, with the language of the interface: ~/.config/py-foliation/config.toml (or $PY_FOLIATION_CONFIG/config.toml).
+.SH SEE ALSO
+The window: py-foliation-gui [file.pdf].
+.SH AUTHOR
+Nicolas Vaughan <https://nicolasvaughan.org>

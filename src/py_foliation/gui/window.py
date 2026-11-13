@@ -8,25 +8,29 @@ import os
 import tempfile
 from pathlib import Path
 
+import re
+
 import pikepdf
-from PySide6.QtCore import QByteArray, QPointF, QSettings, Qt, QTimer
-from PySide6.QtGui import QAction, QActionGroup, QKeySequence
+from PySide6.QtCore import QByteArray, QPointF, QSettings, QSize, Qt, QTimer
+from PySide6.QtGui import QAction, QActionGroup, QColor, QIcon, QKeySequence, QPainter, QPixmap, QValidator
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtWidgets import (
-    QAbstractItemView, QApplication, QComboBox, QFileDialog, QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-    QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QSpinBox, QSplitter, QTableWidget,
-    QVBoxLayout, QWidget,
+    QAbstractItemView, QApplication, QComboBox, QFileDialog, QHBoxLayout, QHeaderView, QInputDialog, QLabel,
+    QLineEdit, QListView, QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPushButton, QSpinBox,
+    QSplitter, QTableWidget, QVBoxLayout, QWidget,
 )
 
 from .. import __version__, config, interface, labels
-from ..cli import set_command
+from ..cli import read_list, set_command
 from ..interface import tr
-from ..labels import Range
+from ..labels import LabelError, Range
 
 RECENT = 10  # documents in File ▸ Open recent
 AUTHOR = '<a href="https://nicolasvaughan.org">Nicolas Vaughan</a>'
-FIRST, STYLE, START, PREFIX, LABELS = range(5)  # the columns of the table of ranges
+FIRST, STYLE, START, PREFIX, SUFFIX, LABELS = range(6)  # the columns of the table of ranges
+THUMB = QSize(96, 128)  # the largest thumbnail of a page
+THUMBS_AT_ONCE = 8  # thumbnails drawn at each turn of the event loop
 
 _WINDOWS: list = []  # (windows built again in another language must stay referenced)
 
@@ -56,18 +60,45 @@ def header_width(table: QTableWidget, col: int) -> int:
     return table.horizontalHeader().fontMetrics().horizontalAdvance(table.horizontalHeaderItem(col).text()) + 16
 
 
-def write_copy(source: Path, ranges: list[Range], target: Path) -> None:
-    """SOURCE with these page labels, saved as TARGET (safely: TARGET may be SOURCE)."""
+def write_copy(source: Path, ranges: list[Range], target: Path, password: str = "") -> None:
+    """SOURCE with these page labels, saved as TARGET (safely: TARGET may be SOURCE),
+    keeping its protection if it has one."""
     fd, tmp = tempfile.mkstemp(suffix=".pdf", dir=target.parent)
     os.close(fd)
     try:
-        with pikepdf.open(source) as pdf:
+        with pikepdf.open(source, password=password) as pdf:
             labels.write_labels(pdf, ranges)
-            pdf.save(tmp)
+            pdf.save(tmp, encryption=True if pdf.is_encrypted else None)
         os.replace(tmp, target)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)
         raise
+
+
+class StartSpin(QSpinBox):
+    """The number a range starts at; for folios, a leaf and its side (12v)."""
+
+    def __init__(self, folio: bool):
+        super().__init__()
+        self.folio = folio
+        self.setRange(1, 999999)
+
+    def textFromValue(self, value: int) -> str:
+        return labels.to_folio(value) if self.folio else str(value)
+
+    def valueFromText(self, text: str) -> int:
+        if not self.folio:
+            return int(text)
+        m = re.fullmatch(r"\s*(\d+)\s*([rv]?)\s*", text)
+        return 2 * int(m[1]) - (0 if m[2] == "v" else 1) if m and int(m[1]) else self.value()
+
+    def validate(self, text: str, pos: int):
+        if not self.folio:
+            return super().validate(text, pos)
+        if re.fullmatch(r"\s*[1-9]\d*\s*[rv]?\s*", text):
+            return QValidator.State.Acceptable, text, pos
+        return (QValidator.State.Intermediate if re.fullmatch(r"\s*\d*\s*", text)
+                else QValidator.State.Invalid), text, pos
 
 
 class MainWindow(QMainWindow):
@@ -83,6 +114,8 @@ class MainWindow(QMainWindow):
         self.saved: list[Range] = []  # the labels of the file
         self.undo_stack: list[list[Range]] = []
         self.redo_stack: list[list[Range]] = []
+        self.password = ""  # (of the document open)
+        self._thumbs: dict[int, QIcon] = {}  # page (1-based) -> its thumbnail
         self._building = False
         self._build()
         self._build_menus()
@@ -94,9 +127,9 @@ class MainWindow(QMainWindow):
     # ----------------------------------------------------------------- construction
 
     def _build(self):
-        self.table = QTableWidget(0, 5)
+        self.table = QTableWidget(0, 6)
         self.table.setHorizontalHeaderLabels([tr("From page"), tr("Style"), tr("Starts at"), tr("Prefix"),
-                                              tr("Labels")])
+                                              tr("Suffix"), tr("Labels")])
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -120,7 +153,12 @@ class MainWindow(QMainWindow):
         buttons.addStretch(1)
 
         self.pages = QListWidget()
+        self.pages.setToolTip(tr("Double-click a page to start a range at it"))
         self.pages.currentRowChanged.connect(self._page_chosen)
+        self.pages.itemDoubleClicked.connect(lambda item: self.start_range_at(self.pages.row(item) + 1))
+        self.thumb_timer = QTimer(self)
+        self.thumb_timer.setInterval(0)
+        self.thumb_timer.timeout.connect(self._draw_thumbnails)
 
         self.cmd_line = QLineEdit()
         self.cmd_line.setReadOnly(True)
@@ -143,10 +181,19 @@ class MainWindow(QMainWindow):
         self.view.setPageMode(QPdfView.PageMode.SinglePage)
         self.view.setZoomMode(QPdfView.ZoomMode.FitInView)
         self.page_info = QLabel("")
+        self.go_to = QLineEdit()
+        self.go_to.setPlaceholderText(tr("Go to the page labelled…"))
+        self.go_to.setToolTip(tr("Type a label (xii, 12v, A-3) and press Enter; Enter again goes to the next "
+                                 "page with that label"))
+        self.go_to.setMinimumWidth(self.go_to.fontMetrics().horizontalAdvance(self.go_to.placeholderText()) + 24)
+        self.go_to.returnPressed.connect(lambda: self.go_to_label(self.go_to.text()))
+        top = QHBoxLayout()
+        top.addWidget(self.page_info, 1)
+        top.addWidget(self.go_to)
         right = QWidget()
         lay = QVBoxLayout(right)
         lay.setContentsMargins(4, 4, 4, 4)
-        lay.addWidget(self.page_info)
+        lay.addLayout(top)
         lay.addWidget(self.view, 1)
 
         self.splitter = QSplitter()
@@ -170,6 +217,17 @@ class MainWindow(QMainWindow):
         m.addAction(self.a_save_as)
         self.a_revert = QAction(tr("Revert to the labels of the file"), self, triggered=self.revert)
         m.addAction(self.a_revert)
+        m.addSeparator()
+        self.a_copy_from = QAction(tr("Copy the labels of another PDF…"), self, triggered=self.copy_from_dialog)
+        self.a_copy_from.setToolTip(tr("For instance, of an earlier export of the same book"))
+        m.addAction(self.a_copy_from)
+        self.a_import = QAction(tr("Labels from a list…"), self, triggered=self.import_dialog)
+        self.a_import.setToolTip(tr("A text file with the label of each page, one on each line"))
+        m.addAction(self.a_import)
+        self.a_export = QAction(tr("Save the labels as a list…"), self, triggered=self.export_dialog)
+        self.a_export.setToolTip(tr("A text file with the label of each page, one on each line, to edit "
+                                    "and read back"))
+        m.addAction(self.a_export)
         m.setToolTipsVisible(True)
         m.addSeparator()
         m.addAction(QAction(tr("Quit"), self, shortcut=QKeySequence.StandardKey.Quit, triggered=self.close))
@@ -180,6 +238,14 @@ class MainWindow(QMainWindow):
         m.addAction(self.a_redo)
         m.addSeparator()
         m.addAction(QAction(tr("Copy command line"), self, triggered=self.copy_command_line))
+        m.addSeparator()
+        a = QAction(tr("Go to the page labelled…"), self, shortcut="Ctrl+L",
+                    triggered=lambda: (self.go_to.setFocus(), self.go_to.selectAll()))
+        m.addAction(a)
+        m = self.menuBar().addMenu(tr("&View"))
+        self.a_thumbs = QAction(tr("Thumbnails of the pages"), self, checkable=True)
+        self.a_thumbs.toggled.connect(self.show_thumbnails)
+        m.addAction(self.a_thumbs)
         m = self.menuBar().addMenu(tr("&Settings"))
         lang = m.addMenu(tr("Language of the interface"))
         group = QActionGroup(self)
@@ -204,10 +270,12 @@ class MainWindow(QMainWindow):
         split = self.settings.value("splitter")
         if isinstance(split, QByteArray):
             self.splitter.restoreState(split)
+        self.a_thumbs.setChecked(self.settings.value("thumbnails", "false") == "true")
 
     def save_settings(self):
         self.settings.setValue("geometry", self.saveGeometry())
         self.settings.setValue("splitter", self.splitter.saveState())
+        self.settings.setValue("thumbnails", "true" if self.a_thumbs.isChecked() else "false")
         self.settings.sync()
 
     def closeEvent(self, event):
@@ -220,11 +288,12 @@ class MainWindow(QMainWindow):
     def export_state(self) -> dict:
         """What a new window needs to carry on with the same document."""
         return {"path": self.path, "ranges": self.ranges, "saved": self.saved, "undo": self.undo_stack,
-                "redo": self.redo_stack, "page": self.current_page()}
+                "redo": self.redo_stack, "page": self.current_page(), "password": self.password}
 
     def adopt_state(self, state: dict):
         if state["path"] is None:
             return
+        self.password = state.get("password", "")
         self._load(state["path"], state["saved"])
         self.undo_stack, self.redo_stack = list(state["undo"]), list(state["redo"])
         self.ranges = state["ranges"]
@@ -276,15 +345,10 @@ class MainWindow(QMainWindow):
             return False
         if not self.maybe_discard():
             return False
-        try:
-            with pikepdf.open(path) as pdf:
-                saved = labels.read_labels(pdf)
-        except pikepdf.PasswordError:
-            self.status(tr("{path} is protected by a password", path=path), error=True)
+        read = self.read_pdf(path)
+        if read is None:
             return False
-        except pikepdf.PdfError as e:
-            self.status(tr("{path} cannot be read as a PDF: {error}", path=path, error=e), error=True)
-            return False
+        saved, _, self.password = read
         self.settings.setValue("last_dir", str(path.parent))
         self.add_recent(path)
         self._load(path, saved)
@@ -295,12 +359,37 @@ class MainWindow(QMainWindow):
         self.status(tr("Opened {path}", path=path))
         return True
 
+    def read_pdf(self, path: Path) -> tuple[list[Range], int, str] | None:
+        """(the labels, the number of pages, the password) of the PDF at PATH,
+        asking for its password if it needs one; None if it can't be read."""
+        password = ""
+        while True:
+            try:
+                with pikepdf.open(path, password=password) as pdf:
+                    return labels.read_labels(pdf), len(pdf.pages), password
+            except pikepdf.PasswordError:
+                password = self.ask_password(path, again=bool(password))
+                if password is None:
+                    self.status(tr("{path} is protected by a password", path=path), error=True)
+                    return None
+            except pikepdf.PdfError as e:
+                self.status(tr("{path} cannot be read as a PDF: {error}", path=path, error=e), error=True)
+                return None
+
+    def ask_password(self, path: Path, again: bool = False) -> str | None:
+        text = tr("That password is not right. The password of {name}:", name=path.name) if again \
+            else tr("{name} is protected. Its password:", name=path.name)
+        password, ok = QInputDialog.getText(self, tr("Password"), text, QLineEdit.EchoMode.Password)
+        return password if ok and password else None
+
     def _load(self, path: Path, saved: list[Range]):
         self.doc.close()
+        self.doc.setPassword(self.password)
         self.doc.load(str(path))
         self.path = path
         self.saved = list(saved)
-        with pikepdf.open(path) as pdf:
+        self._thumbs = {}
+        with pikepdf.open(path, password=self.password) as pdf:
             self.count = len(pdf.pages)
 
     def save(self) -> bool:
@@ -331,7 +420,7 @@ class MainWindow(QMainWindow):
 
     def _write(self, target: Path) -> bool:
         try:
-            write_copy(self.path, self.ranges, target)
+            write_copy(self.path, self.ranges, target, self.password)
         except (OSError, pikepdf.PdfError) as e:
             self.status(tr("{path} cannot be written: {error}", path=target, error=e), error=True)
             return False
@@ -348,6 +437,63 @@ class MainWindow(QMainWindow):
     def revert(self):
         if self.path is not None and self.ranges != self.saved:
             self.change(list(self.saved))
+
+    def copy_from_dialog(self):
+        if self.path is None:
+            return
+        name, _ = QFileDialog.getOpenFileName(self, tr("Copy the labels of another PDF"), self.last_dir(),
+                                              tr("PDF files (*.pdf)"))
+        if name:
+            self.copy_from(Path(name))
+
+    def copy_from(self, path: Path) -> bool:
+        read = self.read_pdf(path)
+        if read is None:
+            return False
+        ranges, count, _ = read
+        self.change([r for r in ranges if r.page <= self.count])
+        note = "" if count == self.count else " " + tr("(it has {count} pages)", count=count)
+        self.status(tr("Labels copied from {path}", path=path.name) + note)
+        return True
+
+    def import_dialog(self):
+        if self.path is None:
+            return
+        name, _ = QFileDialog.getOpenFileName(self, tr("Labels from a list"), self.last_dir(),
+                                              tr("Text files (*.txt);;All files (*)"))
+        if name:
+            self.import_list(Path(name))
+
+    def import_list(self, path: Path) -> bool:
+        try:
+            listed = read_list(str(path))
+            if len(listed) != self.count:
+                raise LabelError(tr("the list has {labels} labels, but the document has {count} pages",
+                                    labels=len(listed), count=self.count))
+        except LabelError as e:
+            self.status(str(e), error=True)
+            return False
+        self.change(labels.from_labels(listed))
+        self.status(tr("Labels read from {path}", path=path.name))
+        return True
+
+    def export_dialog(self):
+        if self.path is None:
+            return
+        name, _ = QFileDialog.getSaveFileName(self, tr("Save the labels as a list"),
+                                              str(Path(self.last_dir()) / f"{self.path.stem}-labels.txt"),
+                                              tr("Text files (*.txt);;All files (*)"))
+        if name:
+            self.export_list(Path(name))
+
+    def export_list(self, path: Path) -> bool:
+        try:
+            path.write_text("\n".join(labels.page_labels(self.ranges, self.count)) + "\n", encoding="utf-8")
+        except OSError as e:
+            self.status(tr("{path} cannot be written: {error}", path=path, error=e), error=True)
+            return False
+        self.status(tr("Saved {path}", path=path))
+        return True
 
     # ----------------------------------------------------------------- recent files
 
@@ -406,6 +552,15 @@ class MainWindow(QMainWindow):
         new = Range(**{**vars(old), **changes})
         ranges = [r for r in self.ranges if r.page not in (old.page, new.page)] + [new]
         QTimer.singleShot(0, lambda: self.change(ranges, select=new.page))
+
+    def start_range_at(self, page: int):
+        """Select the range that starts at PAGE, or start one there."""
+        if self.path is None:
+            return
+        if page in {r.page for r in self.ranges} or (page == 1 and not self.ranges):
+            self.refresh(select=page)
+            return
+        self.change(self.ranges + [Range(page)], select=page)
 
     def add_range(self):
         if self.path is None:
@@ -467,18 +622,25 @@ class MainWindow(QMainWindow):
             style.setCurrentIndex(labels.STYLES.index(r.style))
             style.currentIndexChanged.connect(
                 lambda _i, row=row, w=style: self._edit(row, style=w.currentData()))
-            start = QSpinBox()
-            start.setRange(1, 999999)
+            start = StartSpin(r.style == "f")
             start.setValue(r.start)
             start.setEnabled(bool(r.style))
-            start.setToolTip(tr("The number of the first page of the range"))
+            start.setToolTip(tr("The leaf and side of the first page of the range (12r, 12v)") if r.style == "f"
+                             else tr("The number of the first page of the range"))
             start.editingFinished.connect(lambda row=row, w=start: self._edit(row, start=w.value()))
             prefix = QLineEdit(r.prefix)
             prefix.setMinimumWidth(110)
             prefix.setPlaceholderText(tr("e.g. A-"))
             prefix.setToolTip(tr("Text put before the number of each page"))
             prefix.editingFinished.connect(lambda row=row, w=prefix: self._edit(row, prefix=w.text()))
-            for col, w in ((FIRST, first), (STYLE, style), (START, start), (PREFIX, prefix)):
+            suffix = QLineEdit(r.suffix)
+            suffix.setMinimumWidth(70)
+            suffix.setEnabled(bool(r.style))
+            suffix.setPlaceholderText(tr("e.g. ]"))
+            suffix.setToolTip(tr("Text put after the number of each page (PDF has no suffixes: such labels "
+                                 "are written one for each page)"))
+            suffix.editingFinished.connect(lambda row=row, w=suffix: self._edit(row, suffix=w.text()))
+            for col, w in ((FIRST, first), (STYLE, style), (START, start), (PREFIX, prefix), (SUFFIX, suffix)):
                 self.table.setCellWidget(row, col, w)
             pages = tr("pages {first}-{last}", first=r.page, last=last) if last > r.page \
                 else tr("page {first}", first=r.page)
@@ -486,7 +648,7 @@ class MainWindow(QMainWindow):
             item.setTextFormat(Qt.TextFormat.PlainText)
             item.setContentsMargins(6, 0, 6, 0)
             self.table.setCellWidget(row, LABELS, item)
-        for col in (FIRST, STYLE, START, PREFIX):  # (cell widgets: ResizeToContents ignores them)
+        for col in (FIRST, STYLE, START, PREFIX, SUFFIX):  # (cell widgets: ResizeToContents ignores them)
             widths = [self.table.cellWidget(row, col).sizeHint().width() for row in range(len(spans))]
             self.table.setColumnWidth(col, max(widths + [header_width(self.table, col)]) + 4)
         rows = [i for i, (r, _) in enumerate(spans) if r.page == select]
@@ -497,18 +659,94 @@ class MainWindow(QMainWindow):
         page = self.current_page()
         self.pages.blockSignals(True)
         self.pages.clear()
+        thumbs = self.a_thumbs.isChecked() if hasattr(self, "a_thumbs") else False
         for i, label in enumerate(labels.page_labels(self.ranges, self.count), 1):
-            item = QListWidgetItem(f"{i:>5}   {label}")
-            if label != str(i):
-                item.setToolTip(tr("page {page} of the file: {label}", page=i, label=label))
+            item = QListWidgetItem(f"{i}\n{label}" if thumbs else f"{i:>5}   {label}")
+            item.setToolTip(tr("page {page} of the file: {label}", page=i, label=label or tr("(no label)")))
+            if thumbs:
+                item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)
+                item.setIcon(self._thumbs.get(i) or self._blank_thumb())
             self.pages.addItem(item)
         self.pages.blockSignals(False)
+        if thumbs and len(self._thumbs) < self.count:
+            self.thumb_timer.start()
         if self.count:
             self.pages.setCurrentRow(min(page, self.count) - 1)
         self.cmd_line.setText(set_command(self.path, self.ranges) if self.path else "")
         self._show_page_info()
         self._update_title()
         self._enable()
+
+    def show_thumbnails(self, on: bool):
+        """Show the pages as thumbnails with their labels, or as a list."""
+        mode = QListView.ViewMode.IconMode if on else QListView.ViewMode.ListMode
+        self.pages.setViewMode(mode)
+        self.pages.setIconSize(THUMB if on else QSize())
+        self.pages.setGridSize(QSize(THUMB.width() + 28, THUMB.height() + 48) if on else QSize())
+        self.pages.setResizeMode(QListView.ResizeMode.Adjust)
+        self.pages.setMovement(QListView.Movement.Static)
+        self.pages.setWordWrap(on)
+        self.pages.setUniformItemSizes(True)
+        if not on:
+            self.thumb_timer.stop()
+        self.refresh()
+
+    def _blank_thumb(self) -> QIcon:
+        """What a page shows until its thumbnail is drawn (of the full size, so the grid doesn't move)."""
+        if getattr(self, "_blank", None) is None:
+            pixmap = QPixmap(THUMB)
+            pixmap.fill(QColor(0, 0, 0, 0))
+            self._blank = QIcon(pixmap)
+        return self._blank
+
+    def _thumbnail(self, page: int) -> QIcon:
+        """The thumbnail of PAGE (1-based), framed, centred in a THUMB-sized picture."""
+        size = self.doc.pagePointSize(page - 1).toSize().scaled(THUMB - QSize(2, 2), Qt.AspectRatioMode.KeepAspectRatio)
+        if size.isEmpty():
+            size = THUMB - QSize(2, 2)
+        image = self.doc.render(page - 1, size)
+        pixmap = QPixmap(THUMB)
+        pixmap.fill(QColor(0, 0, 0, 0))
+        p = QPainter(pixmap)
+        x, y = (THUMB.width() - size.width()) // 2, THUMB.height() - size.height() - 1
+        p.fillRect(x, y, size.width(), size.height(), QColor("white"))
+        p.drawImage(x, y, image)
+        p.setPen(QColor(128, 128, 128))
+        p.drawRect(x - 1, y - 1, size.width() + 1, size.height() + 1)
+        p.end()
+        return QIcon(pixmap)
+
+    def _draw_thumbnails(self):
+        """Draw a few more thumbnails (in the background, so the window keeps answering)."""
+        if not self.a_thumbs.isChecked() or self.doc.pageCount() == 0:
+            self.thumb_timer.stop()
+            return
+        drawn = 0
+        for page in range(1, self.count + 1):
+            if page in self._thumbs:
+                continue
+            self._thumbs[page] = self._thumbnail(page)
+            item = self.pages.item(page - 1)
+            if item is not None:
+                item.setIcon(self._thumbs[page])
+            drawn += 1
+            if drawn >= THUMBS_AT_ONCE:
+                return
+        self.thumb_timer.stop()
+
+    def go_to_label(self, label: str) -> bool:
+        """Show the page labelled LABEL (the next one after the page shown, if there are several)."""
+        if not self.count or not label.strip():
+            return False
+        pages = labels.find_label(self.ranges, self.count, label.strip())
+        if not pages:
+            self.status(tr("No page is labelled {label}", label=label.strip()), error=True)
+            return False
+        here = self.current_page()
+        self.show_page(next((p for p in pages if p > here), pages[0]))
+        self.status(tr("Page {page}, labelled {label}", page=self.current_page(),
+                       label=labels.page_labels(self.ranges, self.count)[self.current_page() - 1]))
+        return True
 
     def current_page(self) -> int:
         row = self.pages.currentRow()
@@ -545,7 +783,8 @@ class MainWindow(QMainWindow):
     def _enable(self):
         has = self.path is not None
         for w in (getattr(self, n, None) for n in ("b_add", "b_remove", "b_clear", "a_save", "a_save_as",
-                                                   "a_revert")):
+                                                   "a_revert", "a_copy_from", "a_import", "a_export",
+                                                   "go_to")):
             if w is not None:
                 w.setEnabled(has)
         if hasattr(self, "a_undo"):

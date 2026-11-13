@@ -79,33 +79,51 @@ carpetas; `--uninstall` quita lo que añadió.
 
     py-foliation-gui [archivo.pdf]
 
-![La ventana](docs/img/gui_window_es.png)
+![La ventana](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/gui_window_es.png)
 
 Abra un PDF (o suéltelo en la ventana). La ventana muestra los **intervalos**
 de etiquetas, cada uno con su primera página, su estilo (1, 2, 3; i, ii, iii;
-I, II, III; a, b, c; A, B, C; o sin número), el número en que empieza y un
-prefijo; debajo, cada página con su etiqueta; y a la derecha, la página
-elegida.
+I, II, III; a, b, c; A, B, C; folios 1r, 1v, 2r; o sin número), el número en
+que empieza, un prefijo y un sufijo; debajo, cada página con su etiqueta; y a
+la derecha, la página elegida.
 
-- **Añadir un intervalo** empieza un nuevo intervalo en la página mostrada;
-  **Quitar el intervalo** deja que el anterior siga sobre sus páginas;
-  **Sin etiquetas** las quita todas.
+![Folios, con miniaturas de las páginas](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/gui_folios_es.png)
+
+- **Añadir un intervalo** empieza un nuevo intervalo en la página mostrada, y
+  también un doble clic en una página; **Quitar el intervalo** deja que el
+  anterior siga sobre sus páginas; **Sin etiquetas** las quita todas.
+- **Ver ▸ Miniaturas de las páginas** muestra las páginas en miniatura con sus
+  etiquetas, para revisar todo un libro de un vistazo.
+- **Ir a la página con la etiqueta…** (Ctrl+L) busca una página por su
+  etiqueta: `xii`, `12v`, `A-3`.
 - **Editar ▸ Deshacer / Rehacer** van y vienen por los cambios.
 - **Archivo ▸ Guardar** da las nuevas etiquetas al archivo abierto;
   **Guardar como…** guarda una copia con ellas; **Volver a las etiquetas del
   archivo** descarta los cambios.
+- **Archivo ▸ Copiar las etiquetas de otro PDF…** las toma de otro archivo,
+  por ejemplo de una exportación anterior del mismo libro.
+- **Archivo ▸ Etiquetas de una lista…** lee la etiqueta de cada página de un
+  archivo de texto, una en cada línea, y **Guardar las etiquetas como
+  lista…** escribe uno, para editarlo en cualquier editor u hoja de cálculo.
 - **Editar ▸ Copiar línea de órdenes** copia la orden que da las mismas
   etiquetas a otro archivo.
 
+Los archivos protegidos con contraseña la piden, y conservan su protección al
+guardarlos.
+
 ## La línea de órdenes
 
-![La línea de órdenes](docs/img/cli_es.png)
+![La línea de órdenes](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/cli_es.png)
 
-    py-foliation show libro.pdf                 # los intervalos de etiquetas
-    py-foliation show --all libro.pdf           # la etiqueta de cada página
-    py-foliation set libro.pdf 1:r 9:D          # nuevas etiquetas -> libro-labelled.pdf
-    py-foliation set libro.pdf 1:r 9:D -i       # cambiar el propio libro.pdf
-    py-foliation clear libro.pdf -o simple.pdf  # sin etiquetas
+    py-foliation show libro.pdf                     # los intervalos de etiquetas
+    py-foliation show --all libro.pdf               # la etiqueta de cada página
+    py-foliation show --label xii libro.pdf         # la página con la etiqueta xii
+    py-foliation set libro.pdf 1:r 9:D              # nuevas etiquetas -> libro-labelled.pdf
+    py-foliation set libro.pdf 1:r 9:D -i           # cambiar el propio libro.pdf
+    py-foliation set *.pdf 1:r 9:D -i               # varios archivos a la vez
+    py-foliation set libro.pdf 1:r 9:D --dry-run    # solo mostrar lo que haría
+    py-foliation copy viejo.pdf nuevo.pdf -i        # las etiquetas de viejo.pdf, a nuevo.pdf
+    py-foliation clear libro.pdf -o simple.pdf      # sin etiquetas
 
 Un intervalo se escribe `PÁGINAS:ESTILO[:INICIO[:PREFIJO]]`:
 
@@ -115,11 +133,13 @@ Un intervalo se escribe `PÁGINAS:ESTILO[:INICIO[:PREFIJO]]`:
 | `9:D`          | desde la 9           | 1, 2, 3 …                    |
 | `201-214:A`    | de la 201 a la 214   | A … N, luego sigue la numeración anterior |
 | `215:D:1:Ap-`  | desde la 215         | Ap-1, Ap-2 …                 |
+| `5:f:12v`      | desde la 5           | 12v, 13r, 13v … (folios)     |
 | `LAST:-::Tapa` | la última página     | Tapa                         |
 
-o, con `--range`, como `PÁGINAS [style=E] [start=N] [prefix=P]`:
+o, con `--range`, como `PÁGINAS [style=E] [start=N] [prefix=P] [suffix=X]`:
 
     py-foliation set libro.pdf --range 1-8 style=roman --range 9- style=arabic
+    py-foliation set libro.pdf --range 1-4 style=roman 'prefix=[' 'suffix=]' 5:D
 
 `PÁGINAS` es una primera página (`9`) o un tramo (`9-200`, `9..200`, `201-`);
 `LAST` y `LAST-N` cuentan desde el final. Un intervalo sin última página sigue
@@ -127,12 +147,39 @@ hasta el siguiente; un tramo se pone sobre los demás, y después de él las
 páginas siguen con los números que tenían.
 
 Los estilos son `D` o `arabic` (1, 2, 3), `r` o `roman` (i, ii, iii), `R` o
-`ROMAN` (I, II, III), `a` o `letters` (a, b, c), `A` o `LETTERS` (A, B, C), y
-`-` o `none` (solo el prefijo).
+`ROMAN` (I, II, III), `a` o `letters` (a, b, c), `A` o `LETTERS` (A, B, C), `f`
+o `folio` (1r, 1v, 2r: el recto y el verso de cada hoja; el inicio es una hoja
+y su lado, como `12v`), y `-` o `none` (solo el prefijo).
 
 `set` reemplaza las etiquetas que tenía el archivo; con `--keep` cambia solo
 las páginas indicadas, y `--remove PÁGINA` quita el intervalo que empieza en
 PÁGINA. `show` imprime la orden que da las etiquetas de un archivo a otro.
+`--password` abre archivos protegidos, que conservan su protección.
+
+### Folios, sufijos y cualquier otra etiqueta
+
+PDF numera las páginas en cinco estilos, con un prefijo. Los folios, para
+manuscritos e impresos antiguos, y las etiquetas con algo después del número
+(`[i]`, `12bis`) no están entre ellos: py-foliation los escribe como una
+etiqueta para cada página, y los reconoce de nuevo al leer el archivo, de
+modo que se muestran y se editan como intervalos, igual que los demás.
+
+Cualquier numeración puede darse página por página: `--from-file` (o
+**Archivo ▸ Etiquetas de una lista…**) lee la etiqueta de cada página, una en
+cada línea, y encuentra el menor número de intervalos que las da:
+
+    py-foliation show --all libro.pdf > etiquetas.txt    # editar etiquetas.txt…
+    py-foliation set libro.pdf --from-file etiquetas.txt -i
+
+### Completado y manual
+
+`py-foliation completion bash|fish|zsh` imprime el script que completa
+órdenes, opciones y archivos en cada shell, por ejemplo:
+
+    py-foliation completion fish > ~/.config/fish/completions/py-foliation.fish
+
+El paquete de Fedora los instala, junto con la página de manual
+(`man py-foliation`).
 
 ## Idioma
 
@@ -153,7 +200,12 @@ Las imágenes de este README las hace `uv run python tools/screenshots.py`
 
 La AppImage la hace `uv run python tools/bundle-appimage.py`, el RPM firmado
 `packaging/build-rpm.sh --sign`, y cada versión, en GitHub, Codeberg y Copr,
-`uv run python tools/release.py --rpm` (vea `packaging/COPR.org`).
+`uv run python tools/release.py --rpm` (vea `packaging/COPR.org`); `--pypi` la
+sube además a PyPI. Las páginas de manual se hacen a partir de la ayuda de la
+línea de órdenes con `uv run python tools/manpage.py` (una prueba comprueba
+que estén al día). El manifiesto del Flatpak y sus módulos de Python están en
+`packaging/flatpak/` (`tools/flatpak-deps.py` hace los módulos a partir de
+`uv.lock`); `packaging/FLATHUB.org` explica cómo construirlo y enviarlo.
 
 ## Licencia
 
