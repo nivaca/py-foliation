@@ -10,7 +10,7 @@
 # Build with packaging/build-rpm.sh, which makes the source tarball.
 
 Name:           py-foliation
-Version:        0.4
+Version:        0.5
 Release:        1%{?dist}
 Summary:        Change the page labels (the numbering a viewer shows) of PDF documents
 
@@ -96,6 +96,10 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
 %{zsh_completions_dir}/_py-foliation
 
 %changelog
+* Fri Nov 13 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.5-1
+- The view when the file is opened: layout, zoom, panel and first page
+  (py-foliation view, and File > View when opened... in the window)
+
 * Fri Nov 13 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.4-1
 - Internal clean-up: shared helpers and smaller modules; no change in what
   the commands and the window do
