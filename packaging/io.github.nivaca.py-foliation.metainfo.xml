@@ -75,6 +75,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.3" date="2026-11-12">
+      <description>
+        <p>Choose several pages in the list and right-click them to number them, continue the numbering from before them, give them one label, or edit their labels one by one.</p>
+      </description>
+    </release>
     <release version="0.2" date="2026-11-12">
       <description>
         <p>Folios (1r, 1v, 2r) for manuscripts and early printed books, and labels with a suffix, as [i] or 12bis.</p>
