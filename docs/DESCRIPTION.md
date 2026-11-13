@@ -10,7 +10,7 @@ pages of the file.  Only the labels change; the pages themselves are left
 as they are.  Nicolas Vaughan made it in 2026.  It has a window, for
 seeing and editing the labels page by page, and a command line, for doing
 the same in scripts, in English or in Spanish.  Here I explain how it was
-made, in six stages.
+made, in seven stages.
 
 py-foliation is free software, under the GNU General Public License,
 version 3 or later.  It is written in Python and stands on pikepdf (based
@@ -149,18 +149,45 @@ options in bash, fish and zsh, and has a manual page, made from its own
 help so that the two always agree.  The program can also be published on
 PyPI, and there is a Flatpak, for Flathub.
 
+7. The view when the file is opened
+-----------------------------------
+
+Besides its labels, a PDF can say how viewers should show it when they
+open it: the layout of the pages (one at a time, continuous, two side by
+side, with or without the first one alone as in a book), the zoom (fitting
+the page, its width or its height, or a percentage), the panel beside the
+pages (bookmarks, thumbnails …) and the page to start at.  These are kept
+for the whole document, not for each page, in the catalog: `/PageLayout`,
+`/PageMode` and `/OpenAction`.  `view.py` reads and writes them, and
+changes only the parts that are asked for, so that an opening action it
+does not understand, such as a script, is kept unless it is replaced.
+
+`py-foliation view` shows the view of a file, or sets the parts given
+(`--layout`, `--zoom`, `--panel`, `--open-at`; `default` leaves a part to
+the viewer), and `show` prints it with the labels.  In the window, *View
+when opened…* sets it in a dialog, and the menu on the pages offers to
+open the document at the page chosen; the view is undone, redone and
+saved together with the labels.
+
+To make room for it, the code was rearranged: the numbers in each style
+went to `numbers.py`, the reading and writing of files that the command
+line and the window share to `files.py`, and the widgets and thumbnails of
+the window to modules of their own.
+
 Testing
 -------
 
-The program has 90 automated tests (`tests/`), run with pytest.  They
+The program has 104 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, the reading and
-writing of the number tree, including odd trees, and the ranges found in
-lists of labels.  The command line is run
+writing of the number tree, including odd trees, the ranges found in
+lists of labels, and the view when the file is opened, written and read
+back in every form, with what the program does not understand kept.  The command line is run
 from start to end on the example document, docs/example/numbers-100.pdf,
 whose pages each show their number, and on broken input.  The window is
 tested without a screen, with Qt's offscreen platform: opening, editing,
-undoing, saving, saving as, unsaved changes and the language.  Other
+undoing, saving, saving as, unsaved changes, the view when the file is
+opened and the language.  Other
 tests check that every text has its translation and that none is left
 over, the menu installer on each system, and the packaging files and
 the signing key.  The tests run on every push, on GitHub Actions.

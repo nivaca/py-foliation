@@ -96,7 +96,8 @@ la derecha, la página elegida.
   ellas para **numerarlas** (en cualquier estilo, desde cualquier inicio, con
   prefijo y sufijo), **seguir la numeración anterior**, **darles una sola
   etiqueta**, **editar sus etiquetas una por una** o dejarlas **sin
-  etiqueta**.
+  etiqueta**; **Abrir el documento en la página N** hace que los visores
+  muestren primero esa página.
 - **Ver ▸ Miniaturas de las páginas** muestra las páginas en miniatura con sus
   etiquetas, para revisar todo un libro de un vistazo.
 - **Ir a la página con la etiqueta…** (Ctrl+L) busca una página por su
@@ -112,6 +113,10 @@ la derecha, la página elegida.
   lista…** escribe uno, para editarlo en cualquier editor u hoja de cálculo.
 - **Editar ▸ Copiar línea de órdenes** copia la orden que da las mismas
   etiquetas a otro archivo.
+- **Archivo ▸ Vista al abrir…** establece cómo muestran los visores el
+  documento al abrirlo: la disposición (una página, continua, dos páginas
+  lado a lado, con la primera sola como en un libro), el zoom, el panel junto
+  a las páginas y la página en que se abre. Se guarda con las etiquetas.
 
 Los archivos protegidos con contraseña la piden, y conservan su protección al
 guardarlos.
@@ -129,6 +134,7 @@ guardarlos.
     py-foliation set libro.pdf 1:r 9:D --dry-run    # solo mostrar lo que haría
     py-foliation copy viejo.pdf nuevo.pdf -i        # las etiquetas de viejo.pdf, a nuevo.pdf
     py-foliation clear libro.pdf -o simple.pdf      # sin etiquetas
+    py-foliation view libro.pdf                     # cómo se abre en un visor
 
 Un intervalo se escribe `PÁGINAS:ESTILO[:INICIO[:PREFIJO]]`:
 
@@ -175,6 +181,26 @@ cada línea, y encuentra el menor número de intervalos que las da:
 
     py-foliation show --all libro.pdf > etiquetas.txt    # editar etiquetas.txt…
     py-foliation set libro.pdf --from-file etiquetas.txt -i
+
+### La vista al abrir el archivo
+
+Un PDF puede decir cómo deben mostrarlo los visores al abrirlo: la
+disposición de las páginas, el zoom, el panel junto a ellas y la página en que
+empezar. Tiene una sola vista para todo el documento, no una por página.
+`view` la muestra, y establece las partes que se den (las demás se conservan;
+`default` deja una parte al visor):
+
+    py-foliation view libro.pdf --layout double-cover --zoom fit-page --open-at 9 -i
+    py-foliation view libro.pdf --zoom 150% --panel bookmarks -i
+    py-foliation view libro.pdf --open-at default -i
+
+Las disposiciones son `single`, `continuous`, `double`, `double-cover` (la
+primera página sola, como en un libro), `double-continuous` y
+`double-continuous-cover`; los zooms, `fit-page`, `fit-width`, `fit-height`,
+`fit-visible` (lo impreso), `fit-visible-width`, `fit-visible-height` o un
+porcentaje; los paneles, `none`, `bookmarks`, `thumbnails`, `attachments`,
+`layers` y `full-screen`. `show` también muestra la vista, si el archivo
+tiene una.
 
 ### Completado y manual
 

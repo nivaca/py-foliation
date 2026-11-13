@@ -1050,4 +1050,226 @@ hoja y su lado, como 12v), - o none (solo el prefijo).</tr>
     <en>{count} pages, numbered one after the other:</en>
     <tr>{count} páginas, numeradas una tras otra:</tr>
   </text>
+  <text>
+    <en>(the viewer's choice)</en>
+    <tr>(lo que elija el visor)</tr>
+  </text>
+  <text>
+    <en>Attachments</en>
+    <tr>Adjuntos</tr>
+  </text>
+  <text>
+    <en>Bookmarks</en>
+    <tr>Marcadores</tr>
+  </text>
+  <text>
+    <en>Continuous</en>
+    <tr>Continua</tr>
+  </text>
+  <text>
+    <en>Fit the height</en>
+    <tr>Ajustar al alto</tr>
+  </text>
+  <text>
+    <en>Fit the height of what is printed</en>
+    <tr>Ajustar al alto de lo impreso</tr>
+  </text>
+  <text>
+    <en>Fit the page</en>
+    <tr>Ajustar a la página</tr>
+  </text>
+  <text>
+    <en>Fit the width</en>
+    <tr>Ajustar al ancho</tr>
+  </text>
+  <text>
+    <en>Fit the width of what is printed</en>
+    <tr>Ajustar al ancho de lo impreso</tr>
+  </text>
+  <text>
+    <en>Fit what is printed</en>
+    <tr>Ajustar a lo impreso</tr>
+  </text>
+  <text>
+    <en>For instance: py-foliation view book.pdf --layout double-cover --zoom fit-page --open-at 9 -i</en>
+    <tr>Por ejemplo: py-foliation view libro.pdf --layout double-cover --zoom fit-page
+--open-at 9 -i</tr>
+  </text>
+  <text>
+    <en>Full screen</en>
+    <tr>Pantalla completa</tr>
+  </text>
+  <text>
+    <en>How viewers show the document when they open it (a PDF has one view for the whole document):</en>
+    <tr>Cómo muestran los visores el documento al abrirlo (un PDF tiene una sola vista para todo el documento):</tr>
+  </text>
+  <text>
+    <en>LAYOUT</en>
+    <tr>DISPOSICIÓN</tr>
+  </text>
+  <text>
+    <en>Layers</en>
+    <tr>Capas</tr>
+  </text>
+  <text>
+    <en>Layout</en>
+    <tr>Disposición</tr>
+  </text>
+  <text>
+    <en>Layouts: single (one page at a time), continuous, double (two pages at a time), double-cover (two at a time, the first one alone, as a book), double-continuous, double-continuous-cover.</en>
+    <tr>Disposiciones: single (una página cada vez), continuous (continua), double
+(dos páginas cada vez), double-cover (dos cada vez, la primera sola, como un
+libro), double-continuous, double-continuous-cover.</tr>
+  </text>
+  <text>
+    <en>No panel</en>
+    <tr>Ningún panel</tr>
+  </text>
+  <text>
+    <en>One page at a time</en>
+    <tr>Una página cada vez</tr>
+  </text>
+  <text>
+    <en>Open the document at page {page}</en>
+    <tr>Abrir el documento en la página {page}</tr>
+  </text>
+  <text>
+    <en>Opens at</en>
+    <tr>Se abre en</tr>
+  </text>
+  <text>
+    <en>Opens at page</en>
+    <tr>Se abre en la página</tr>
+  </text>
+  <text>
+    <en>PANEL</en>
+    <tr>PANEL</tr>
+  </text>
+  <text>
+    <en>Panel</en>
+    <tr>Panel</tr>
+  </text>
+  <text>
+    <en>Panels: none, bookmarks, thumbnails, attachments, layers, full-screen.</en>
+    <tr>Paneles: none (ninguno), bookmarks (marcadores), thumbnails (miniaturas),
+attachments (adjuntos), layers (capas), full-screen (pantalla completa).</tr>
+  </text>
+  <text>
+    <en>Percentage</en>
+    <tr>Porcentaje</tr>
+  </text>
+  <text>
+    <en>Show or set the view of PDFs when they are opened: the layout of the pages, the zoom, the panel beside them and the page they open at. A PDF has one view for the whole document. Without options, the view is shown; the options not given are kept; 'default' leaves that part to the viewer.</en>
+    <tr>Muestra o establece la vista de los PDF al abrirse: la disposición de las páginas, el zoom, el panel junto a ellas y la página en que se abren. Un PDF tiene una sola vista para todo el documento. Sin opciones, se muestra la vista; las opciones que no se dan se conservan; 'default' deja esa parte al visor.</tr>
+  </text>
+  <text>
+    <en>The layout, zoom, panel and first page viewers show the document with</en>
+    <tr>La disposición, el zoom, el panel y la primera página con que los visores muestran el documento</tr>
+  </text>
+  <text>
+    <en>The pages of the file, from 1; a zoom opens at page 1 if no page is given</en>
+    <tr>Las páginas del archivo, desde 1; con un zoom, se abre en la página 1 si no se da ninguna</tr>
+  </text>
+  <text>
+    <en>Thumbnails</en>
+    <tr>Miniaturas</tr>
+  </text>
+  <text>
+    <en>Two pages at a time</en>
+    <tr>Dos páginas cada vez</tr>
+  </text>
+  <text>
+    <en>Two pages at a time, the first one alone (as a book)</en>
+    <tr>Dos páginas cada vez, la primera sola (como un libro)</tr>
+  </text>
+  <text>
+    <en>Two pages side by side, continuous</en>
+    <tr>Dos páginas lado a lado, continua</tr>
+  </text>
+  <text>
+    <en>Two pages side by side, continuous, the first one alone (as a book)</en>
+    <tr>Dos páginas lado a lado, continua, la primera sola (como un libro)</tr>
+  </text>
+  <text>
+    <en>View when opened</en>
+    <tr>Vista al abrir</tr>
+  </text>
+  <text>
+    <en>View when opened…</en>
+    <tr>Vista al abrir…</tr>
+  </text>
+  <text>
+    <en>Viewers will show this page first when they open the file</en>
+    <tr>Los visores mostrarán primero esta página al abrir el archivo</tr>
+  </text>
+  <text>
+    <en>When it is opened:</en>
+    <tr>Al abrirse:</tr>
+  </text>
+  <text>
+    <en>ZOOM</en>
+    <tr>ZOOM</tr>
+  </text>
+  <text>
+    <en>Zoom</en>
+    <tr>Zoom</tr>
+  </text>
+  <text>
+    <en>Zooms: fit-page, fit-width, fit-height, fit-visible (what is printed), fit-visible-width, fit-visible-height, or a percentage (150%).</en>
+    <tr>Zooms: fit-page (la página), fit-width (el ancho), fit-height (el alto),
+fit-visible (lo impreso), fit-visible-width, fit-visible-height, o un
+porcentaje (150%).</tr>
+  </text>
+  <text>
+    <en>how the pages are laid out (see below)</en>
+    <tr>cómo se disponen las páginas (véase abajo)</tr>
+  </text>
+  <text>
+    <en>layout</en>
+    <tr>disposición</tr>
+  </text>
+  <text>
+    <en>nothing to change: give --layout, --zoom, --panel or --open-at</en>
+    <tr>nada que cambiar: dé --layout, --zoom, --panel o --open-at</tr>
+  </text>
+  <text>
+    <en>page {page}</en>
+    <tr>página {page}</tr>
+  </text>
+  <text>
+    <en>panel</en>
+    <tr>panel</tr>
+  </text>
+  <text>
+    <en>show or set how PDFs open in a viewer</en>
+    <tr>mostrar o establecer cómo se abren los PDF en un visor</tr>
+  </text>
+  <text>
+    <en>the page it opens at (the pages of the file, from 1; LAST counts from the end)</en>
+    <tr>la página en que se abre (las páginas del archivo, desde 1; LAST cuenta desde el final)</tr>
+  </text>
+  <text>
+    <en>the zoom must be from 1% to 6400% (not {value})</en>
+    <tr>el zoom debe ir del 1 % al 6400 % (no {value})</tr>
+  </text>
+  <text>
+    <en>the zoom: a fit (see below) or a percentage, as 150%%</en>
+    <tr>el zoom: un ajuste (véase abajo) o un porcentaje, como 150%%</tr>
+  </text>
+  <text>
+    <en>unknown {what} {value!r} (one of: {names})</en>
+    <tr>valor desconocido para {what}: {value!r} (uno de: {names})</tr>
+  </text>
+  <text>
+    <en>what is shown beside the pages (see below)</en>
+    <tr>lo que se muestra junto a las páginas (véase abajo)</tr>
+  </text>
+  <text>
+    <en>zoom</en>
+    <tr>zoom</tr>
+  </text>
+  <text>
+    <en>show the view the files would get, without writing anything</en>
+    <tr>mostrar la vista que recibirían los archivos, sin escribir nada</tr>
+  </text>
 </interface>

@@ -1,4 +1,4 @@
-.TH PY-FOLIATION 1 "" "py-foliation 0.4" "py-foliation"
+.TH PY-FOLIATION 1 "" "py-foliation 0.5" "py-foliation"
 .SH NAME
 py-foliation \- change the page labels of PDF documents
 .SH SYNOPSIS
@@ -16,6 +16,7 @@ positional arguments:
     set                give PDFs new page labels
     clear              remove the page labels of PDFs
     copy               give PDFs the page labels of another
+    view               show or set how PDFs open in a viewer
     completion         print the completion script of a shell
     interface          show or choose the language of the interface
 
@@ -164,6 +165,47 @@ options:
                        anything
   --password PASSWORD  the password to open the PDFs (their protection is
                        kept when they are saved)
+.fi
+.SS view
+.nf
+usage: py-foliation view [-h] [--interface {en,es}] [--layout LAYOUT]
+                         [--zoom ZOOM] [--panel PANEL] [--open-at PAGE]
+                         [-o OUTPUT | -i] [-n] [--password PASSWORD]
+                         FILE [FILE ...]
+
+Show or set the view of PDFs when they are opened: the layout of the pages, the zoom, the panel beside them and the page they open at. A PDF has one view for the whole document. Without options, the view is shown; the options not given are kept; 'default' leaves that part to the viewer.
+
+positional arguments:
+  FILE                 source PDF
+
+options:
+  -h, --help           show this help message and exit
+  --interface {en,es}  the language of the interface, for this run only (to
+                       keep a choice, use the 'interface' command)
+  --layout LAYOUT      how the pages are laid out (see below)
+  --zoom ZOOM          the zoom: a fit (see below) or a percentage, as 150%
+  --panel PANEL        what is shown beside the pages (see below)
+  --open-at PAGE       the page it opens at (the pages of the file, from 1;
+                       LAST counts from the end)
+  -o, --output OUTPUT  output PDF, with one input only (default:
+                       <input>-labelled.pdf)
+  -i, --in-place       change the input files themselves
+  -n, --dry-run        show the view the files would get, without writing
+                       anything
+  --password PASSWORD  the password to open the PDFs (their protection is
+                       kept when they are saved)
+
+Layouts: single (one page at a time), continuous, double (two pages at a
+time), double-cover (two at a time, the first one alone, as a book),
+double-continuous, double-continuous-cover.
+
+Zooms: fit-page, fit-width, fit-height, fit-visible (what is printed),
+fit-visible-width, fit-visible-height, or a percentage (150%).
+
+Panels: none, bookmarks, thumbnails, attachments, layers, full-screen.
+
+For instance: py-foliation view book.pdf --layout double-cover --zoom fit-page
+--open-at 9 -i
 .fi
 .SS completion
 .nf

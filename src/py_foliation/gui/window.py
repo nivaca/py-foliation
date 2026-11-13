@@ -19,11 +19,12 @@ from PySide6.QtWidgets import (
 )
 
 from .. import __version__, config, interface, labels
+from ..view import View, read_view
 from ..files import read_list, write_copy
 from ..interface import tr
 from ..labels import LabelError, Range
 from . import thumbnails
-from .widgets import FIELDS, LABELS, NumberDialog, edited_signal, fit_columns, range_row
+from .widgets import FIELDS, LABELS, NumberDialog, ViewDialog, edited_signal, fit_columns, range_row
 
 RECENT = 10  # documents in File ▸ Open recent
 AUTHOR = '<a href="https://nicolasvaughan.org">Nicolas Vaughan</a>'
@@ -63,8 +64,10 @@ class MainWindow(QMainWindow):
         self.count = 0
         self.ranges: list[Range] = []  # (normalized)
         self.saved: list[Range] = []  # the labels of the file
-        self.undo_stack: list[list[Range]] = []
-        self.redo_stack: list[list[Range]] = []
+        self.opening = View()  # the view of the document when it is opened
+        self.saved_opening = View()  # the one the file has
+        self.undo_stack: list[tuple[list[Range], View]] = []  # (ranges, view) before each change
+        self.redo_stack: list[tuple[list[Range], View]] = []
         self.password = ""  # (of the document open)
         self._thumbs: dict[int, QIcon] = {}  # page (1-based) -> its thumbnail
         self._blank: QIcon | None = None
@@ -187,6 +190,10 @@ class MainWindow(QMainWindow):
         self.a_export = self._action(m, tr("Save the labels as a list…"), self.export_dialog,
                                      tip=tr("A text file with the label of each page, one on each line, to "
                                             "edit and read back"))
+        m.addSeparator()
+        self.a_view = self._action(m, tr("View when opened…"), self.view_dialog,
+                                   tip=tr("The layout, zoom, panel and first page viewers show the document "
+                                          "with"))
         m.setToolTipsVisible(True)
         m.addSeparator()
         self._action(m, tr("Quit"), self.close, QKeySequence.StandardKey.Quit)
@@ -243,16 +250,17 @@ class MainWindow(QMainWindow):
 
     def export_state(self) -> dict:
         """What a new window needs to carry on with the same document."""
-        return {"path": self.path, "ranges": self.ranges, "saved": self.saved, "undo": self.undo_stack,
-                "redo": self.redo_stack, "page": self.current_page(), "password": self.password}
+        return {"path": self.path, "ranges": self.ranges, "saved": self.saved, "opening": self.opening,
+                "saved_opening": self.saved_opening, "undo": self.undo_stack, "redo": self.redo_stack,
+                "page": self.current_page(), "password": self.password}
 
     def adopt_state(self, state: dict):
         if state["path"] is None:
             return
         self.password = state.get("password", "")
-        self._load(state["path"], state["saved"])
+        self._load(state["path"], state["saved"], state["saved_opening"])
         self.undo_stack, self.redo_stack = list(state["undo"]), list(state["redo"])
-        self.ranges = state["ranges"]
+        self.ranges, self.opening = state["ranges"], state["opening"]
         self.refresh()
         self.show_page(state["page"])
 
@@ -319,25 +327,25 @@ class MainWindow(QMainWindow):
         read = self.read_pdf(path)
         if read is None:
             return False
-        saved, _, self.password = read
+        saved, _, self.password, saved_opening = read
         self.settings.setValue("last_dir", str(path.parent))
         self.add_recent(path)
-        self._load(path, saved)
+        self._load(path, saved, saved_opening)
         self.undo_stack, self.redo_stack = [], []
-        self.ranges = list(saved)
+        self.ranges, self.opening = list(saved), saved_opening
         self.refresh()
         self.show_page(1)
         self.status(tr("Opened {path}", path=path))
         return True
 
-    def read_pdf(self, path: Path) -> tuple[list[Range], int, str] | None:
-        """(the labels, the number of pages, the password) of the PDF at PATH,
-        asking for its password if it needs one; None if it can't be read."""
+    def read_pdf(self, path: Path) -> tuple[list[Range], int, str, View] | None:
+        """(the labels, the number of pages, the password, the view) of the PDF at
+        PATH, asking for its password if it needs one; None if it can't be read."""
         password = ""
         while True:
             try:
                 with pikepdf.open(path, password=password) as pdf:
-                    return labels.read_labels(pdf), len(pdf.pages), password
+                    return labels.read_labels(pdf), len(pdf.pages), password, read_view(pdf)
             except pikepdf.PasswordError:
                 password = self.ask_password(path, again=bool(password))
                 if password is None:
@@ -353,12 +361,13 @@ class MainWindow(QMainWindow):
         password, ok = QInputDialog.getText(self, tr("Password"), text, QLineEdit.EchoMode.Password)
         return password if ok and password else None
 
-    def _load(self, path: Path, saved: list[Range]):
+    def _load(self, path: Path, saved: list[Range], saved_opening: View):
         self.doc.close()
         self.doc.setPassword(self.password)
         self.doc.load(str(path))
         self.path = path
         self.saved = list(saved)
+        self.saved_opening = saved_opening
         self._thumbs = {}
         with pikepdf.open(path, password=self.password) as pdf:
             self.count = len(pdf.pages)
@@ -388,7 +397,7 @@ class MainWindow(QMainWindow):
 
     def _write(self, target: Path) -> bool:
         try:
-            write_copy(self.path, self.ranges, target, self.password)
+            write_copy(self.path, self.ranges, target, self.password, self.opening)
         except (OSError, pikepdf.PdfError) as e:
             self.status(tr("{path} cannot be written: {error}", path=target, error=e), error=True)
             return False
@@ -397,14 +406,14 @@ class MainWindow(QMainWindow):
             self.doc.close()
             self.doc.load(str(target))
             self.show_page(page)
-        self.saved = list(self.ranges)
+        self.saved, self.saved_opening = list(self.ranges), self.opening
         self._update_title()
         self.status(tr("Saved {path}", path=target))
         return True
 
     def revert(self):
-        if self.path is not None and self.ranges != self.saved:
-            self.change(list(self.saved))
+        if self.is_modified():
+            self.change(list(self.saved), view=self.saved_opening)
 
     def copy_from_dialog(self):
         if self.path is None:
@@ -417,7 +426,7 @@ class MainWindow(QMainWindow):
         read = self.read_pdf(path)
         if read is None:
             return False
-        ranges, count, _ = read
+        ranges, count, _, _ = read  # (the labels only, not the view)
         self.change([r for r in ranges if r.page <= self.count])
         note = "" if count == self.count else " " + tr("(it has {count} pages)", count=count)
         self.status(tr("Labels copied from {path}", path=path.name) + note)
@@ -492,16 +501,32 @@ class MainWindow(QMainWindow):
 
     # ----------------------------------------------------------------- changing the ranges
 
-    def change(self, ranges: list[Range], select: int | None = None):
-        """Make RANGES the labels (undoably); SELECT: the first page of the range to select."""
+    def change(self, ranges: list[Range], select: int | None = None, view: View | None = None):
+        """Make RANGES the labels, and VIEW (if given) the view of the document, undoably;
+        SELECT: the first page of the range to select."""
         ranges = labels.normalize(ranges)
-        if ranges == self.ranges:
-            self.refresh(select)
-            return
-        self.undo_stack.append(self.ranges)
-        self.redo_stack.clear()
-        self.ranges = ranges
+        view = self.opening if view is None else view
+        if (ranges, view) != (self.ranges, self.opening):
+            self.undo_stack.append((self.ranges, self.opening))
+            self.redo_stack.clear()
+            self.ranges, self.opening = ranges, view
         self.refresh(select)
+
+    def set_view(self, view: View) -> None:
+        """Make VIEW the view of the document when it is opened (undoably)."""
+        if self.path is not None:
+            self.change(self.ranges, view=view)
+
+    def view_dialog(self):
+        if self.path is None:
+            return
+        view = self.ask_view()
+        if view is not None:
+            self.set_view(view)
+
+    def ask_view(self) -> View | None:
+        dlg = ViewDialog(self, self.opening, self.count)
+        return dlg.value() if dlg.exec() == QDialog.DialogCode.Accepted else None
 
     def _edit(self, row: int, **changes):
         """Change one field of the range in ROW (later, out of the signal of the widget)."""
@@ -559,6 +584,12 @@ class MainWindow(QMainWindow):
                                                                           {p: "" for p in pages})))
         menu.addSeparator()
         menu.addAction(tr("Start a range at page {page}", page=pages[0]), lambda: self.start_range_at(pages[0]))
+        a = menu.addAction(tr("Open the document at page {page}", page=pages[0]),
+                           lambda: self.set_view(dataclasses.replace(self.opening, page=pages[0])))
+        a.setToolTip(tr("Viewers will show this page first when they open the file"))
+        a.setCheckable(True)
+        a.setChecked(self.opening.page == pages[0])
+        menu.setToolTipsVisible(True)
         menu.addAction(tr("Copy their labels") if count > 1 else tr("Copy its label"), lambda: self.copy_labels())
         return menu
 
@@ -645,14 +676,14 @@ class MainWindow(QMainWindow):
 
     def undo(self):
         if self.undo_stack:
-            self.redo_stack.append(self.ranges)
-            self.ranges = self.undo_stack.pop()
+            self.redo_stack.append((self.ranges, self.opening))
+            self.ranges, self.opening = self.undo_stack.pop()
             self.refresh()
 
     def redo(self):
         if self.redo_stack:
-            self.undo_stack.append(self.ranges)
-            self.ranges = self.redo_stack.pop()
+            self.undo_stack.append((self.ranges, self.opening))
+            self.ranges, self.opening = self.redo_stack.pop()
             self.refresh()
 
     # ----------------------------------------------------------------- showing
@@ -807,7 +838,7 @@ class MainWindow(QMainWindow):
     def _enable(self):
         has = self.path is not None
         for w in (self.b_add, self.b_remove, self.b_clear, self.a_save, self.a_save_as, self.a_revert,
-                  self.a_copy_from, self.a_import, self.a_export, self.go_to):
+                  self.a_copy_from, self.a_import, self.a_export, self.a_view, self.go_to):
             w.setEnabled(has)
         self.a_undo.setEnabled(bool(self.undo_stack))
         self.a_redo.setEnabled(bool(self.redo_stack))
@@ -815,7 +846,7 @@ class MainWindow(QMainWindow):
     # ----------------------------------------------------------------- unsaved changes
 
     def is_modified(self) -> bool:
-        return self.path is not None and self.ranges != self.saved
+        return self.path is not None and (self.ranges, self.opening) != (self.saved, self.saved_opening)
 
     def _update_title(self):
         name = f"{self.path.name}[*] — py-foliation" if self.path else "py-foliation"

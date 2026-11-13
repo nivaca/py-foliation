@@ -1,4 +1,4 @@
-.TH PY-FOLIATION 1 "" "py-foliation 0.4" "py-foliation"
+.TH PY-FOLIATION 1 "" "py-foliation 0.5" "py-foliation"
 .SH NOMBRE
 py-foliation \- cambiar las etiquetas de página de documentos PDF
 .SH SINOPSIS
@@ -16,6 +16,8 @@ argumentos posicionales:
     set                dar a varios PDF nuevas etiquetas de página
     clear              quitar las etiquetas de página de varios PDF
     copy               dar a varios PDF las etiquetas de página de otro
+    view               mostrar o establecer cómo se abren los PDF en un
+                       visor
     completion         imprimir el script de completado de un shell
     interface          mostrar o elegir el idioma de la interfaz
 
@@ -178,6 +180,52 @@ opciones:
   --password CONTRASEÑA
                         la contraseña para abrir los PDF (su protección se
                         conserva al guardarlos)
+.fi
+.SS view
+.nf
+uso: py-foliation view [-h] [--interface {en,es}] [--layout DISPOSICIÓN]
+                       [--zoom ZOOM] [--panel PANEL] [--open-at PÁGINA]
+                       [-o OUTPUT | -i] [-n] [--password CONTRASEÑA]
+                       ARCHIVO [ARCHIVO ...]
+
+Muestra o establece la vista de los PDF al abrirse: la disposición de las páginas, el zoom, el panel junto a ellas y la página en que se abren. Un PDF tiene una sola vista para todo el documento. Sin opciones, se muestra la vista; las opciones que no se dan se conservan; 'default' deja esa parte al visor.
+
+argumentos posicionales:
+  ARCHIVO               PDF de origen
+
+opciones:
+  -h, --help            mostrar esta ayuda y terminar
+  --interface {en,es}   el idioma de la interfaz, solo para esta ejecución
+                        (para conservar una elección, use la orden
+                        'interface')
+  --layout DISPOSICIÓN  cómo se disponen las páginas (véase abajo)
+  --zoom ZOOM           el zoom: un ajuste (véase abajo) o un porcentaje,
+                        como 150%
+  --panel PANEL         lo que se muestra junto a las páginas (véase abajo)
+  --open-at PÁGINA      la página en que se abre (las páginas del archivo,
+                        desde 1; LAST cuenta desde el final)
+  -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
+                        <entrada>-labelled.pdf)
+  -i, --in-place        cambiar los propios archivos de entrada
+  -n, --dry-run         mostrar la vista que recibirían los archivos, sin
+                        escribir nada
+  --password CONTRASEÑA
+                        la contraseña para abrir los PDF (su protección se
+                        conserva al guardarlos)
+
+Disposiciones: single (una página cada vez), continuous (continua), double
+(dos páginas cada vez), double-cover (dos cada vez, la primera sola, como un
+libro), double-continuous, double-continuous-cover.
+
+Zooms: fit-page (la página), fit-width (el ancho), fit-height (el alto),
+fit-visible (lo impreso), fit-visible-width, fit-visible-height, o un
+porcentaje (150%).
+
+Paneles: none (ninguno), bookmarks (marcadores), thumbnails (miniaturas),
+attachments (adjuntos), layers (capas), full-screen (pantalla completa).
+
+Por ejemplo: py-foliation view libro.pdf --layout double-cover --zoom fit-page
+--open-at 9 -i
 .fi
 .SS completion
 .nf

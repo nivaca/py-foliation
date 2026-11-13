@@ -93,7 +93,8 @@ on the right, the page chosen.
   **number them** (in any style, from any start, with a prefix and a
   suffix), **continue the numbering from before** them, **give them one
   label**, **edit their labels one by one**, or leave them with **no
-  label**.
+  label**; **Open the document at page N** makes viewers show that page
+  first.
 - **View ▸ Thumbnails of the pages** shows the pages as thumbnails with
   their labels, to look over a whole book at once.
 - **Go to the page labelled…** (Ctrl+L) finds a page by its label: `xii`,
@@ -108,6 +109,10 @@ on the right, the page chosen.
   edit in any editor or spreadsheet.
 - **Edit ▸ Copy command line** copies the command that gives the same labels
   to another file.
+- **File ▸ View when opened…** sets how viewers show the document when they
+  open it: the layout (one page, continuous, two pages side by side, with
+  the first one alone as in a book), the zoom, the panel beside the pages
+  and the page it opens at. It is saved with the labels.
 
 Files protected by a password ask for it, and keep their protection when
 they are saved.
@@ -125,6 +130,7 @@ they are saved.
     py-foliation set book.pdf 1:r 9:D --dry-run    # only show what it would do
     py-foliation copy old.pdf new.pdf -i           # the labels of old.pdf, to new.pdf
     py-foliation clear book.pdf -o plain.pdf       # no labels
+    py-foliation view book.pdf                     # how it opens in a viewer
 
 A range is written `PAGES:STYLE[:START[:PREFIX]]`:
 
@@ -171,6 +177,25 @@ line, and finds the fewest ranges that give them:
 
     py-foliation show --all book.pdf > labels.txt     # edit labels.txt…
     py-foliation set book.pdf --from-file labels.txt -i
+
+### The view when the file is opened
+
+A PDF can say how viewers should show it when they open it: the layout of
+the pages, the zoom, the panel beside them and the page to start at. It has
+one view for the whole document, not one for each page. `view` shows it, and
+sets the parts given (the others are kept; `default` leaves a part to the
+viewer):
+
+    py-foliation view book.pdf --layout double-cover --zoom fit-page --open-at 9 -i
+    py-foliation view book.pdf --zoom 150% --panel bookmarks -i
+    py-foliation view book.pdf --open-at default -i
+
+The layouts are `single`, `continuous`, `double`, `double-cover` (the first
+page alone, as in a book), `double-continuous` and `double-continuous-cover`;
+the zooms, `fit-page`, `fit-width`, `fit-height`, `fit-visible` (what is
+printed), `fit-visible-width`, `fit-visible-height` or a percentage; the
+panels, `none`, `bookmarks`, `thumbnails`, `attachments`, `layers` and
+`full-screen`. `show` prints the view too, when the file has one.
 
 ### Completion and manual
 

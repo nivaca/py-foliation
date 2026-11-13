@@ -6,12 +6,12 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import config, interface, labels
+from . import config, interface, labels, view
 from .files import open_pdf, read_list, save_pdf
 from .interface import N_, ntr, tr
 from .labels import LabelError, pages_text, set_command
 
-COMMANDS = ("show", "set", "clear", "copy", "completion", "interface")
+COMMANDS = ("show", "set", "clear", "copy", "view", "completion", "interface")
 
 SET_EPILOG = N_("""A range is written PAGES:STYLE[:START[:PREFIX]]:
 
@@ -42,6 +42,19 @@ file.
 --from-file takes the labels of all the pages, one on each line (as
 'show --all' writes them, with or without the page numbers; - is the
 standard input), and finds the fewest ranges that give them.""")
+
+
+VIEW_EPILOG = N_("""Layouts: single (one page at a time), continuous, double (two pages at a
+time), double-cover (two at a time, the first one alone, as a book),
+double-continuous, double-continuous-cover.
+
+Zooms: fit-page, fit-width, fit-height, fit-visible (what is printed),
+fit-visible-width, fit-visible-height, or a percentage (150%).
+
+Panels: none, bookmarks, thumbnails, attachments, layers, full-screen.
+
+For instance: py-foliation view book.pdf --layout double-cover --zoom fit-page
+--open-at 9 -i""")
 
 
 def interface_option(argv: list[str]) -> str | None:
@@ -79,13 +92,13 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
         sp.add_argument("--password", default="", metavar=tr("PASSWORD"),
                         help=tr("the password to open the PDFs (their protection is kept when they are saved)"))
 
-    def output_options(sp):
+    def output_options(sp, dry_run_help: str | None = None):
         g = sp.add_mutually_exclusive_group()
         g.add_argument("-o", "--output", type=Path,
                        help=tr("output PDF, with one input only (default: <input>-labelled.pdf)"))
         g.add_argument("-i", "--in-place", action="store_true", help=tr("change the input files themselves"))
         sp.add_argument("-n", "--dry-run", action="store_true",
-                        help=tr("show the labels the files would get, without writing anything"))
+                        help=dry_run_help or tr("show the labels the files would get, without writing anything"))
         password(sp)
 
     sp = sub.add_parser("show", parents=[common], help=tr("show the page labels of PDFs"),
@@ -130,6 +143,22 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
     sp.add_argument("inputs", nargs="+", type=Path, metavar=tr("FILE"), help=tr("the PDFs that get them"))
     output_options(sp)
 
+    sp = sub.add_parser("view", parents=[common], help=tr("show or set how PDFs open in a viewer"),
+                        description=tr("Show or set the view of PDFs when they are opened: the layout of "
+                                       "the pages, the zoom, the panel beside them and the page they open "
+                                       "at. A PDF has one view for the whole document. Without options, the "
+                                       "view is shown; the options not given are kept; 'default' leaves "
+                                       "that part to the viewer."),
+                        epilog=translate_paragraphs(VIEW_EPILOG),
+                        formatter_class=argparse.RawDescriptionHelpFormatter)
+    sp.add_argument("inputs", nargs="+", type=Path, metavar=tr("FILE"), help=tr("source PDF"))
+    sp.add_argument("--layout", metavar=tr("LAYOUT"), help=tr("how the pages are laid out (see below)"))
+    sp.add_argument("--zoom", metavar=tr("ZOOM"), help=tr("the zoom: a fit (see below) or a percentage, as 150%%"))
+    sp.add_argument("--panel", metavar=tr("PANEL"), help=tr("what is shown beside the pages (see below)"))
+    sp.add_argument("--open-at", metavar=tr("PAGE"),
+                    help=tr("the page it opens at (the pages of the file, from 1; LAST counts from the end)"))
+    output_options(sp, tr("show the view the files would get, without writing anything"))
+
     sp = sub.add_parser("completion", parents=[common], help=tr("print the completion script of a shell"),
                         description=tr("Print the script that completes py-foliation's commands, options and "
                                        "files in SHELL. For instance: py-foliation completion fish > "
@@ -163,6 +192,7 @@ def show(a) -> int:
             with open_pdf(path, password=a.password) as pdf:
                 n = len(pdf.pages)
                 ranges = labels.read_labels(pdf)
+                shown = view.read_view(pdf)
         except LabelError as e:
             report(e)
             failed = True
@@ -179,22 +209,36 @@ def show(a) -> int:
                 print(prefix + tr("no page is labelled {label!r}", label=a.label), file=sys.stderr)
                 failed = True
         else:
-            print_ranges(path, ranges, n)
+            print_ranges(path, ranges, n, shown)
     return 1 if failed else 0
 
 
-def print_ranges(path: Path, ranges: list[labels.Range], n: int) -> None:
+def print_ranges(path: Path, ranges: list[labels.Range], n: int, shown: view.View = view.View()) -> None:
+    """The ranges of a file (and its view when it is opened, if it has one), and the command that gives
+    them to another file."""
     print(ntr("{path}: {count} page", "{path}: {count} pages", n, path=path))
     if not ranges:
         print(tr("No page labels: viewers number the pages 1, 2, 3 ..."))
+    else:
+        rows = [(pages_text(r, last), labels.describe(r, last), r.spec()) for r, last in labels.spans(ranges, n)]
+        w1 = max(len(x[0]) for x in rows)
+        w2 = max(len(x[1]) for x in rows)
+        for pages, desc, spec in rows:
+            print(f"  {pages:<{w1}}  {desc:<{w2}}  {spec}")
+    if shown:
+        print_view(shown)
+    if not ranges:
         return
-    rows = [(pages_text(r, last), labels.describe(r, last), r.spec()) for r, last in labels.spans(ranges, n)]
-    w1 = max(len(x[0]) for x in rows)
-    w2 = max(len(x[1]) for x in rows)
-    for pages, desc, spec in rows:
-        print(f"  {pages:<{w1}}  {desc:<{w2}}  {spec}")
     print(tr("To give these labels to another file:"))
     print("  " + set_command(Path("FILE.pdf"), ranges).replace("FILE.pdf", tr("FILE.pdf")))
+
+
+def print_view(v: view.View, title: str | None = None) -> None:
+    print(title or tr("When it is opened:"))
+    rows = view.describe(v)
+    width = max(len(what) for what, _ in rows)
+    for what, how in rows:
+        print(f"  {what + ':':<{width + 1}}  {how}")
 
 
 def split_named(groups: list[list[str]]) -> tuple[list[list[str]], list[str]]:
@@ -218,9 +262,15 @@ def output_path(a, path: Path) -> Path:
     return a.output or path.with_name(path.stem + "-labelled.pdf")
 
 
-def change(a, inputs: list[Path], make) -> int:
-    """Give each of INPUTS the labels MAKE(pdf, n) returns, and save it (or, with
-    --dry-run, only say what it would be)."""
+def print_spans(ranges: list[labels.Range], n: int) -> None:
+    for r, last in labels.spans(ranges, n):
+        print(f"  {pages_text(r, last)}: {labels.describe(r, last)}")
+
+
+def change(a, inputs: list[Path], make, write=labels.write_labels, describe=print_spans) -> int:
+    """Give each of INPUTS what MAKE(pdf, n) returns (with WRITE(pdf, it): page labels
+    unless said otherwise), and save it (or, with --dry-run, only say what it would be);
+    then DESCRIBE(it, n)."""
     if a.output is not None and len(inputs) > 1:
         raise LabelError(tr("--output takes one input only; with several, each is saved as "
                             "<input>-labelled.pdf, or changed with --in-place"))
@@ -229,7 +279,7 @@ def change(a, inputs: list[Path], make) -> int:
         try:
             with open_pdf(path, a.in_place and not a.dry_run, a.password) as pdf:
                 n = len(pdf.pages)
-                ranges = make(pdf, n)
+                made = make(pdf, n)
                 out = output_path(a, path)
                 if a.dry_run:
                     print(ntr("{path} would get ({count} page):", "{path} would get ({count} pages):", n,
@@ -237,15 +287,14 @@ def change(a, inputs: list[Path], make) -> int:
                 else:
                     if not a.in_place and out.resolve() == path.resolve():
                         raise LabelError(tr("the output is the input file; use --in-place to change it"))
-                    labels.write_labels(pdf, ranges)
+                    write(pdf, made)
                     save_pdf(pdf, out)
                     print(ntr("Wrote {path} ({count} page)", "Wrote {path} ({count} pages)", n, path=out))
         except LabelError as e:
             report(e)
             failed = True
             continue
-        for r, last in labels.spans(ranges, n):
-            print(f"  {pages_text(r, last)}: {labels.describe(r, last)}")
+        describe(made, n)
     return 1 if failed else 0
 
 
@@ -279,6 +328,28 @@ def copy(a) -> int:
     with open_pdf(a.source, password=a.password) as pdf:
         source = labels.read_labels(pdf)
     return change(a, a.inputs, lambda pdf, n: [r for r in source if r.page <= n])
+
+
+def view_command(a) -> int:
+    given = {"layout": a.layout, "zoom": a.zoom, "panel": a.panel, "page": a.open_at}
+    if all(v is None for v in given.values()):
+        if a.output is not None or a.in_place or a.dry_run:
+            raise LabelError(tr("nothing to change: give --layout, --zoom, --panel or --open-at"))
+        failed = False
+        for k, path in enumerate(a.inputs):
+            try:
+                with open_pdf(path, password=a.password) as pdf:
+                    shown = view.read_view(pdf)
+            except LabelError as e:
+                report(e)
+                failed = True
+                continue
+            if k:
+                print()
+            print_view(shown, f"{path}:")
+        return 1 if failed else 0
+    return change(a, a.inputs, lambda pdf, n: view.changed(view.read_view(pdf), n, **given),
+                  write=view.write_view, describe=lambda v, n: print_view(v, tr("When it is opened:")))
 
 
 def completion(a) -> int:
@@ -318,16 +389,20 @@ def main(argv: list[str] | None = None) -> int:
         argv.insert(argv.index(first), "show")
     parser = build_parser()
     a, extra = parser.parse_known_args(argv)
-    # (argparse takes the positionals of 'set' in one go: those after an option are left over)
-    if extra and a.command == "set" and not any(t.startswith("-") and t != "-" for t in extra):
-        a.items += extra
+    # (argparse takes the positionals of a command in one go: those after an option are left over)
+    if extra and a.command in ("set", "show", "clear", "copy", "view") \
+            and not any(t.startswith("-") and t != "-" for t in extra):
+        if a.command == "set":
+            a.items += extra
+        else:
+            a.inputs += [Path(t) for t in extra]
     elif extra:
         parser.error(tr("unrecognized arguments: %s") % " ".join(extra))
     if not a.command:
         parser.print_help()
         return 1
-    commands = {"show": show, "set": set_labels, "clear": clear, "copy": copy, "completion": completion,
-                "interface": choose_interface}
+    commands = {"show": show, "set": set_labels, "clear": clear, "copy": copy, "view": view_command,
+                "completion": completion, "interface": choose_interface}
     try:
         return commands[a.command](a)
     except LabelError as e:

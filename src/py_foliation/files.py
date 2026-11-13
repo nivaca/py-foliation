@@ -14,6 +14,7 @@ from pikepdf import Pdf
 from . import labels
 from .interface import tr
 from .labels import LabelError, Range
+from .view import View, write_view
 
 
 def open_pdf(path: Path, in_place: bool = False, password: str = "") -> Pdf:
@@ -40,14 +41,17 @@ def save_pdf(pdf: Pdf, out: Path) -> None:
         raise LabelError(tr("{path} cannot be written: {error}", path=out, error=e)) from None
 
 
-def write_copy(source: Path, ranges: list[Range], target: Path, password: str = "") -> None:
-    """SOURCE with these page labels, saved as TARGET (safely: TARGET may be SOURCE),
-    keeping its protection if it has one."""
+def write_copy(source: Path, ranges: list[Range], target: Path, password: str = "",
+               view: View | None = None) -> None:
+    """SOURCE with these page labels (and VIEW, if given: see view.write_view), saved as
+    TARGET (safely: TARGET may be SOURCE), keeping its protection if it has one."""
     fd, tmp = tempfile.mkstemp(suffix=".pdf", dir=target.parent)
     os.close(fd)
     try:
         with pikepdf.open(source, password=password) as pdf:
             labels.write_labels(pdf, ranges)
+            if view is not None:
+                write_view(pdf, view)
             _save(pdf, tmp)
         os.replace(tmp, target)
     except BaseException:

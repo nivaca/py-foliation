@@ -266,3 +266,42 @@ def test_number_dialog(app, window):
     assert dlg.values() == ("f", "f. ", 24, "") and dlg.preview.text() == "f. 12v … f. 14v"
     dlg.style.setCurrentIndex(dlg.style.findData("r"))
     assert dlg.start.text() == "12"  # (the leaf, as a number)
+
+
+def test_view_when_opened(app, window, book, monkeypatch):
+    from py_foliation.view import View, read_view
+    window.open_path(book)
+    assert window.opening == View(panel="UseNone") and not window.is_modified()
+    window.set_view(View("TwoPageRight", "150", "UseThumbs", 3))
+    assert window.is_modified()
+    window.undo()
+    assert window.opening == View(panel="UseNone") and not window.is_modified()
+    window.redo()
+    window.pages.setCurrentRow(8)
+    menu = window.build_pages_menu()
+    opener = next(a for a in menu.actions() if a.text() == "Open the document at page 9")
+    assert not opener.isChecked()
+    opener.trigger()
+    assert window.opening == View("TwoPageRight", "150", "UseThumbs", 9)
+    window.change([Range(1, "D")])  # (labels and view are saved together)
+    assert window.save() and not window.is_modified()
+    with pikepdf.open(book) as pdf:
+        assert read_view(pdf) == View("TwoPageRight", "150", "UseThumbs", 9)
+        assert labels.read_labels(pdf) == [Range(1, "D")]
+    monkeypatch.setattr(type(window), "ask_view", lambda self: View(layout="OneColumn"))
+    window.view_dialog()
+    window.revert()
+    assert window.opening == View("TwoPageRight", "150", "UseThumbs", 9)
+    window.show_page(20)  # (the preview, window.view, still follows the page shown)
+    assert window.view.pageNavigator().currentPage() == 19
+
+
+def test_view_dialog(app, window):
+    from py_foliation.gui.widgets import ViewDialog
+    from py_foliation.view import View
+    dlg = ViewDialog(window, View("OneColumn", "125", "", 4), 10)
+    assert dlg.value() == View("OneColumn", "125", "", 4) and dlg.percent.isEnabled()
+    dlg.zoom_box.setCurrentIndex(dlg.zoom_box.findData("FitH"))
+    dlg.page.setValue(0)
+    assert not dlg.percent.isEnabled() and dlg.value() == View("OneColumn", "FitH", "", 1)
+    assert ViewDialog(window, View(), 10).value() == View()
