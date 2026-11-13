@@ -1,4 +1,4 @@
-# py-foliation 0.5: descripción
+# py-foliation 0.6: descripción
 
 ## Análisis
 
@@ -56,7 +56,7 @@ Cada texto del programa, en la ventana y en la línea de órdenes, incluidos los
 
 ### Proceso y distribución
 
-El trabajo pasó por siete etapas: primero las etiquetas mismas, su lectura, su escritura y el cálculo de los cambios; luego la línea de órdenes, con las dos formas de escribir los intervalos; después la ventana; la interfaz en español, el icono y las capturas; los paquetes (versión 0.1); los folios, los sufijos, las listas de etiquetas y lo que pidió el uso (versiones 0.2 y 0.3); y por último una reorganización del código en módulos más pequeños (0.4) y la vista al abrir (0.5).
+El trabajo pasó por siete etapas: primero las etiquetas mismas, su lectura, su escritura y el cálculo de los cambios; luego la línea de órdenes, con las dos formas de escribir los intervalos; después la ventana; la interfaz en español, el icono y las capturas; los paquetes (versión 0.1); los folios, los sufijos, las listas de etiquetas y lo que pidió el uso (versiones 0.2 y 0.3); y por último una reorganización del código en módulos más pequeños (0.4) y la vista al abrir (0.5, y en los términos de Xodo, 0.6).
 
 La AppImage lleva su propio Python, con py-foliation, pikepdf y PySide6, y funciona en casi cualquier Linux; su primer argumento decide entre la ventana y la línea de órdenes. Antes de guardarla se arranca una vez con una carpeta personal vacía, para que no dependa de nada instalado en el equipo donde se hizo. Para Fedora hay un RPM, hecho con el Python, pikepdf y PySide6 de Fedora, que corre todas las pruebas mientras se construye y se firma con la clave del autor. `tools/release.py` publica cada versión de la misma manera: corre las pruebas, hace la wheel, el paquete fuente, la AppImage y el RPM firmado, etiqueta la versión y la publica en GitHub, en Codeberg y en Copr.
 

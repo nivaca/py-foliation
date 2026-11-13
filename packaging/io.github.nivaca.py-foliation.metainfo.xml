@@ -77,6 +77,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.6" date="2026-11-13">
+      <description>
+        <p>The initial view of the document is set from the right-click menu of the pages, or the View menu, as Xodo names it: Page layout (Single, Single Continuous, Facing, Facing Continuous, Cover, Cover Continuous) and Page view (Actual Size, Fit to Width, Fit to Page). The Settings menu has Language instead of Interface Language.</p>
+      </description>
+    </release>
     <release version="0.5" date="2026-11-13">
       <description>
         <p>Set how viewers show the document when they open it: the layout of the pages (one at a time, continuous, two side by side, the first one alone as in a book), the zoom, the panel beside the pages and the page it opens at. In the window, File ▸ View when opened…, and Open the document at this page in the menu of the pages; on the command line, py-foliation view.</p>
