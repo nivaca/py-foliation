@@ -33,12 +33,17 @@ leaf and its side (``12v``; ``12`` is ``12r``).
 from __future__ import annotations
 
 import re
+import shlex
 from dataclasses import dataclass
+from pathlib import Path
 
 import pikepdf
 from pikepdf import Array, Dictionary, Name, Pdf
 
 from .interface import N_, tr
+from .numbers import (  # noqa: F401  (to_roman, to_letters and from_roman are part of this module's API)
+    format_number, from_letters, from_roman, parse_folio, to_folio, to_letters, to_roman,
+)
 
 STYLES = ["D", "r", "R", "a", "A", "f", ""]  # ("" is no number; "f", folios, is py-foliation's own)
 NATIVE = {"D", "r", "R", "a", "A", ""}  # (the styles a PDF knows)
@@ -48,6 +53,11 @@ STYLE_NAMES = {
     "D": "arabic", "r": "roman", "R": "ROMAN", "a": "letters", "A": "LETTERS", "f": "folio", "": "none",
 }
 NONE_CODE = "-"  # how "no number" is written in compact ranges
+
+# what style_code takes: the codes, the names, "-" (as written) ...
+STYLE_ALIASES = {**{c: c for c in STYLES}, **{name: c for c, name in STYLE_NAMES.items()}, NONE_CODE: ""}
+# ... and these in any case
+STYLE_ALIASES_ANY_CASE = {"none": "", "arabic": "D", "folio": "f", "folios": "f"}
 
 # how the styles are shown (with tr)
 STYLE_TITLES = {
@@ -123,73 +133,14 @@ class Range:
 
 def style_code(name: str) -> str:
     """The code of a style given by its code (D, r...), its name (arabic, roman...) or '-'."""
-    if name in ("D", "r", "R", "a", "A", "f"):
-        return name
-    for code, long in STYLE_NAMES.items():
-        if name == long:
-            return code
-    if name in (NONE_CODE, "") or name.lower() == "none":
-        return ""
-    if name.lower() in ("arabic", "folio", "folios"):
-        return "f" if name.lower().startswith("folio") else "D"
-    raise LabelError(tr("unknown style {style!r} (one of: {styles})", style=name, styles=styles_help()))
+    code = STYLE_ALIASES.get(name, STYLE_ALIASES_ANY_CASE.get(name.lower()))
+    if code is None:
+        raise LabelError(tr("unknown style {style!r} (one of: {styles})", style=name, styles=styles_help()))
+    return code
 
 
 def styles_help() -> str:
     return ", ".join(f"{c or NONE_CODE} ({STYLE_NAMES[c]})" for c in STYLES)
-
-
-# =========================================================================== numbers
-
-
-ROMAN = ((1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC"),
-         (50, "L"), (40, "XL"), (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I"))
-
-
-def to_roman(n: int) -> str:
-    """N in uppercase roman numerals (thousands beyond 3999 as more Ms)."""
-    out = []
-    for value, digits in ROMAN:
-        count, n = divmod(n, value)
-        out.append(digits * count)
-    return "".join(out)
-
-
-def from_roman(s: str) -> int | None:
-    """The number S writes in roman numerals, if S is how to_roman writes it."""
-    values = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
-    s = s.upper()
-    if not s or any(c not in values for c in s):
-        return None
-    n = 0
-    for i, c in enumerate(s):
-        v = values[c]
-        n += -v if i + 1 < len(s) and values[s[i + 1]] > v else v
-    return n if n > 0 and to_roman(n) == s else None
-
-
-def to_letters(n: int) -> str:
-    """N as the PDF numbers pages with letters: A ... Z, AA ... ZZ, AAA ..."""
-    return chr(ord("A") + (n - 1) % 26) * ((n - 1) // 26 + 1)
-
-
-def to_folio(side: int) -> str:
-    """SIDE (1, 2, 3 ...) as a folio: 1r, 1v, 2r ..."""
-    return f"{(side + 1) // 2}{'r' if side % 2 else 'v'}"
-
-
-def format_number(n: int, style: str) -> str:
-    if style == "D":
-        return str(n)
-    if style in ("r", "R"):
-        s = to_roman(n)
-        return s.lower() if style == "r" else s
-    if style in ("a", "A"):
-        s = to_letters(n)
-        return s.lower() if style == "a" else s
-    if style == "f":
-        return to_folio(n)
-    return ""
 
 
 # =========================================================================== pages
@@ -242,11 +193,11 @@ def _start(value: str, spec: str, style: str) -> int:
     if not v:
         return 1
     if style == "f":
-        m = re.fullmatch(r"(\d+)([rv]?)", v)
-        if not m or int(m[1]) < 1:
+        side = parse_folio(v)
+        if side is None:
             raise LabelError(tr("the start of folios in {spec!r} must be a leaf and its side, as 12r or 12v",
                                 spec=spec))
-        return 2 * int(m[1]) - (0 if m[2] == "v" else 1)
+        return side
     if not v.isdigit() or int(v) < 1:
         raise LabelError(tr("the start number in {spec!r} must be a whole number from 1 on", spec=spec))
     return int(v)
@@ -285,18 +236,27 @@ def parse_named(tokens: list[str], n: int) -> Request:
 # =========================================================================== labels from a list
 
 
-def _candidates(label: str) -> list[tuple[str, str, int, str]]:
-    """The ways LABEL may be written: (style, prefix, number, suffix), the likeliest first;
-    the last is always the label as a prefix with no number."""
-    found: list[tuple[int, tuple[str, str, int, str]]] = []
+Spec = tuple[str, str, int, str]  # (style, prefix, number, suffix) of a page
+
+
+def _following(spec: Spec) -> Spec:
+    """The spec of the page after one with SPEC, in the same range."""
+    style, prefix, number, suffix = spec
+    return style, prefix, number + 1, suffix
+
+
+def _candidates(label: str) -> list[Spec]:
+    """The ways LABEL may be written, the likeliest first; the last is always
+    the label as a prefix with no number."""
+    found: list[tuple[int, Spec]] = []
 
     def add(rank: int, style: str, m: re.Match, number: int):
         found.append((rank + (0 if m.end() == len(label) else 10) + (0 if m.start() == 0 else 1),
                       (style, label[:m.start()], number, label[m.end():])))
 
-    for m in re.finditer(r"(?<!\d)(\d+)([rv])(?![a-zA-Z])", label):
+    for m in re.finditer(r"(?<!\d)(\d+)[rv](?![a-zA-Z])", label):
         if not m[1].startswith("0"):
-            add(1, "f", m, 2 * int(m[1]) - (0 if m[2] == "v" else 1))
+            add(1, "f", m, parse_folio(m[0]))
     for m in re.finditer(r"\d+", label):
         if not m[0].startswith("0"):
             add(0, "D", m, int(m[0]))
@@ -307,7 +267,7 @@ def _candidates(label: str) -> list[tuple[str, str, int, str]]:
                 add(2, style, m, n)
     for style, rx in (("a", r"([a-z])\1*"), ("A", r"([A-Z])\1*")):
         for m in re.finditer(rx, label):
-            add(3, style, m, (len(m[0]) - 1) * 26 + ord(m[0][0].lower()) - ord("a") + 1)
+            add(3, style, m, from_letters(m[0]))
     out = [c for _, c in sorted(found, key=lambda x: x[0])]
     return out + [("", label, 1, "")]
 
@@ -318,12 +278,12 @@ def from_labels(labels: list[str], first_page: int = 1) -> list[Range]:
     Each label is read as a prefix, a number and a suffix (or a text with no
     number) so that it goes on from the label before when it can."""
     out: list[Range] = []
-    prev: tuple[str, str, int, str] | None = None
+    prev: Spec | None = None
     for i, label in enumerate(labels):
         cands = _candidates(label)
         if prev is not None:
-            if prev[0] and (prev[0], prev[1], prev[2] + 1, prev[3]) in cands:
-                prev = (prev[0], prev[1], prev[2] + 1, prev[3])
+            if prev[0] and _following(prev) in cands:
+                prev = _following(prev)
                 continue
             if not prev[0] and prev[1] == label:
                 continue
@@ -332,12 +292,21 @@ def from_labels(labels: list[str], first_page: int = 1) -> list[Range]:
             prev = ("", label, 1, "")
             continue
         nxt = _candidates(labels[i + 1]) if i + 1 < len(labels) else []
-        pick = next((c for c in cands if c[0] and (c[0], c[1], c[2] + 1, c[3]) in nxt), None)
+        pick = next((c for c in cands if c[0] and _following(c) in nxt), None)
         if pick is None:  # (a page on its own: plainly numbered if it can be, else its text)
-            pick = next((c for c in cands if c[0] in "DrRaA" and c[0] and not c[1] and not c[3]), cands[-1])
-        out.append(Range(first_page + i, pick[0], pick[1], pick[2] if pick[0] else 1, pick[3]))
+            pick = next((c for c in cands if c[0] in NATIVE and c[0] and not c[1] and not c[3]), cands[-1])
+        style, prefix, number, suffix = pick
+        out.append(Range(first_page + i, style, prefix, number if style else 1, suffix))
         prev = pick
     return out
+
+
+def from_list(listed: list[str], n: int) -> list[Range]:
+    """The ranges that give a document of N pages the labels LISTED (one for each page)."""
+    if len(listed) != n:
+        raise LabelError(tr("the list has {labels} labels, but the document has {count} pages",
+                            labels=len(listed), count=n))
+    return from_labels(listed)
 
 
 # =========================================================================== reading and writing
@@ -478,9 +447,6 @@ def spans(ranges: list[Range], n: int) -> list[tuple[Range, int]]:
     return [(r, (ranges[i + 1].page - 1) if i + 1 < len(ranges) else n) for i, r in enumerate(ranges)]
 
 
-Spec = tuple[str, str, int, str]  # (style, prefix, number, suffix) of a page
-
-
 def _page_specs(ranges: list[Range], n: int) -> list[Spec]:
     out = []
     ranges = normalize(ranges) or [Range(1)]
@@ -589,3 +555,20 @@ def describe(r: Range, last: int) -> str:
     if not r.style:
         return tr("{label} (every page)", label=a) if a else tr("(no label)")
     return f"{a} … {b}"
+
+
+def pages_text(r: Range, last: int) -> str:
+    """'pages 9-200' (or 'page 9': the pages of a range)."""
+    if last > r.page:
+        return tr("pages {first}-{last}", first=r.page, last=last)
+    return tr("page {first}", first=r.page)
+
+
+def set_command(input: Path, ranges: list[Range]) -> str:
+    """The command line that gives a file these RANGES."""
+    ranges = normalize(ranges)
+    if not ranges:
+        return shlex.join(["py-foliation", "clear", str(input)])
+    tokens = [t for r in ranges if not r.suffix for t in r.tokens()]
+    tokens += [t for r in ranges if r.suffix for t in r.tokens()]  # (--range ... last: it takes the rest)
+    return shlex.join(["py-foliation", "set", str(input)] + tokens)

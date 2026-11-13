@@ -216,7 +216,7 @@ def cli(lang: str, out: Path, scale: float):
 
 
 def cli_child(out: str):
-    from PySide6.QtCore import QPointF, QRectF, Qt
+    from PySide6.QtCore import QPointF, QRectF
     from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetricsF, QGuiApplication, QImage, QPainter
 
     app = QGuiApplication([sys.argv[0]])

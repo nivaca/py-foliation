@@ -3,17 +3,13 @@
 from __future__ import annotations
 
 import argparse
-import re
-import shlex
 import sys
 from pathlib import Path
 
-import pikepdf
-from pikepdf import Pdf
-
 from . import config, interface, labels
+from .files import open_pdf, read_list, save_pdf
 from .interface import N_, ntr, tr
-from .labels import LabelError
+from .labels import LabelError, pages_text, set_command
 
 COMMANDS = ("show", "set", "clear", "copy", "completion", "interface")
 
@@ -151,60 +147,11 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
     return parser
 
 
-# =========================================================================== files
-
-
-def open_pdf(path: Path, in_place: bool = False, password: str = "") -> Pdf:
-    if not path.is_file():
-        raise LabelError(tr("{path} not found", path=path))
-    try:
-        return Pdf.open(path, allow_overwriting_input=in_place, password=password)
-    except pikepdf.PasswordError:
-        raise LabelError(tr("{path} is protected by a password (give it with --password)", path=path)) from None
-    except pikepdf.PdfError as e:
-        raise LabelError(tr("{path} cannot be read as a PDF: {error}", path=path, error=e)) from None
-
-
-def save_pdf(pdf: Pdf, out: Path) -> None:
-    """Save PDF as OUT, keeping its protection if it has one."""
-    try:
-        pdf.save(out, encryption=True if pdf.is_encrypted else None)
-    except OSError as e:
-        raise LabelError(tr("{path} cannot be written: {error}", path=out, error=e)) from None
-
-
-def set_command(input: Path, ranges: list[labels.Range]) -> str:
-    """The command line that gives a file these RANGES."""
-    ranges = labels.normalize(ranges)
-    if not ranges:
-        return shlex.join(["py-foliation", "clear", str(input)])
-    tokens = [t for r in ranges if not r.suffix for t in r.tokens()]
-    tokens += [t for r in ranges if r.suffix for t in r.tokens()]  # (--range ... last: it takes the rest)
-    return shlex.join(["py-foliation", "set", str(input)] + tokens)
-
-
-def read_list(name: str) -> list[str]:
-    """The labels of a list (a file, or - for the standard input): one on each
-    line, or as 'show --all' writes them, after the page numbers."""
-    try:
-        text = sys.stdin.read() if name == "-" else Path(name).read_text(encoding="utf-8-sig")
-    except (OSError, UnicodeDecodeError) as e:
-        raise LabelError(tr("{path} cannot be read: {error}", path=name, error=e)) from None
-    lines = text.splitlines()
-    while lines and not lines[-1].strip():
-        lines.pop()
-    numbered = [re.fullmatch(r"\s*(\d+)(?:  (.*))?", line) for line in lines]
-    if lines and all(numbered) and [int(m[1]) for m in numbered] == list(range(1, len(lines) + 1)):
-        return [m[2] or "" for m in numbered]
-    return lines
-
-
-def pages_text(r: labels.Range, last: int) -> str:
-    return tr("pages {first}-{last}", first=r.page, last=last) if last > r.page \
-        else tr("page {first}", first=r.page)
-
-
 # =========================================================================== commands
+
+
+def report(error: LabelError) -> None:
+    print(tr("error: {error}", error=error), file=sys.stderr)
 
 
 def show(a) -> int:
@@ -217,7 +164,7 @@ def show(a) -> int:
                 n = len(pdf.pages)
                 ranges = labels.read_labels(pdf)
         except LabelError as e:
-            print(tr("error: {error}", error=e), file=sys.stderr)
+            report(e)
             failed = True
             continue
         prefix = f"{path}: " if len(a.inputs) > 1 else ""
@@ -294,7 +241,7 @@ def change(a, inputs: list[Path], make) -> int:
                     save_pdf(pdf, out)
                     print(ntr("Wrote {path} ({count} page)", "Wrote {path} ({count} pages)", n, path=out))
         except LabelError as e:
-            print(tr("error: {error}", error=e), file=sys.stderr)
+            report(e)
             failed = True
             continue
         for r, last in labels.spans(ranges, n):
@@ -315,10 +262,7 @@ def set_labels(a) -> int:
 
     def make(pdf, n):
         if listed is not None:
-            if len(listed) != n:
-                raise LabelError(tr("the list has {labels} labels, but the document has {count} pages",
-                                    labels=len(listed), count=n))
-            base = labels.from_labels(listed)
+            base = labels.from_list(listed, n)
         else:
             base = labels.read_labels(pdf) if a.keep or a.remove else []
         requests = [labels.parse_compact(s, n) for s in compact] + [labels.parse_named(g, n) for g in named]
@@ -387,5 +331,5 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return commands[a.command](a)
     except LabelError as e:
-        print(tr("error: {error}", error=e), file=sys.stderr)
+        report(e)
         return 1

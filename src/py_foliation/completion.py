@@ -13,15 +13,30 @@ import argparse
 PROG = "py-foliation"
 
 
+def _subparsers(parser: argparse.ArgumentParser) -> argparse._SubParsersAction | None:
+    return next((a for a in parser._actions if isinstance(a, argparse._SubParsersAction)), None)
+
+
 def commands(parser: argparse.ArgumentParser) -> dict[str, argparse.ArgumentParser]:
-    for action in parser._actions:
-        if isinstance(action, argparse._SubParsersAction):
-            return dict(action.choices)
-    return {}
+    sub = _subparsers(parser)
+    return dict(sub.choices) if sub else {}
 
 
 def options(parser: argparse.ArgumentParser) -> list[tuple[list[str], argparse.Action]]:
     return [(a.option_strings, a) for a in parser._actions if a.option_strings]
+
+
+def _option_words(parser: argparse.ArgumentParser) -> str:
+    return " ".join(o for strings, _ in options(parser) for o in strings)
+
+
+def _positionals(parser: argparse.ArgumentParser) -> list[argparse.Action]:
+    return [a for a in parser._actions if not a.option_strings]
+
+
+def _choices(parser: argparse.ArgumentParser) -> list[str]:
+    """The values its first positional with choices takes ([] if none)."""
+    return next((list(a.choices) for a in _positionals(parser) if a.choices), [])
 
 
 def _help(action: argparse.Action) -> str:
@@ -33,10 +48,8 @@ def bash(parser: argparse.ArgumentParser) -> str:
     cmds = commands(parser)
     cases = []
     for name, sub in cmds.items():
-        opts = " ".join(o for strings, _ in options(sub) for o in strings)
-        choices = next((" ".join(a.choices) for a in sub._actions if not a.option_strings and a.choices), "")
-        cases.append(f'        {name}) opts="{opts}"; words="{choices}" ;;')
-    top = " ".join(o for strings, _ in options(parser) for o in strings)
+        cases.append(f'        {name}) opts="{_option_words(sub)}"; words="{' '.join(_choices(sub))}" ;;')
+    top = _option_words(parser)
     return f"""# bash completion for {PROG} (made by '{PROG} completion bash')
 _py_foliation() {{
     local cur prev cmd opts words i
@@ -84,22 +97,18 @@ def fish(parser: argparse.ArgumentParser) -> str:
         cond = f"'__fish_seen_subcommand_from {name}'"
         for strings, action in options(sub):
             lines.append(_fish_option(strings, action, cond))
-        positional = [a for a in sub._actions if not a.option_strings]
-        choices = next((a.choices for a in positional if a.choices), None)
+        choices = _choices(sub)
         if choices:
             lines.append(f"complete -c {PROG} -n {cond} -a '{' '.join(choices)}'")
-        elif positional:
+        elif _positionals(sub):
             lines.append(f"complete -c {PROG} -n {cond} -F -a '(__fish_complete_suffix .pdf)'")
     return "\n".join(lines) + "\n"
 
 
 def _help_of(parser: argparse.ArgumentParser, name: str) -> str:
-    for action in parser._actions:
-        if isinstance(action, argparse._SubParsersAction):
-            for choice in action._choices_actions:
-                if choice.dest == name:
-                    return _help(choice)
-    return ""
+    sub = _subparsers(parser)
+    choice = next((c for c in sub._choices_actions if c.dest == name), None) if sub else None
+    return _help(choice) if choice else ""
 
 
 def _fish_option(strings: list[str], action: argparse.Action, cond: str) -> str:
