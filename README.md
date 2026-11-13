@@ -93,8 +93,14 @@ on the right, the page chosen.
   **number them** (in any style, from any start, with a prefix and a
   suffix), **continue the numbering from before** them, **give them one
   label**, **edit their labels one by one**, or leave them with **no
-  label**; **Open the document at page N** makes viewers show that page
-  first.
+  label**.
+- The same menu sets how viewers show the document when they open it (for
+  the whole document: PDF has no other way). **Page layout**: Single,
+  Single Continuous, Facing (two pages side by side, odd pages on the
+  left), Facing Continuous, Cover (as Facing, with the first page alone,
+  as the cover of a book) or Cover Continuous; **Page view**: Actual Size,
+  Fit to Width or Fit to Page; and **Open the document at page N**. They
+  are also in the **View** menu, and are saved with the labels.
 - **View ▸ Thumbnails of the pages** shows the pages as thumbnails with
   their labels, to look over a whole book at once.
 - **Go to the page labelled…** (Ctrl+L) finds a page by its label: `xii`,
@@ -109,10 +115,6 @@ on the right, the page chosen.
   edit in any editor or spreadsheet.
 - **Edit ▸ Copy command line** copies the command that gives the same labels
   to another file.
-- **File ▸ View when opened…** sets how viewers show the document when they
-  open it: the layout (one page, continuous, two pages side by side, with
-  the first one alone as in a book), the zoom, the panel beside the pages
-  and the page it opens at. It is saved with the labels.
 
 Files protected by a password ask for it, and keep their protection when
 they are saved.
@@ -180,22 +182,22 @@ line, and finds the fewest ranges that give them:
 
 ### The view when the file is opened
 
-A PDF can say how viewers should show it when they open it: the layout of
-the pages, the zoom, the panel beside them and the page to start at. It has
-one view for the whole document, not one for each page. `view` shows it, and
+A PDF can say how viewers should show it when they open it (its *initial
+view*): the page layout, the page view and the page to start at. It has one
+view for the whole document, not one for each page. `view` shows it, and
 sets the parts given (the others are kept; `default` leaves a part to the
 viewer):
 
-    py-foliation view book.pdf --layout double-cover --zoom fit-page --open-at 9 -i
-    py-foliation view book.pdf --zoom 150% --panel bookmarks -i
+    py-foliation view book.pdf --layout cover --page-view fit-page --open-at 9 -i
+    py-foliation view book.pdf --page-view actual-size -i
     py-foliation view book.pdf --open-at default -i
 
-The layouts are `single`, `continuous`, `double`, `double-cover` (the first
-page alone, as in a book), `double-continuous` and `double-continuous-cover`;
-the zooms, `fit-page`, `fit-width`, `fit-height`, `fit-visible` (what is
-printed), `fit-visible-width`, `fit-visible-height` or a percentage; the
-panels, `none`, `bookmarks`, `thumbnails`, `attachments`, `layers` and
-`full-screen`. `show` prints the view too, when the file has one.
+The page layouts are `single` (one page at a time), `single-continuous` (all
+the pages in one column), `facing` (two pages at a time, odd pages on the
+left), `facing-continuous`, `cover` (as `facing`, with the first page alone,
+as the cover of a book) and `cover-continuous`; the page views,
+`actual-size`, `fit-width`, `fit-page` or a percentage (`150%`). `show`
+prints the view too, when the file has one.
 
 ### Completion and manual
 
@@ -209,7 +211,7 @@ The Fedora package installs them, and the manual page (`man py-foliation`).
 ## Language
 
 The interface is in English and Spanish. `py-foliation interface es` (or
-**Settings ▸ Interface Language** in the window) keeps the choice in
+**Settings ▸ Language** in the window) keeps the choice in
 the configuration file; `--interface CODE` changes it for one run.
 
 ## Development

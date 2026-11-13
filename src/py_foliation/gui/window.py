@@ -18,13 +18,13 @@ from PySide6.QtWidgets import (
     QTableWidget, QVBoxLayout, QWidget,
 )
 
-from .. import __version__, config, interface, labels
+from .. import __version__, config, interface, labels, view
 from ..view import View, read_view
 from ..files import read_list, write_copy
 from ..interface import tr
 from ..labels import LabelError, Range
 from . import thumbnails
-from .widgets import FIELDS, LABELS, NumberDialog, ViewDialog, edited_signal, fit_columns, range_row
+from .widgets import FIELDS, LABELS, NumberDialog, edited_signal, fit_columns, range_row
 
 RECENT = 10  # documents in File ▸ Open recent
 AUTHOR = '<a href="https://nicolasvaughan.org">Nicolas Vaughan</a>'
@@ -190,10 +190,6 @@ class MainWindow(QMainWindow):
         self.a_export = self._action(m, tr("Save the labels as a list…"), self.export_dialog,
                                      tip=tr("A text file with the label of each page, one on each line, to "
                                             "edit and read back"))
-        m.addSeparator()
-        self.a_view = self._action(m, tr("View when opened…"), self.view_dialog,
-                                   tip=tr("The layout, zoom, panel and first page viewers show the document "
-                                          "with"))
         m.setToolTipsVisible(True)
         m.addSeparator()
         self._action(m, tr("Quit"), self.close, QKeySequence.StandardKey.Quit)
@@ -209,8 +205,11 @@ class MainWindow(QMainWindow):
         self.a_thumbs = QAction(tr("Thumbnails of the pages"), self, checkable=True)
         self.a_thumbs.toggled.connect(self.show_thumbnails)
         m.addAction(self.a_thumbs)
+        self.m_view = m
+        m.aboutToShow.connect(self._fill_view_menu)
+        self._fill_view_menu()
         m = self.menuBar().addMenu(tr("&Settings"))
-        lang = m.addMenu(tr("Interface Language"))
+        lang = m.addMenu(tr("Language"))
         group = QActionGroup(self)
         for code, name in interface.names().items():
             act = QAction(name, self, checkable=True)
@@ -290,7 +289,7 @@ class MainWindow(QMainWindow):
         if code == interface.code():
             return
         if not interface.use(code):
-            QMessageBox.warning(self, tr("Interface Language"),
+            QMessageBox.warning(self, tr("Language"),
                                 tr("The language of the interface could not be changed: {error}",
                                    error=interface.error()))
             interface.use(config.get("interface"))
@@ -512,21 +511,50 @@ class MainWindow(QMainWindow):
             self.ranges, self.opening = ranges, view
         self.refresh(select)
 
-    def set_view(self, view: View) -> None:
-        """Make VIEW the view of the document when it is opened (undoably)."""
+    def set_view(self, new: View) -> None:
+        """Make NEW the view of the document when it is opened (undoably)."""
         if self.path is not None:
-            self.change(self.ranges, view=view)
+            self.change(self.ranges, view=new)
 
-    def view_dialog(self):
-        if self.path is None:
-            return
-        view = self.ask_view()
-        if view is not None:
-            self.set_view(view)
+    def set_view_part(self, field: str, value) -> None:
+        """Change one part of the view when the document is opened: its layout, zoom (page view) or page."""
+        new = dataclasses.replace(self.opening, **{field: value})
+        self.set_view(view.without_lone_first_page(self.opening, new, page_given=field == "page"))
 
-    def ask_view(self) -> View | None:
-        dlg = ViewDialog(self, self.opening, self.count)
-        return dlg.value() if dlg.exec() == QDialog.DialogCode.Accepted else None
+    def add_view_menus(self, menu: QMenu, page: int | None = None) -> None:
+        """The submenus of MENU that choose the page layout and the page view of the document when
+        it is opened (for the whole document: PDF has no other), and with PAGE, the page it opens at."""
+        menu.addSection(tr("When the document is opened"))
+        for title, field, current, titles, tips in (
+                (tr("Page layout"), "layout", self.opening.layout, view.LAYOUT_TITLES, view.LAYOUT_TIPS),
+                (tr("Page view"), "zoom", self.opening.zoom, view.PAGE_VIEW_TITLES, view.PAGE_VIEW_TIPS)):
+            sub = menu.addMenu(title)
+            sub.setEnabled(self.path is not None)
+            sub.setToolTipsVisible(True)
+            group = QActionGroup(sub)
+            choices = [("", tr("The viewer's choice"), "")]
+            choices += [(code, tr(text), tr(tips[code])) for code, text in titles.items()]
+            if current and current not in titles:  # (a page view of the file that isn't offered)
+                choices.append((current, view.page_view_title(current), ""))
+            for code, text, tip in choices:
+                a = sub.addAction(text, lambda *_, f=field, c=code: self.set_view_part(f, c))
+                a.setCheckable(True)
+                a.setChecked(code == current)
+                a.setToolTip(tip)
+                group.addAction(a)
+        if page is not None:
+            a = menu.addAction(tr("Open the document at page {page}", page=page),
+                               lambda *_: self.set_view_part("page", page))
+            a.setToolTip(tr("Viewers will show this page first when they open the file"))
+            a.setCheckable(True)
+            a.setChecked(self.opening.page == page)
+        menu.setToolTipsVisible(True)
+
+    def _fill_view_menu(self):
+        """The View menu, with the view of the document when it is opened as it is now."""
+        self.m_view.clear()
+        self.m_view.addAction(self.a_thumbs)
+        self.add_view_menus(self.m_view)
 
     def _edit(self, row: int, **changes):
         """Change one field of the range in ROW (later, out of the signal of the widget)."""
@@ -584,13 +612,8 @@ class MainWindow(QMainWindow):
                                                                           {p: "" for p in pages})))
         menu.addSeparator()
         menu.addAction(tr("Start a range at page {page}", page=pages[0]), lambda: self.start_range_at(pages[0]))
-        a = menu.addAction(tr("Open the document at page {page}", page=pages[0]),
-                           lambda: self.set_view(dataclasses.replace(self.opening, page=pages[0])))
-        a.setToolTip(tr("Viewers will show this page first when they open the file"))
-        a.setCheckable(True)
-        a.setChecked(self.opening.page == pages[0])
-        menu.setToolTipsVisible(True)
         menu.addAction(tr("Copy their labels") if count > 1 else tr("Copy its label"), lambda: self.copy_labels())
+        self.add_view_menus(menu, pages[0])
         return menu
 
     def ask_numbering(self, count: int) -> tuple[str, str, int, str] | None:
@@ -838,7 +861,7 @@ class MainWindow(QMainWindow):
     def _enable(self):
         has = self.path is not None
         for w in (self.b_add, self.b_remove, self.b_clear, self.a_save, self.a_save_as, self.a_revert,
-                  self.a_copy_from, self.a_import, self.a_export, self.a_view, self.go_to):
+                  self.a_copy_from, self.a_import, self.a_export, self.go_to):
             w.setEnabled(has)
         self.a_undo.setEnabled(bool(self.undo_stack))
         self.a_redo.setEnabled(bool(self.redo_stack))

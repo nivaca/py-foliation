@@ -7,14 +7,13 @@ import re
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QValidator
 from PySide6.QtWidgets import (
-    QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QSpinBox, QTableWidget,
+    QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QSpinBox, QTableWidget,
     QVBoxLayout, QWidget,
 )
 
-from .. import labels, view
+from .. import labels
 from ..interface import tr
 from ..labels import Range
-from ..view import View
 from ..numbers import folio_side, to_folio
 
 FIRST, STYLE, START, PREFIX, SUFFIX, LABELS = range(6)  # the columns of the table of ranges
@@ -101,66 +100,6 @@ class NumberDialog(QDialog):
         self.start.set_folio(self.style.currentData() == "f")
         style, prefix, start, suffix = self.values()
         self.preview.setText(labels.describe(Range(1, style, prefix, start, suffix), self.count))
-
-
-class ViewDialog(QDialog):
-    """The view of the document when it is opened: layout, zoom, panel and first page."""
-
-    def __init__(self, parent, v: View, count: int):
-        super().__init__(parent)
-        self.setWindowTitle(tr("View when opened"))
-        default = tr("(the viewer's choice)")
-
-        def combo(titles: dict[str, str], current: str) -> QComboBox:
-            box = QComboBox()
-            box.addItem(default, "")
-            for code, title in titles.items():
-                box.addItem(tr(title), code)
-            box.setCurrentIndex(max(box.findData(current), 0))
-            return box
-
-        self.layout_box = combo(view.LAYOUT_TITLES, v.layout)
-        self.zoom_box = combo(view.ZOOM_TITLES, "" if v.zoom.isdigit() else v.zoom)
-        self.zoom_box.addItem(tr("Percentage"), "%")
-        self.percent = QSpinBox()
-        self.percent.setRange(1, 6400)
-        self.percent.setSuffix(" %")
-        self.percent.setValue(int(v.zoom) if v.zoom.isdigit() else 100)
-        if v.zoom.isdigit():
-            self.zoom_box.setCurrentIndex(self.zoom_box.findData("%"))
-        self.panel_box = combo(view.PANEL_TITLES, v.panel)
-        self.page = QSpinBox()
-        self.page.setRange(0, max(count, 1))
-        self.page.setSpecialValueText(default)  # (0)
-        self.page.setValue(v.page or 0)
-        self.page.setToolTip(tr("The pages of the file, from 1; a zoom opens at page 1 if no page is given"))
-
-        zoom = QHBoxLayout()
-        zoom.addWidget(self.zoom_box, 1)
-        zoom.addWidget(self.percent)
-        form = QFormLayout()
-        form.addRow(tr("Layout"), self.layout_box)
-        form.addRow(tr("Zoom"), zoom)
-        form.addRow(tr("Panel"), self.panel_box)
-        form.addRow(tr("Opens at page"), self.page)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        lay = QVBoxLayout(self)
-        lay.addWidget(QLabel(tr("How viewers show the document when they open it (a PDF has one view for "
-                                "the whole document):")))
-        lay.addLayout(form)
-        lay.addWidget(buttons)
-        self.zoom_box.currentIndexChanged.connect(self._zoom_chosen)
-        self._zoom_chosen()
-
-    def _zoom_chosen(self, *_):
-        self.percent.setEnabled(self.zoom_box.currentData() == "%")
-
-    def value(self) -> View:
-        zoom = self.zoom_box.currentData()
-        return View(self.layout_box.currentData(), str(self.percent.value()) if zoom == "%" else zoom,
-                    self.panel_box.currentData(), self.page.value() or None)
 
 
 # the field of a Range each editable column changes, and how to read it from its widget

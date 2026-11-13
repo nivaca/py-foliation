@@ -268,40 +268,39 @@ def test_number_dialog(app, window):
     assert dlg.start.text() == "12"  # (the leaf, as a number)
 
 
-def test_view_when_opened(app, window, book, monkeypatch):
+def test_view_when_opened(app, window, book):
     from py_foliation.view import View, read_view
     window.open_path(book)
-    assert window.opening == View(panel="UseNone") and not window.is_modified()
-    window.set_view(View("TwoPageRight", "150", "UseThumbs", 3))
-    assert window.is_modified()
-    window.undo()
-    assert window.opening == View(panel="UseNone") and not window.is_modified()
-    window.redo()
+    assert window.opening == View() and not window.is_modified()
     window.pages.setCurrentRow(8)
     menu = window.build_pages_menu()
-    opener = next(a for a in menu.actions() if a.text() == "Open the document at page 9")
+    subs = {a.text(): a.menu() for a in menu.actions() if a.menu()}
+    assert set(subs) == {"Page layout", "Page view"}
+    layouts = {a.text(): a for a in subs["Page layout"].actions()}
+    assert list(layouts) == ["The viewer's choice", "Single", "Single Continuous", "Facing", "Facing Continuous",
+                             "Cover", "Cover Continuous"] and layouts["The viewer's choice"].isChecked()
+    layouts["Cover"].trigger()
+    assert window.opening == View(layout="TwoPageRight") and window.is_modified()
+    views = {a.text(): a for a in window.build_pages_menu().actions() if a.menu()}["Page view"].menu().actions()
+    next(a for a in views if a.text() == "Fit to Width").trigger()
+    assert window.opening == View("TwoPageRight", "FitH", 1)
+    opener = next(a for a in window.build_pages_menu().actions() if a.text() == "Open the document at page 9")
     assert not opener.isChecked()
     opener.trigger()
-    assert window.opening == View("TwoPageRight", "150", "UseThumbs", 9)
+    assert window.opening == View("TwoPageRight", "FitH", 9)
+    window.undo()
+    assert window.opening == View("TwoPageRight", "FitH", 1)
+    window.redo()
     window.change([Range(1, "D")])  # (labels and view are saved together)
     assert window.save() and not window.is_modified()
     with pikepdf.open(book) as pdf:
-        assert read_view(pdf) == View("TwoPageRight", "150", "UseThumbs", 9)
+        assert read_view(pdf) == View("TwoPageRight", "FitH", 9)
         assert labels.read_labels(pdf) == [Range(1, "D")]
-    monkeypatch.setattr(type(window), "ask_view", lambda self: View(layout="OneColumn"))
-    window.view_dialog()
+    window._fill_view_menu()  # (the View menu has the same submenus, checked as they are now)
+    sub = next(a.menu() for a in window.m_view.actions() if a.text() == "Page layout")
+    assert next(a for a in sub.actions() if a.isChecked()).text() == "Cover"
+    window.set_view_part("layout", "SinglePage")
     window.revert()
-    assert window.opening == View("TwoPageRight", "150", "UseThumbs", 9)
+    assert window.opening == View("TwoPageRight", "FitH", 9)
     window.show_page(20)  # (the preview, window.view, still follows the page shown)
     assert window.view.pageNavigator().currentPage() == 19
-
-
-def test_view_dialog(app, window):
-    from py_foliation.gui.widgets import ViewDialog
-    from py_foliation.view import View
-    dlg = ViewDialog(window, View("OneColumn", "125", "", 4), 10)
-    assert dlg.value() == View("OneColumn", "125", "", 4) and dlg.percent.isEnabled()
-    dlg.zoom_box.setCurrentIndex(dlg.zoom_box.findData("FitH"))
-    dlg.page.setValue(0)
-    assert not dlg.percent.isEnabled() and dlg.value() == View("OneColumn", "FitH", "", 1)
-    assert ViewDialog(window, View(), 10).value() == View()

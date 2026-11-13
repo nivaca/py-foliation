@@ -1,18 +1,20 @@
 """The view of a PDF when it is opened: how a viewer lays out its pages, at
-what zoom, with which side panel, and at which page.
+what size, and at which page.
 
-A PDF keeps these for the whole document (not for each page), in its catalog:
+A PDF keeps these for the whole document (not for each page), in its catalog;
+viewers such as Xodo call them its initial view:
 
-    /PageLayout   SinglePage, OneColumn (continuous), TwoPageLeft, TwoPageRight,
-                  TwoColumnLeft, TwoColumnRight (two pages side by side; with
-                  "Right", the first page is alone on the right, as in a book)
-    /PageMode     UseNone, UseOutlines, UseThumbs, UseAttachments, UseOC,
-                  FullScreen (what is shown beside the pages)
-    /OpenAction   a destination: the page it opens at, and its zoom (/Fit,
-                  /FitH, /FitV, /FitB, /FitBH, /FitBV, or /XYZ with a factor)
+    /PageLayout   the page layout: SinglePage (Single), OneColumn (Single
+                  Continuous), TwoPageLeft (Facing), TwoColumnLeft (Facing
+                  Continuous), TwoPageRight (Cover: as Facing, but the first
+                  page alone), TwoColumnRight (Cover Continuous)
+    /OpenAction   a destination: the page it opens at, and the page view
+                  (/XYZ with a factor of 1: Actual Size; /FitH: Fit to Width;
+                  /Fit: Fit to Page; other destinations are read too)
 
-Whatever is not given is left to the viewer. Here a View holds the PDF's own
-names; LAYOUTS, ZOOMS and PANELS give the names the command line uses.
+Whatever is not given is left to the viewer, and what py-foliation doesn't
+know (/PageMode, an opening script) is kept. A View holds the PDF's own
+names; LAYOUTS and PAGE_VIEWS give the names the command line uses.
 """
 
 from __future__ import annotations
@@ -26,48 +28,49 @@ from pikepdf import Array, Dictionary, Name, Pdf
 from .interface import N_, tr
 from .labels import LabelError, page_number
 
-# PDF name -> name on the command line (and how the window shows it)
+# PDF name -> name on the command line, in the order of the menus
 LAYOUTS = {
-    "SinglePage": "single", "OneColumn": "continuous", "TwoPageLeft": "double",
-    "TwoPageRight": "double-cover", "TwoColumnLeft": "double-continuous",
-    "TwoColumnRight": "double-continuous-cover",
+    "SinglePage": "single", "OneColumn": "single-continuous", "TwoPageLeft": "facing",
+    "TwoColumnLeft": "facing-continuous", "TwoPageRight": "cover", "TwoColumnRight": "cover-continuous",
+}
+LAYOUT_ALIASES = {  # (the names of py-foliation 0.5)
+    "continuous": "OneColumn", "double": "TwoPageLeft", "double-continuous": "TwoColumnLeft",
+    "double-cover": "TwoPageRight", "double-continuous-cover": "TwoColumnRight",
 }
 LAYOUT_TITLES = {
-    "SinglePage": N_("One page at a time"), "OneColumn": N_("Continuous"),
-    "TwoPageLeft": N_("Two pages at a time"),
-    "TwoPageRight": N_("Two pages at a time, the first one alone (as a book)"),
-    "TwoColumnLeft": N_("Two pages side by side, continuous"),
-    "TwoColumnRight": N_("Two pages side by side, continuous, the first one alone (as a book)"),
+    "SinglePage": N_("Single"), "OneColumn": N_("Single Continuous"), "TwoPageLeft": N_("Facing"),
+    "TwoColumnLeft": N_("Facing Continuous"), "TwoPageRight": N_("Cover"),
+    "TwoColumnRight": N_("Cover Continuous"),
 }
-ZOOMS = {
-    "Fit": "fit-page", "FitH": "fit-width", "FitV": "fit-height", "FitB": "fit-visible",
-    "FitBH": "fit-visible-width", "FitBV": "fit-visible-height",
+LAYOUT_TIPS = {
+    "SinglePage": N_("One page at a time"),
+    "OneColumn": N_("All the pages in one column, scrolled continuously"),
+    "TwoPageLeft": N_("Two pages at a time, side by side: odd pages on the left, even pages on the right"),
+    "TwoColumnLeft": N_("All the pages in two columns: odd pages on the left, even pages on the right"),
+    "TwoPageRight": N_("As Facing, but with the first page alone, as the cover of a book"),
+    "TwoColumnRight": N_("As Facing Continuous, but with the first page alone, as the cover of a book"),
 }
-ZOOM_TITLES = {
-    "Fit": N_("Fit the page"), "FitH": N_("Fit the width"), "FitV": N_("Fit the height"),
-    "FitB": N_("Fit what is printed"), "FitBH": N_("Fit the width of what is printed"),
-    "FitBV": N_("Fit the height of what is printed"),
+ACTUAL_SIZE = "100"
+PAGE_VIEWS = {ACTUAL_SIZE: "actual-size", "FitH": "fit-width", "Fit": "fit-page"}
+PAGE_VIEW_TITLES = {ACTUAL_SIZE: N_("Actual Size"), "FitH": N_("Fit to Width"), "Fit": N_("Fit to Page")}
+PAGE_VIEW_TIPS = {
+    ACTUAL_SIZE: N_("The pages at the size they would be printed"),
+    "FitH": N_("The width of the page fits the window"),
+    "Fit": N_("The whole page fits the window"),
 }
-PANELS = {
-    "UseNone": "none", "UseOutlines": "bookmarks", "UseThumbs": "thumbnails",
-    "UseAttachments": "attachments", "UseOC": "layers", "FullScreen": "full-screen",
-}
-PANEL_TITLES = {
-    "UseNone": N_("No panel"), "UseOutlines": N_("Bookmarks"), "UseThumbs": N_("Thumbnails"),
-    "UseAttachments": N_("Attachments"), "UseOC": N_("Layers"), "FullScreen": N_("Full screen"),
-}
+DESTINATIONS = ("Fit", "FitH", "FitV", "FitB", "FitBH", "FitBV")  # (the fits a file may have)
 DEFAULT = "default"  # (on the command line: leave it to the viewer)
 
 
 @dataclass(frozen=True)
 class View:
-    """LAYOUT and PANEL: PDF names ('' for the viewer's choice). ZOOM: a PDF name
-    (Fit, FitH ...), a percentage ('150') or ''. PAGE: the page it opens at
-    (1-based; None for the viewer's choice; a zoom needs a page: 1 if none)."""
+    """LAYOUT: a PDF name ('' for the viewer's choice). ZOOM, the page view: a PDF
+    name (Fit, FitH; FitV ... if the file has them), a percentage ('100': Actual Size)
+    or ''. PAGE: the page it opens at (1-based; None for the viewer's choice; a page
+    view needs a page: 1 if none)."""
 
     layout: str = ""
     zoom: str = ""
-    panel: str = ""
     page: int | None = None
 
     def __post_init__(self):
@@ -83,25 +86,27 @@ class View:
         if self.layout:
             out += ["--layout", LAYOUTS[self.layout]]
         if self.zoom:
-            out += ["--zoom", zoom_name(self.zoom)]
-        if self.panel:
-            out += ["--panel", PANELS[self.panel]]
+            out += ["--page-view", PAGE_VIEWS.get(self.zoom) or f"{self.zoom}%"]
         if self.page is not None:
             out += ["--open-at", str(self.page)]
         return out
 
 
-def zoom_name(zoom: str) -> str:
-    return f"{zoom}%" if zoom.isdigit() else ZOOMS[zoom]
+def page_view_title(zoom: str) -> str:
+    """How the window and 'show' name a page view ('' for none)."""
+    if not zoom:
+        return ""
+    if zoom in PAGE_VIEW_TITLES:
+        return tr(PAGE_VIEW_TITLES[zoom])
+    return tr("Other ({zoom})", zoom=f"{zoom} %" if zoom.isdigit() else zoom)
 
 
 def describe(v: View) -> list[tuple[str, str]]:
-    """(what, how) for each part of V, as the window and 'show' print them."""
+    """(what, how) for each part of V, as 'show' and 'view' print them."""
     default = tr("(the viewer's choice)")
     return [
-        (tr("Layout"), tr(LAYOUT_TITLES[v.layout]) if v.layout else default),
-        (tr("Zoom"), (f"{v.zoom} %" if v.zoom.isdigit() else tr(ZOOM_TITLES[v.zoom])) if v.zoom else default),
-        (tr("Panel"), tr(PANEL_TITLES[v.panel]) if v.panel else default),
+        (tr("Page layout"), tr(LAYOUT_TITLES[v.layout]) if v.layout else default),
+        (tr("Page view"), page_view_title(v.zoom) or default),
         (tr("Opens at"), tr("page {page}", page=v.page) if v.page is not None else default),
     ]
 
@@ -109,57 +114,64 @@ def describe(v: View) -> list[tuple[str, str]]:
 # =========================================================================== the command line
 
 
-def _code(value: str, names: dict[str, str], what: str) -> str:
-    """The PDF name of VALUE, given by its name on the command line ('default': '')."""
-    v = value.strip().lower()
-    if v == DEFAULT:
-        return ""
-    for code, name in names.items():
-        if v in (name, code.lower()):
-            return code
-    raise LabelError(tr("unknown {what} {value!r} (one of: {names})", what=tr(what), value=value,
-                        names=", ".join(list(names.values()) + [DEFAULT])))
+def _unknown(what: str, value: str, names) -> LabelError:
+    return LabelError(tr("unknown {what} {value!r} (one of: {names})", what=tr(what), value=value,
+                         names=", ".join(list(names) + [DEFAULT])))
 
 
 def parse_layout(value: str) -> str:
-    return _code(value, LAYOUTS, N_("layout"))
-
-
-def parse_panel(value: str) -> str:
-    return _code(value, PANELS, N_("panel"))
+    """The PDF name of a page layout, given by its name (single ...) or 'default' ('')."""
+    v = value.strip().lower()
+    if v == DEFAULT:
+        return ""
+    for code, name in LAYOUTS.items():
+        if v in (name, code.lower()):
+            return code
+    if v in LAYOUT_ALIASES:
+        return LAYOUT_ALIASES[v]
+    raise _unknown(N_("page layout"), value, LAYOUTS.values())
 
 
 def parse_zoom(value: str) -> str:
-    """A zoom: a name (fit-width ...), a percentage (150 or 150%) or 'default'."""
-    m = re.fullmatch(r"\s*(\d+)\s*%?\s*", value)
+    """A page view: a name (actual-size, fit-width, fit-page), a percentage (150 or 150%)
+    or 'default' ('')."""
+    v = value.strip().lower()
+    if v == DEFAULT:
+        return ""
+    m = re.fullmatch(r"(\d+)\s*%?", v)
     if m:
         if not 1 <= int(m[1]) <= 6400:
             raise LabelError(tr("the zoom must be from 1% to 6400% (not {value})", value=value))
         return str(int(m[1]))
-    return _code(value, ZOOMS, N_("zoom"))
+    for code, name in PAGE_VIEWS.items():
+        if v in (name, code.lower()):
+            return code
+    raise _unknown(N_("page view"), value, PAGE_VIEWS.values())
 
 
 def parse_page(value: str, n: int) -> int | None:
     """The page to open at (1-based; LAST and LAST-N allowed), or None for 'default' (but
-    with a zoom, a view opens at page 1)."""
+    with a page view, a document opens at page 1)."""
     return None if value.strip().lower() == DEFAULT else page_number(value, n)
 
 
-def changed(v: View, n: int, layout: str | None = None, zoom: str | None = None, panel: str | None = None,
+def changed(v: View, n: int, layout: str | None = None, zoom: str | None = None,
             page: str | None = None) -> View:
     """V with the parts given on the command line (None: kept) changed, in a document of N pages."""
     changes = {}
     if layout is not None:
         changes["layout"] = parse_layout(layout)
-    if panel is not None:
-        changes["panel"] = parse_panel(panel)
     if zoom is not None:
         changes["zoom"] = parse_zoom(zoom)
     if page is not None:
         changes["page"] = parse_page(page, n)
-    new = replace(v, **changes)
-    if page is None and zoom is not None and not new.zoom and v.page == 1:
-        new = replace(new, page=None)  # (the page was only there for the zoom)
+    return without_lone_first_page(v, replace(v, **changes), page_given=page is not None)
+
+
+def without_lone_first_page(old: View, new: View, page_given: bool) -> View:
+    """NEW, but without its page if it was only there for a page view that is gone."""
+    if not page_given and old.zoom and not new.zoom and new.page == 1:
+        return replace(new, page=None)
     return new
 
 
@@ -188,7 +200,7 @@ def _destination(pdf: Pdf, action) -> tuple[int | None, str] | None:
     if index is None or not 0 <= index < len(pdf.pages):
         return None
     kind = _name(action[1])
-    if kind in ZOOMS:
+    if kind in DESTINATIONS:
         return index + 1, kind
     if kind == "XYZ":
         factor = action[4] if len(action) > 4 else None
@@ -203,12 +215,10 @@ def _destination(pdf: Pdf, action) -> tuple[int | None, str] | None:
 def read_view(pdf: Pdf) -> View:
     """The view of the document when it is opened (the parts it doesn't give, or that
     py-foliation doesn't know, are left empty)."""
-    root = pdf.Root
-    layout = _name(root.get("/PageLayout"))
-    panel = _name(root.get("/PageMode"))
-    dest = _destination(pdf, root.get("/OpenAction"))
+    layout = _name(pdf.Root.get("/PageLayout"))
+    dest = _destination(pdf, pdf.Root.get("/OpenAction"))
     page, zoom = dest if dest else (None, "")
-    return View(layout if layout in LAYOUTS else "", zoom, panel if panel in PANELS else "", page)
+    return View(layout if layout in LAYOUTS else "", zoom, page)
 
 
 def write_view(pdf: Pdf, v: View) -> None:
@@ -216,12 +226,11 @@ def write_view(pdf: Pdf, v: View) -> None:
     (so that what py-foliation doesn't know is kept, unless it is replaced)."""
     old = read_view(pdf)
     root = pdf.Root
-    for key, value, before in (("/PageLayout", v.layout, old.layout), ("/PageMode", v.panel, old.panel)):
-        if value != before:
-            if value:
-                root[key] = Name("/" + value)
-            elif key in root:
-                del root[key]
+    if v.layout != old.layout:
+        if v.layout:
+            root.PageLayout = Name("/" + v.layout)
+        elif "/PageLayout" in root:
+            del root["/PageLayout"]
     if (v.page, v.zoom) != (old.page, old.zoom):
         if v.page is None:
             if "/OpenAction" in root:

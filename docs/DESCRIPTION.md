@@ -153,21 +153,26 @@ PyPI, and there is a Flatpak, for Flathub.
 -----------------------------------
 
 Besides its labels, a PDF can say how viewers should show it when they
-open it: the layout of the pages (one at a time, continuous, two side by
-side, with or without the first one alone as in a book), the zoom (fitting
-the page, its width or its height, or a percentage), the panel beside the
-pages (bookmarks, thumbnails …) and the page to start at.  These are kept
-for the whole document, not for each page, in the catalog: `/PageLayout`,
-`/PageMode` and `/OpenAction`.  `view.py` reads and writes them, and
-changes only the parts that are asked for, so that an opening action it
-does not understand, such as a script, is kept unless it is replaced.
+open it, its *initial view*: the page layout, the page view and the page to
+start at.  It names them as Xodo and other viewers do: the layouts Single,
+Single Continuous, Facing (two pages side by side, odd pages on the left),
+Facing Continuous, Cover (as Facing, with the first page alone, as the
+cover of a book) and Cover Continuous; the page views Actual Size, Fit to
+Width and Fit to Page.  These are kept for the whole document, not for
+each page or range, in the catalog: `/PageLayout` and `/OpenAction`;
+there is no way to give a page a layout of its own that any viewer would
+follow.  `view.py` reads and writes them, and changes only the parts that
+are asked for, so that what it does not understand, such as an opening
+script or the panel beside the pages, is kept unless it is replaced.
 
 `py-foliation view` shows the view of a file, or sets the parts given
-(`--layout`, `--zoom`, `--panel`, `--open-at`; `default` leaves a part to
-the viewer), and `show` prints it with the labels.  In the window, *View
-when opened…* sets it in a dialog, and the menu on the pages offers to
-open the document at the page chosen; the view is undone, redone and
-saved together with the labels.
+(`--layout`, `--page-view`, `--open-at`; `default` leaves a part to the
+viewer), and `show` prints it with the labels.  In the window, the menu
+on the pages, and the *View* menu, have a *Page layout* and a *Page view*
+submenu, and offer to open the document at the page chosen; the view is
+undone, redone and saved together with the labels.  (Version 0.5 set the
+panel and more zooms too, from a dialog; that proved confusing, and 0.6
+keeps to these.)
 
 To make room for it, the code was rearranged: the numbers in each style
 went to `numbers.py`, the reading and writing of files that the command

@@ -96,8 +96,16 @@ la derecha, la página elegida.
   ellas para **numerarlas** (en cualquier estilo, desde cualquier inicio, con
   prefijo y sufijo), **seguir la numeración anterior**, **darles una sola
   etiqueta**, **editar sus etiquetas una por una** o dejarlas **sin
-  etiqueta**; **Abrir el documento en la página N** hace que los visores
-  muestren primero esa página.
+  etiqueta**.
+- El mismo menú establece cómo muestran los visores el documento al abrirlo
+  (para todo el documento: PDF no tiene otra manera). **Disposición de
+  página**: Una página, Una página continua, Páginas enfrentadas (dos páginas
+  lado a lado, las impares a la izquierda), Páginas enfrentadas continuas,
+  Portada (como Páginas enfrentadas, con la primera página sola, como la
+  portada de un libro) o Portada continua; **Vista de página**: Tamaño real,
+  Ajustar al ancho o Ajustar a la página; y **Abrir el documento en la
+  página N**. También están en el menú **Ver**, y se guardan con las
+  etiquetas.
 - **Ver ▸ Miniaturas de las páginas** muestra las páginas en miniatura con sus
   etiquetas, para revisar todo un libro de un vistazo.
 - **Ir a la página con la etiqueta…** (Ctrl+L) busca una página por su
@@ -113,10 +121,6 @@ la derecha, la página elegida.
   lista…** escribe uno, para editarlo en cualquier editor u hoja de cálculo.
 - **Editar ▸ Copiar línea de órdenes** copia la orden que da las mismas
   etiquetas a otro archivo.
-- **Archivo ▸ Vista al abrir…** establece cómo muestran los visores el
-  documento al abrirlo: la disposición (una página, continua, dos páginas
-  lado a lado, con la primera sola como en un libro), el zoom, el panel junto
-  a las páginas y la página en que se abre. Se guarda con las etiquetas.
 
 Los archivos protegidos con contraseña la piden, y conservan su protección al
 guardarlos.
@@ -184,23 +188,23 @@ cada línea, y encuentra el menor número de intervalos que las da:
 
 ### La vista al abrir el archivo
 
-Un PDF puede decir cómo deben mostrarlo los visores al abrirlo: la
-disposición de las páginas, el zoom, el panel junto a ellas y la página en que
+Un PDF puede decir cómo deben mostrarlo los visores al abrirlo (su *vista
+inicial*): la disposición de página, la vista de página y la página en que
 empezar. Tiene una sola vista para todo el documento, no una por página.
 `view` la muestra, y establece las partes que se den (las demás se conservan;
 `default` deja una parte al visor):
 
-    py-foliation view libro.pdf --layout double-cover --zoom fit-page --open-at 9 -i
-    py-foliation view libro.pdf --zoom 150% --panel bookmarks -i
+    py-foliation view libro.pdf --layout cover --page-view fit-page --open-at 9 -i
+    py-foliation view libro.pdf --page-view actual-size -i
     py-foliation view libro.pdf --open-at default -i
 
-Las disposiciones son `single`, `continuous`, `double`, `double-cover` (la
-primera página sola, como en un libro), `double-continuous` y
-`double-continuous-cover`; los zooms, `fit-page`, `fit-width`, `fit-height`,
-`fit-visible` (lo impreso), `fit-visible-width`, `fit-visible-height` o un
-porcentaje; los paneles, `none`, `bookmarks`, `thumbnails`, `attachments`,
-`layers` y `full-screen`. `show` también muestra la vista, si el archivo
-tiene una.
+Las disposiciones de página son `single` (una página cada vez),
+`single-continuous` (todas las páginas en una columna), `facing` (dos páginas
+cada vez, las impares a la izquierda), `facing-continuous`, `cover` (como
+`facing`, con la primera página sola, como la portada de un libro) y
+`cover-continuous`; las vistas de página, `actual-size` (tamaño real),
+`fit-width`, `fit-page` o un porcentaje (`150%`). `show` también muestra la
+vista, si el archivo tiene una.
 
 ### Completado y manual
 
@@ -215,7 +219,7 @@ El paquete de Fedora los instala, junto con la página de manual
 ## Idioma
 
 La interfaz está en inglés y en español. `py-foliation interface es` (o
-**Ajustes ▸ Idioma de la interfaz** en la ventana) guarda la elección en
+**Ajustes ▸ Idioma** en la ventana) guarda la elección en
 el archivo de configuración; `--interface CÓDIGO` la cambia para una sola
 ejecución.
 

@@ -33,8 +33,8 @@
       <li xml:lang="es">Cada página con su etiqueta, en lista o en miniaturas, y una vista previa</li>
       <li>Labels from a list, one for each page, and copied from another PDF</li>
       <li xml:lang="es">Etiquetas de una lista, una para cada página, y copiadas de otro PDF</li>
-      <li>The view when the file is opened: layout, zoom, side panel and first page</li>
-      <li xml:lang="es">La vista al abrir el archivo: disposición, zoom, panel lateral y primera página</li>
+      <li>The initial view of the file: page layout (Single, Facing, Cover …), page view and first page</li>
+      <li xml:lang="es">La vista inicial del archivo: disposición de página (Una página, Páginas enfrentadas, Portada …), vista de página y primera página</li>
       <li>A command line with the same features, in English or Spanish</li>
       <li xml:lang="es">Una línea de órdenes con las mismas funciones, en inglés o en español</li>
     </ul>

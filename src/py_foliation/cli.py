@@ -44,16 +44,15 @@ file.
 standard input), and finds the fewest ranges that give them.""")
 
 
-VIEW_EPILOG = N_("""Layouts: single (one page at a time), continuous, double (two pages at a
-time), double-cover (two at a time, the first one alone, as a book),
-double-continuous, double-continuous-cover.
+VIEW_EPILOG = N_("""Page layouts: single (one page at a time), single-continuous (all the pages
+in one column), facing (two pages at a time, odd pages on the left),
+facing-continuous (all the pages in two columns), cover (as facing, but the
+first page alone, as the cover of a book), cover-continuous.
 
-Zooms: fit-page, fit-width, fit-height, fit-visible (what is printed),
-fit-visible-width, fit-visible-height, or a percentage (150%).
+Page views: actual-size (the size it would be printed), fit-width, fit-page,
+or a percentage (150%).
 
-Panels: none, bookmarks, thumbnails, attachments, layers, full-screen.
-
-For instance: py-foliation view book.pdf --layout double-cover --zoom fit-page
+For instance: py-foliation view book.pdf --layout cover --page-view fit-page
 --open-at 9 -i""")
 
 
@@ -144,17 +143,17 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
     output_options(sp)
 
     sp = sub.add_parser("view", parents=[common], help=tr("show or set how PDFs open in a viewer"),
-                        description=tr("Show or set the view of PDFs when they are opened: the layout of "
-                                       "the pages, the zoom, the panel beside them and the page they open "
-                                       "at. A PDF has one view for the whole document. Without options, the "
-                                       "view is shown; the options not given are kept; 'default' leaves "
-                                       "that part to the viewer."),
+                        description=tr("Show or set the view of PDFs when they are opened: the page "
+                                       "layout, the page view and the page they open at. A PDF has one view "
+                                       "for the whole document. Without options, the view is shown; the "
+                                       "options not given are kept; 'default' leaves that part to the "
+                                       "viewer."),
                         epilog=translate_paragraphs(VIEW_EPILOG),
                         formatter_class=argparse.RawDescriptionHelpFormatter)
     sp.add_argument("inputs", nargs="+", type=Path, metavar=tr("FILE"), help=tr("source PDF"))
-    sp.add_argument("--layout", metavar=tr("LAYOUT"), help=tr("how the pages are laid out (see below)"))
-    sp.add_argument("--zoom", metavar=tr("ZOOM"), help=tr("the zoom: a fit (see below) or a percentage, as 150%%"))
-    sp.add_argument("--panel", metavar=tr("PANEL"), help=tr("what is shown beside the pages (see below)"))
+    sp.add_argument("--layout", metavar=tr("LAYOUT"), help=tr("the page layout (see below)"))
+    sp.add_argument("--page-view", "--zoom", dest="zoom", metavar=tr("VIEW"),
+                    help=tr("the page view (see below), or a percentage, as 150%%"))
     sp.add_argument("--open-at", metavar=tr("PAGE"),
                     help=tr("the page it opens at (the pages of the file, from 1; LAST counts from the end)"))
     output_options(sp, tr("show the view the files would get, without writing anything"))
@@ -331,10 +330,10 @@ def copy(a) -> int:
 
 
 def view_command(a) -> int:
-    given = {"layout": a.layout, "zoom": a.zoom, "panel": a.panel, "page": a.open_at}
+    given = {"layout": a.layout, "zoom": a.zoom, "page": a.open_at}
     if all(v is None for v in given.values()):
         if a.output is not None or a.in_place or a.dry_run:
-            raise LabelError(tr("nothing to change: give --layout, --zoom, --panel or --open-at"))
+            raise LabelError(tr("nothing to change: give --layout, --page-view or --open-at"))
         failed = False
         for k, path in enumerate(a.inputs):
             try:

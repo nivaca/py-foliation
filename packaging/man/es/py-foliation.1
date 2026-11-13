@@ -184,11 +184,11 @@ opciones:
 .SS view
 .nf
 uso: py-foliation view [-h] [--interface {en,es}] [--layout DISPOSICIÓN]
-                       [--zoom ZOOM] [--panel PANEL] [--open-at PÁGINA]
-                       [-o OUTPUT | -i] [-n] [--password CONTRASEÑA]
+                       [--page-view VISTA] [--open-at PÁGINA] [-o OUTPUT |
+                       -i] [-n] [--password CONTRASEÑA]
                        ARCHIVO [ARCHIVO ...]
 
-Muestra o establece la vista de los PDF al abrirse: la disposición de las páginas, el zoom, el panel junto a ellas y la página en que se abren. Un PDF tiene una sola vista para todo el documento. Sin opciones, se muestra la vista; las opciones que no se dan se conservan; 'default' deja esa parte al visor.
+Muestra o establece la vista de los PDF al abrirse: la disposición de página, la vista de página y la página en que se abren. Un PDF tiene una sola vista para todo el documento. Sin opciones, se muestra la vista; las opciones que no se dan se conservan; 'default' deja esa parte al visor.
 
 argumentos posicionales:
   ARCHIVO               PDF de origen
@@ -198,10 +198,10 @@ opciones:
   --interface {en,es}   el idioma de la interfaz, solo para esta ejecución
                         (para conservar una elección, use la orden
                         'interface')
-  --layout DISPOSICIÓN  cómo se disponen las páginas (véase abajo)
-  --zoom ZOOM           el zoom: un ajuste (véase abajo) o un porcentaje,
+  --layout DISPOSICIÓN  la disposición de página (véase abajo)
+  --page-view, --zoom VISTA
+                        la vista de página (véase abajo), o un porcentaje,
                         como 150%
-  --panel PANEL         lo que se muestra junto a las páginas (véase abajo)
   --open-at PÁGINA      la página en que se abre (las páginas del archivo,
                         desde 1; LAST cuenta desde el final)
   -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
@@ -213,18 +213,16 @@ opciones:
                         la contraseña para abrir los PDF (su protección se
                         conserva al guardarlos)
 
-Disposiciones: single (una página cada vez), continuous (continua), double
-(dos páginas cada vez), double-cover (dos cada vez, la primera sola, como un
-libro), double-continuous, double-continuous-cover.
+Disposiciones de página: single (una página cada vez), single-continuous (todas
+las páginas en una columna), facing (dos páginas cada vez, las impares a la
+izquierda), facing-continuous (todas las páginas en dos columnas), cover (como
+facing, pero con la primera página sola, como la portada de un libro),
+cover-continuous.
 
-Zooms: fit-page (la página), fit-width (el ancho), fit-height (el alto),
-fit-visible (lo impreso), fit-visible-width, fit-visible-height, o un
-porcentaje (150%).
+Vistas de página: actual-size (el tamaño que tendría impresa), fit-width
+(ajustar al ancho), fit-page (ajustar a la página), o un porcentaje (150%).
 
-Paneles: none (ninguno), bookmarks (marcadores), thumbnails (miniaturas),
-attachments (adjuntos), layers (capas), full-screen (pantalla completa).
-
-Por ejemplo: py-foliation view libro.pdf --layout double-cover --zoom fit-page
+Por ejemplo: py-foliation view libro.pdf --layout cover --page-view fit-page
 --open-at 9 -i
 .fi
 .SS completion
