@@ -247,7 +247,7 @@ class MainWindow(QMainWindow):
         self.a_thumbs.toggled.connect(self.show_thumbnails)
         m.addAction(self.a_thumbs)
         m = self.menuBar().addMenu(tr("&Settings"))
-        lang = m.addMenu(tr("Language of the interface"))
+        lang = m.addMenu(tr("Interface Language"))
         group = QActionGroup(self)
         for code, name in interface.names().items():
             act = QAction(name, self, checkable=True)
@@ -311,7 +311,7 @@ class MainWindow(QMainWindow):
         if code == interface.code():
             return
         if not interface.use(code):
-            QMessageBox.warning(self, tr("Language of the interface"),
+            QMessageBox.warning(self, tr("Interface Language"),
                                 tr("The language of the interface could not be changed: {error}",
                                    error=interface.error()))
             interface.use(config.get("interface"))

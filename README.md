@@ -179,7 +179,7 @@ The Fedora package installs them, and the manual page (`man py-foliation`).
 ## Language
 
 The interface is in English and Spanish. `py-foliation interface es` (or
-**Settings ▸ Language of the interface** in the window) keeps the choice in
+**Settings ▸ Interface Language** in the window) keeps the choice in
 the configuration file; `--interface CODE` changes it for one run.
 
 ## Development
