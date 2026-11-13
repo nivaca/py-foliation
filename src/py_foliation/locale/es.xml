@@ -684,4 +684,64 @@ C), - o none (solo el prefijo).</tr>
     <en>mutually exclusive arguments must be optional</en>
     <tr>los argumentos mutuamente excluyentes deben ser opcionales</tr>
   </text>
+  <text>
+    <en>Add the py-foliation window to the applications menu, or remove it. Everything goes in your own folders; no administrator rights are needed.</en>
+    <tr>Añadir la ventana de py-foliation al menú de aplicaciones, o quitarla. Todo va en sus propias carpetas; no se necesitan permisos de administrador.</tr>
+  </text>
+  <text>
+    <en>Added py-foliation to {where}:</en>
+    <tr>Se añadió py-foliation a {where}:</tr>
+  </text>
+  <text>
+    <en>Applications (in your home folder)</en>
+    <tr>Aplicaciones (en su carpeta personal)</tr>
+  </text>
+  <text>
+    <en>Change the page labels of PDF documents: the numbering a viewer shows</en>
+    <tr>Cambiar las etiquetas de página de documentos PDF: la numeración que muestra un visor</tr>
+  </text>
+  <text>
+    <en>If that Python environment moves or is rebuilt, run this again.</en>
+    <tr>Si ese entorno de Python se mueve o se reconstruye, vuelva a ejecutar esto.</tr>
+  </text>
+  <text>
+    <en>It starts the window with:</en>
+    <tr>Inicia la ventana con:</tr>
+  </text>
+  <text>
+    <en>Removed py-foliation from {where}.</en>
+    <tr>Se quitó py-foliation de {where}.</tr>
+  </text>
+  <text>
+    <en>There was nothing to remove.</en>
+    <tr>No había nada que quitar.</tr>
+  </text>
+  <text>
+    <en>could not make the shortcut {path}: {output}</en>
+    <tr>no se pudo crear el acceso directo {path}: {output}</tr>
+  </text>
+  <text>
+    <en>py-foliation-install: {error}</en>
+    <tr>py-foliation-install: {error}</tr>
+  </text>
+  <text>
+    <en>remove what was added</en>
+    <tr>quitar lo que se añadió</tr>
+  </text>
+  <text>
+    <en>the Start menu</en>
+    <tr>el menú Inicio</tr>
+  </text>
+  <text>
+    <en>the applications menu</en>
+    <tr>el menú de aplicaciones</tr>
+  </text>
+  <text>
+    <en>the window needs PySide6, which is not installed for {executable}; install py-foliation with the gui extra: pip install 'py-foliation[gui]' (or uv tool install 'py-foliation[gui]')</en>
+    <tr>la ventana necesita PySide6, que no está instalado para {executable}; instale py-foliation con el extra gui: pip install 'py-foliation[gui]' (o uv tool install 'py-foliation[gui]')</tr>
+  </text>
+  <text>
+    <en>{app} exists and was not made by py-foliation-install; move it away first</en>
+    <tr>{app} existe y no lo creó py-foliation-install; muévalo antes a otro lugar</tr>
+  </text>
 </interface>

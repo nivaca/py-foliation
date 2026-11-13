@@ -10,7 +10,7 @@ pages of the file.  Only the labels change; the pages themselves are left
 as they are.  Nicolas Vaughan made it in 2026.  It has a window, for
 seeing and editing the labels page by page, and a command line, for doing
 the same in scripts, in English or in Spanish.  Here I explain how it was
-made, in four stages.
+made, in five stages.
 
 py-foliation is free software, under the GNU General Public License,
 version 3 or later.  It is written in Python and stands on pikepdf (based
@@ -94,10 +94,29 @@ SVG, and `tools/icons.py` makes every size of it with Inkscape.
 `tools/screenshots.py` takes the pictures of the READMEs, in both
 languages, without showing anything on the screen.
 
+5. Packages
+-----------
+
+`py-foliation-install` adds the window to the applications menu, with its
+icon, in the user's own folders: a .desktop file on Linux, which also
+offers py-foliation in the "Open with" menu of PDF files, a shortcut in
+the Start menu on Windows, and a small application on macOS.
+
+The AppImage holds a Python of its own, with py-foliation, pikepdf and
+PySide6, and runs on almost any Linux; its first argument chooses between
+the window and the command line.  Before it is kept, it is run once with
+an empty home folder, so it cannot lean on anything installed on the
+machine that made it.  For Fedora there is an RPM, made with Fedora's own
+Python, pikepdf and PySide6, which runs the whole test suite while it is
+built and is signed with the author's key.  `tools/release.py` makes each
+release in the same way: it runs the tests, makes the wheel, the source
+package, the AppImage and the signed RPM, tags the version, and publishes
+it on GitHub, on Codeberg and on Copr.
+
 Testing
 -------
 
-The program has 47 automated tests (`tests/`), run with pytest.  They
+The program has 63 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, and the reading and
 writing of the number tree, including odd trees.  The command line is run
@@ -106,4 +125,5 @@ whose pages each show their number, and on broken input.  The window is
 tested without a screen, with Qt's offscreen platform: opening, editing,
 undoing, saving, saving as, unsaved changes and the language.  Other
 tests check that every text has its translation and that none is left
-over.  The tests run on every push, on GitHub Actions.
+over, the menu installer on each system, and the packaging files and
+the signing key.  The tests run on every push, on GitHub Actions.

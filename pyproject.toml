@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 py-foliation = "py_foliation:main"
+py-foliation-install = "py_foliation.install:main"
 
 [project.gui-scripts]
 py-foliation-gui = "py_foliation.gui:main"

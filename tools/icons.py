@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-"""Make the icons afresh from src/py_foliation/icons/py-foliation.svg:
+"""Make all the icons afresh from src/py_foliation/icons/py-foliation.svg:
 
     python3 tools/icons.py [--svg FILE] [-o FOLDER] [--dry-run]
 
-In FOLDER (src/py_foliation/icons/ by default) it writes
-linux/hicolor/NxN/apps/py-foliation.png, for each N in HICOLOR_SIZES, and
-linux/hicolor/scalable/apps/py-foliation.svg (a copy of the SVG), for the
-window. (The macOS and Windows icons come with the release tooling.)
+In FOLDER (src/py_foliation/icons/ by default) it writes:
+
+* linux/hicolor/NxN/apps/py-foliation.png, for each N in HICOLOR_SIZES, and
+  linux/hicolor/scalable/apps/py-foliation.svg (a copy of the SVG), for
+  py-foliation-install and the window;
+* macos/py-foliation.iconset/icon_NxN[@2x].png and macos/py-foliation.icns;
+* windows/py-foliation.ico.
 
 Each size is drawn by Inkscape from the SVG (never scaled down from a
-bigger PNG), all of them in a single run of Inkscape.
+bigger PNG), all of them in a single run of Inkscape. The .ico is put
+together with Pillow from those same PNGs, and the .icns from the iconset
+as py-foliation-install does it (as iconutil would, with all ten sizes).
 
 Inkscape may be a Flatpak (org.inkscape.Inkscape), and then it is run with
 "flatpak run", with absolute paths, and writing only inside FOLDER: a
@@ -19,6 +24,7 @@ there. If there is no Flatpak, the inkscape on the PATH is used.
 """
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -28,9 +34,15 @@ from pathlib import Path
 NAME = "py-foliation"
 FLATPAK_ID = "org.inkscape.Inkscape"
 HICOLOR_SIZES = [16, 22, 24, 32, 48, 64, 96, 128, 192, 256, 512]
+ICONSET_SIZES = [16, 32, 128, 256, 512]  # each also @2x
+ICO_SIZES = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256]
+
+#  Every size that is drawn
+SIZES = sorted(set(HICOLOR_SIZES) | set(ICONSET_SIZES) | {2 * n for n in ICONSET_SIZES} | set(ICO_SIZES))
 
 ROOT = Path(__file__).resolve().parent.parent
 ICONS = ROOT / "src" / "py_foliation" / "icons"
+sys.path.insert(0, str(ROOT / "src"))
 
 
 def find_inkscape():
@@ -76,8 +88,16 @@ def put(src, dst):
     shutil.copyfile(src, dst)
 
 
+def save_ico(path, sizes, png):
+    from PIL import Image
+    images = [Image.open(png(n)).convert("RGBA") for n in sizes]
+    tmp = path.with_name(path.name + ".tmp")
+    images[-1].save(tmp, format="ICO", append_images=images[:-1], sizes=[(n, n) for n in sizes])
+    os.replace(tmp, path)
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Make the icons afresh from the SVG.")
+    parser = argparse.ArgumentParser(description="Make all the icons afresh from the SVG.")
     parser.add_argument("--svg", type=Path, default=ICONS / f"{NAME}.svg",
                         help=f"the SVG (src/py_foliation/icons/{NAME}.svg)")
     parser.add_argument("-o", "--output", type=Path, default=ICONS,
@@ -92,30 +112,51 @@ def main():
     try:
         import PIL  # noqa: F401
     except ImportError:
-        sys.exit("Pillow is needed to check the sizes (it comes with pikepdf: run this with 'uv run').")
+        sys.exit("Pillow is needed for the .ico (it comes with pikepdf: run this with 'uv run').")
 
     inkscape, flatpak = find_inkscape()
     print(f"Inkscape: {' '.join(inkscape)}{' (Flatpak)' if flatpak else ''}")
     if flatpak and (out == Path("/tmp") or Path("/tmp") in out.parents):
         sys.exit("The Flatpak of Inkscape cannot write in /tmp; choose another folder with -o.")
     if args.dry_run:
-        print(f"Would draw {svg} at {', '.join(map(str, HICOLOR_SIZES))} px into {out}.")
+        print(f"Would draw {svg} at {', '.join(map(str, SIZES))} px into {out}.")
         return
 
     out.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix=".render-", dir=out))
     try:
-        render(inkscape, svg, stage, HICOLOR_SIZES)
-        check_sizes(stage, HICOLOR_SIZES)
+        render(inkscape, svg, stage, SIZES)
+        check_sizes(stage, SIZES)
+
+        def png(n):
+            return stage / f"{n}.png"
+
         hicolor = out / "linux" / "hicolor"
         for n in HICOLOR_SIZES:
-            put(stage / f"{n}.png", hicolor / f"{n}x{n}" / "apps" / f"{NAME}.png")
+            put(png(n), hicolor / f"{n}x{n}" / "apps" / f"{NAME}.png")
         scalable = hicolor / "scalable" / "apps" / f"{NAME}.svg"
         if svg != scalable.resolve():
             put(svg, scalable)
+
+        macos = out / "macos"
+        iconset = macos / f"{NAME}.iconset"
+        for n in ICONSET_SIZES:
+            put(png(n), iconset / f"icon_{n}x{n}.png")
+            put(png(2 * n), iconset / f"icon_{n}x{n}@2x.png")
+        from py_foliation.install import make_icns
+        icns = macos / f"{NAME}.icns"
+        icns.with_name(icns.name + ".tmp").write_bytes(make_icns(iconset))
+        os.replace(icns.with_name(icns.name + ".tmp"), icns)
+
+        windows = out / "windows"
+        windows.mkdir(parents=True, exist_ok=True)
+        save_ico(windows / f"{NAME}.ico", ICO_SIZES, png)
     finally:
         shutil.rmtree(stage, ignore_errors=True)
-    print(f"Made the icons in {out / 'linux' / 'hicolor'}.")
+
+    print(f"Made the icons in {out}:")
+    for part in ["linux/hicolor", "macos", "windows"]:
+        print(f"  {part}/")
 
 
 if __name__ == "__main__":

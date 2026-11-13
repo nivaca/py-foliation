@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=py-foliation
+GenericName=PDF page labels
+GenericName[es]=Etiquetas de página de PDF
+Comment=Change the page labels of PDF documents: the numbering a viewer shows
+Comment[es]=Cambiar las etiquetas de página de documentos PDF: la numeración que muestra un visor
+Keywords=page labels;page numbers;foliation;pagination;PDF;roman numerals;
+Keywords[es]=etiquetas de página;números de página;foliación;paginación;PDF;números romanos;
+Categories=Office;Publishing;
+Icon=py-foliation
+Exec=py-foliation-gui %f
+MimeType=application/pdf;
+Terminal=false
+StartupNotify=true
+StartupWMClass=py-foliation

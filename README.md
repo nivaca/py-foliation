@@ -13,11 +13,64 @@ command line, for doing the same in scripts.
 
 ## Installation
 
-py-foliation needs Python 3.12 or later. With [uv](https://docs.astral.sh/uv/):
+There are three ways to install it: the AppImage (nothing to install), the
+Fedora package, or from the source.
 
-    uv tool install 'py-foliation[gui]'
+### AppImage (any Linux)
 
-Without the `[gui]` extra only the command line is installed.
+Download `py-foliation-VERSION-x86_64.AppImage` from the
+[releases](https://github.com/nivaca/py-foliation/releases), make it
+executable, and run it. It holds its own Python, Qt and everything else, and
+runs on Linux with glibc 2.34 or later (Ubuntu 22.04, Debian 12, Fedora 35 and
+later).
+
+```bash
+chmod +x py-foliation-*-x86_64.AppImage
+./py-foliation-*-x86_64.AppImage                   # the window
+./py-foliation-*-x86_64.AppImage show book.pdf     # the command line
+./py-foliation-*-x86_64.AppImage cli --help        # the list of commands
+```
+
+A first argument that is a command (`show`, `set`…), an option, or `cli`
+runs the command line; anything else, or nothing, opens the window. Tools
+such as AppImageLauncher or Gear Lever add it to the applications menu.
+
+### Fedora (Copr)
+
+```bash
+sudo dnf copr enable nivaca/py-foliation
+sudo dnf install py-foliation
+```
+
+This installs `py-foliation`, `py-foliation-gui`, a menu entry (also offered
+for opening PDF files) and the icons, using Fedora's own Python, pikepdf and
+PySide6. Updates come with `sudo dnf upgrade`. The packages are built and
+signed by [Copr](https://copr.fedorainfracloud.org/coprs/nivaca/py-foliation/).
+
+Each release also has the RPM itself, signed with the author's key, and that
+key (`RPM-GPG-KEY-py-foliation`, also in the repository as
+[`packaging/RPM-GPG-KEY-py-foliation`](packaging/RPM-GPG-KEY-py-foliation)).
+Its fingerprint is `8187 0643 CA22 1AF9 0C30 554E BE68 32CD 3599 4948`:
+
+```bash
+sudo rpm --import RPM-GPG-KEY-py-foliation
+sudo dnf install ./py-foliation-*.noarch.rpm
+```
+
+### From the source
+
+You need Python 3.12+ and [uv](https://docs.astral.sh/uv/).
+
+```bash
+git clone https://github.com/nivaca/py-foliation.git    # or https://codeberg.org/nivaca/py-foliation.git
+cd py-foliation
+uv sync --extra gui      # without --extra gui, only the command line
+uv tool install '.[gui]' # optional: makes py-foliation and py-foliation-gui available everywhere
+py-foliation-install     # optional: adds the window to the applications menu
+```
+
+`py-foliation-install` works on Linux, Windows and macOS, in your own
+folders; `--uninstall` removes what it added.
 
 ## The window
 
@@ -91,6 +144,10 @@ The pictures of this README are made by `uv run python tools/screenshots.py`
 (in both languages, without showing anything on the screen), and the icons by
 `uv run python tools/icons.py` (with Inkscape) from
 `src/py_foliation/icons/py-foliation.svg`.
+
+The AppImage is made by `uv run python tools/bundle-appimage.py`, the signed
+RPM by `packaging/build-rpm.sh --sign`, and each release, on GitHub, Codeberg
+and Copr, by `uv run python tools/release.py --rpm` (see `packaging/COPR.org`).
 
 ## License
 

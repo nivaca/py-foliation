@@ -12,13 +12,13 @@ Los requisitos quedaron claros desde el principio. Lo primero era no tocar nada 
 
 El programa está dividido en módulos pequeños, cada uno con un solo trabajo. `labels.py` es la base: los intervalos de etiquetas, los números en cada estilo, la lectura de los intervalos en sus dos formas y de los números de página, el cálculo de los cambios y la lectura y escritura del árbol `/PageLabels`. `cli.py` es la línea de órdenes, con las órdenes `show`, `set`, `clear` e `interface`. La ventana está en `gui/window.py`.
 
-De los idiomas se ocupa `interface.py`, con `tr()`, que traduce cada texto del programa a partir de `locale/es.xml`, y `config.py` lee y escribe el archivo de configuración, `config.toml`, con el idioma de la interfaz; los dos vienen de py-imposition.
+De los idiomas se ocupa `interface.py`, con `tr()`, que traduce cada texto del programa a partir de `locale/es.xml`, y `config.py` lee y escribe el archivo de configuración, `config.toml`, con el idioma de la interfaz; los dos vienen de py-imposition, como `install.py`, que añade la entrada del menú de aplicaciones en Linux, Windows y macOS.
 
-Fuera del paquete quedan las herramientas: `tools/screenshots.py` hace las capturas de los README y `tools/icons.py` hace los iconos a partir de un SVG.
+Fuera del paquete quedan las herramientas: `tools/screenshots.py` hace las capturas de los README, `tools/icons.py` hace todos los iconos a partir de un SVG, `tools/bundle-appimage.py` arma la AppImage, `packaging/build-rpm.sh` el RPM firmado, y `tools/release.py` publica cada versión.
 
 ## Implementación
 
-Está escrito en Python 3.12 o superior, con pikepdf (basada en QPDF), que lee y escribe los PDF. La ventana usa PySide6 (Qt 6), con QtPdf para mostrar las páginas. Son 9 módulos, unas 1600 líneas, y 4 órdenes.
+Está escrito en Python 3.12 o superior, con pikepdf (basada en QPDF), que lee y escribe los PDF. La ventana usa PySide6 (Qt 6), con QtPdf para mostrar las páginas. Son 10 módulos, unas 1950 líneas, y 4 órdenes.
 
 Un PDF guarda sus etiquetas de página en un árbol de números, `/PageLabels`, en su catálogo. Cada entrada empieza un intervalo en una página e indica su estilo (números arábigos, romanos en minúscula o en mayúscula, letras minúsculas o mayúsculas, o ningún número), un prefijo y el número de su primera página; el intervalo dura hasta que empieza el siguiente. El programa lee ese árbol como venga (en un nodo o en muchos, con entradas más allá del documento, estilos desconocidos o nodos que aparecen dos veces, cosas que tienen los archivos reales) y lo escribe de nuevo como un solo nodo sencillo.
 
@@ -40,13 +40,15 @@ La ventana muestra los intervalos en una tabla, cada uno con su primera página,
 
 Cada texto del programa, en la ventana y en la línea de órdenes, incluidos los mensajes propios de `argparse`, pasa por `tr()`, y las traducciones están en un solo archivo XML, `locale/es.xml`, con cada texto en inglés y en español. El idioma se elige en la ventana (*Ajustes*), con `--interface` en la línea de órdenes o en `config.toml` (`py-foliation interface es` lo guarda). El README tiene una versión en español, paralela a la inglesa, y las capturas se hacen en los dos idiomas.
 
-### Proceso
+### Proceso y distribución
 
-El trabajo pasó por cuatro etapas: primero las etiquetas mismas, su lectura, su escritura y el cálculo de los cambios; luego la línea de órdenes, con las dos formas de escribir los intervalos; después la ventana; y por último la interfaz en español, el icono y las capturas (versión 0.1).
+El trabajo pasó por cinco etapas: primero las etiquetas mismas, su lectura, su escritura y el cálculo de los cambios; luego la línea de órdenes, con las dos formas de escribir los intervalos; después la ventana; la interfaz en español, el icono y las capturas; y por último los paquetes (versión 0.1).
+
+La AppImage lleva su propio Python, con py-foliation, pikepdf y PySide6, y funciona en casi cualquier Linux; su primer argumento decide entre la ventana y la línea de órdenes. Antes de guardarla se arranca una vez con una carpeta personal vacía, para que no dependa de nada instalado en el equipo donde se hizo. Para Fedora hay un RPM, hecho con el Python, pikepdf y PySide6 de Fedora, que corre todas las pruebas mientras se construye y se firma con la clave del autor. `tools/release.py` publica cada versión de la misma manera: corre las pruebas, hace la wheel, el paquete fuente, la AppImage y el RPM firmado, etiqueta la versión y la publica en GitHub, en Codeberg y en Copr.
 
 ## Validación
 
-Hay 47 pruebas automáticas (`tests/`), que se corren con `uv run pytest`. Comprueban los números en cada estilo, la lectura de los intervalos en sus dos formas y de los números de página, cómo se ponen unos intervalos sobre otros, y la lectura y escritura del árbol de etiquetas, incluidos árboles raros. La línea de órdenes se ejecuta de principio a fin sobre el documento de ejemplo, docs/example/numbers-100.pdf, cuyas páginas muestran cada una su número, y sobre entradas erróneas. La ventana se prueba sin pantalla, con la plataforma offscreen de Qt: abrir, editar, deshacer, guardar, guardar como, los cambios sin guardar y el idioma. Otras pruebas comprueban que cada texto tenga su traducción y que no sobre ninguna. Las pruebas corren con cada push en GitHub Actions.
+Hay 63 pruebas automáticas (`tests/`), que se corren con `uv run pytest`. Comprueban los números en cada estilo, la lectura de los intervalos en sus dos formas y de los números de página, cómo se ponen unos intervalos sobre otros, y la lectura y escritura del árbol de etiquetas, incluidos árboles raros. La línea de órdenes se ejecuta de principio a fin sobre el documento de ejemplo, docs/example/numbers-100.pdf, cuyas páginas muestran cada una su número, y sobre entradas erróneas. La ventana se prueba sin pantalla, con la plataforma offscreen de Qt: abrir, editar, deshacer, guardar, guardar como, los cambios sin guardar y el idioma. Otras pruebas comprueban que cada texto tenga su traducción y que no sobre ninguna, el instalador del menú en cada sistema, los archivos de empaquetado y la clave de firma. Las pruebas corren con cada push en GitHub Actions.
 
 ## Plataforma
 
@@ -56,4 +58,4 @@ Funciona en Linux. Necesita Python 3.12 o superior y pikepdf, y para la ventana 
 
 Lo desarrollé en Fedora Linux 45 con KDE Plasma, con Python 3.15 y uv, y con git. El icono se dibuja con Inkscape y las pruebas corren también en GitHub Actions.
 
-Desde el código fuente, `uv sync --extra gui` lo prepara; `py-foliation-gui` abre la ventana y `py-foliation` es la línea de órdenes. Los ajustes quedan en la carpeta de configuración del usuario (`~/.config/py-foliation/` en Linux).
+Desde el código fuente, `uv sync --extra gui` lo prepara; `py-foliation-gui` abre la ventana, `py-foliation` es la línea de órdenes y `py-foliation-install` añade el acceso al menú de aplicaciones, con su icono. Los ajustes quedan en la carpeta de configuración del usuario (`~/.config/py-foliation/` en Linux).
