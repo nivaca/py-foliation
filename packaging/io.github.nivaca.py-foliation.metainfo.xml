@@ -75,6 +75,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.4" date="2026-11-13">
+      <description>
+        <p>Internal clean-up of the code, which is now shared between the command line and the window and split into smaller modules. The commands and the window work as before.</p>
+      </description>
+    </release>
     <release version="0.3" date="2026-11-12">
       <description>
         <p>Choose several pages in the list and right-click them to number them, continue the numbering from before them, give them one label, or edit their labels one by one.</p>
