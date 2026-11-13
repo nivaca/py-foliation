@@ -304,3 +304,34 @@ def test_view_when_opened(app, window, book):
     assert window.opening == View("TwoPageRight", "FitH", 9)
     window.show_page(20)  # (the preview, window.view, still follows the page shown)
     assert window.view.pageNavigator().currentPage() == 19
+
+
+def test_preview_settles_at_any_size(app, window, book):
+    """At some sizes, a page fitted in the preview with scroll bars left to Qt made them show and hide
+    without end, and the window stopped answering (py-foliation 0.6)."""
+    from PySide6.QtCore import QElapsedTimer, QEvent, QObject
+
+    toggles = [0]
+    bars = (window.view.horizontalScrollBar(), window.view.verticalScrollBar())
+
+    class Counter(QObject):
+        def eventFilter(self, obj, event):
+            if obj in bars and event.type() in (QEvent.Type.Show, QEvent.Type.Hide):
+                toggles[0] += 1
+            return False
+
+    counter = Counter()
+    app.installEventFilter(counter)
+    try:
+        window.open_path(book)
+        window.show()
+        for width in range(300, 380, 5):  # (sizes that toggled them, offscreen; on Wayland, others)
+            window.resize(width, 460)
+            toggles[0] = 0
+            clock = QElapsedTimer()
+            clock.start()
+            while clock.elapsed() < 30:
+                app.processEvents()
+            assert toggles[0] <= 4, f"the scroll bars of the preview keep toggling at {width}x460"
+    finally:
+        app.removeEventFilter(counter)

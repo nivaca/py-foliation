@@ -139,6 +139,11 @@ class MainWindow(QMainWindow):
         self.view.setDocument(self.doc)
         self.view.setPageMode(QPdfView.PageMode.SinglePage)
         self.view.setZoomMode(QPdfView.ZoomMode.FitInView)
+        # (a page fitted in the view needs no scroll bars, and with them left to Qt, at some sizes
+        # showing one shrinks the page so that it isn't needed, hiding it makes it needed again,
+        # and the window stops answering)
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.page_info = QLabel("")
         self.go_to = QLineEdit()
         self.go_to.setPlaceholderText(tr("Go to the page labelled…"))

@@ -174,6 +174,14 @@ undone, redone and saved together with the labels.  (Version 0.5 set the
 panel and more zooms too, from a dialog; that proved confusing, and 0.6
 keeps to these.)
 
+Version 0.6.1 mended a hang that had been there from the start.  The
+preview shows one page fitted in its frame, and Qt was left to decide
+when to show its scroll bars; at some sizes of the window a scroll bar
+made the page smaller, so it was no longer needed and went away, which
+made the page bigger, so it was needed again, without end, and the window
+stopped answering.  A page fitted in its frame needs no scroll bars, so
+the preview has none.
+
 To make room for it, the code was rearranged: the numbers in each style
 went to `numbers.py`, the reading and writing of files that the command
 line and the window share to `files.py`, and the widgets and thumbnails of
@@ -182,7 +190,7 @@ the window to modules of their own.
 Testing
 -------
 
-The program has 104 automated tests (`tests/`), run with pytest.  They
+The program has 105 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, the reading and
 writing of the number tree, including odd trees, the ranges found in
@@ -192,7 +200,8 @@ from start to end on the example document, docs/example/numbers-100.pdf,
 whose pages each show their number, and on broken input.  The window is
 tested without a screen, with Qt's offscreen platform: opening, editing,
 undoing, saving, saving as, unsaved changes, the view when the file is
-opened and the language.  Other
+opened, the language, and a preview that settles at every size of the
+window.  Other
 tests check that every text has its translation and that none is left
 over, the menu installer on each system, and the packaging files and
 the signing key.  The tests run on every push, on GitHub Actions.
