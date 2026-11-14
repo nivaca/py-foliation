@@ -18,7 +18,7 @@ Fuera del paquete quedan las herramientas: `tools/screenshots.py` hace las captu
 
 ## Implementación
 
-Está escrito en Python 3.12 o superior, con pikepdf (basada en QPDF), que lee y escribe los PDF. La ventana usa PySide6 (Qt 6), con QtPdf para mostrar las páginas. Son 16 módulos, unas 3400 líneas, y 7 órdenes.
+Está escrito en Python 3.13 o superior, con pikepdf (basada en QPDF), que lee y escribe los PDF. La ventana usa PySide6 (Qt 6), con QtPdf para mostrar las páginas. Son 16 módulos, unas 3400 líneas, y 7 órdenes.
 
 Un PDF guarda sus etiquetas de página en un árbol de números, `/PageLabels`, en su catálogo. Cada entrada empieza un intervalo en una página e indica su estilo (números arábigos, romanos en minúscula o en mayúscula, letras minúsculas o mayúsculas, o ningún número), un prefijo y el número de su primera página; el intervalo dura hasta que empieza el siguiente. El programa lee ese árbol como venga (en un nodo o en muchos, con entradas más allá del documento, estilos desconocidos o nodos que aparecen dos veces, cosas que tienen los archivos reales) y lo escribe de nuevo como un solo nodo sencillo.
 
@@ -68,7 +68,7 @@ Hay 104 pruebas automáticas (`tests/`), que se corren con `uv run pytest`. Comp
 
 ## Plataforma
 
-Funciona en Linux. Necesita Python 3.12 o superior y pikepdf, y para la ventana PySide6. Al ser Python y Qt, debería funcionar también en Windows y macOS, pero allí solo se ha probado con las pruebas automáticas. No necesita internet ni permisos de administrador.
+Funciona en Linux. Necesita Python 3.13 o superior y pikepdf, y para la ventana PySide6. Al ser Python y Qt, debería funcionar también en Windows y macOS, pero allí solo se ha probado con las pruebas automáticas. No necesita internet ni permisos de administrador.
 
 ## Ambiente
 
