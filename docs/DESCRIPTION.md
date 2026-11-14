@@ -147,7 +147,8 @@ with their password, and keep their protection when they are saved (the
 first version took it away).  The command line completes its commands and
 options in bash, fish and zsh, and has a manual page, made from its own
 help so that the two always agree.  The program can also be published on
-PyPI, and there is a Flatpak, for Flathub.
+PyPI.  (A Flatpak for Flathub was made too, but it was given up before
+it was ever submitted.)
 
 7. The view when the file is opened
 -----------------------------------

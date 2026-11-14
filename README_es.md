@@ -238,9 +238,7 @@ La AppImage la hace `uv run python tools/bundle-appimage.py`, el RPM firmado
 `uv run python tools/release.py --rpm` (vea `packaging/COPR.org`); `--pypi` la
 sube además a PyPI. Las páginas de manual se hacen a partir de la ayuda de la
 línea de órdenes con `uv run python tools/manpage.py` (una prueba comprueba
-que estén al día). El manifiesto del Flatpak y sus módulos de Python están en
-`packaging/flatpak/` (`tools/flatpak-deps.py` hace los módulos a partir de
-`uv.lock`); `packaging/FLATHUB.org` explica cómo construirlo y enviarlo.
+que estén al día).
 
 ## Licencia
 

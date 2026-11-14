@@ -229,9 +229,7 @@ RPM by `packaging/build-rpm.sh --sign`, and each release, on GitHub, Codeberg
 and Copr, by `uv run python tools/release.py --rpm` (see `packaging/COPR.org`);
 `--pypi` also uploads it to PyPI. The manual pages are made from the help of
 the command line by `uv run python tools/manpage.py` (a test checks they are
-up to date). The Flatpak's manifest and Python modules are in
-`packaging/flatpak/` (`tools/flatpak-deps.py` makes the modules from
-`uv.lock`); `packaging/FLATHUB.org` explains how to build it and submit it.
+up to date).
 
 ## License
 
