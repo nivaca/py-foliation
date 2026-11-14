@@ -6,7 +6,7 @@ viewers such as Xodo call them its initial view:
 
     /PageLayout   the page layout: SinglePage (Single), OneColumn (Single
                   Continuous), TwoPageLeft (Facing), TwoColumnLeft (Facing
-                  Continuous), TwoPageRight (Cover: as Facing, but the first
+                  Continuous), TwoPageRight (Cover: like Facing, but the first
                   page alone), TwoColumnRight (Cover Continuous)
     /OpenAction   a destination: the page it opens at, and the page view
                   (/XYZ with a factor of 1: Actual Size; /FitH: Fit to Width;

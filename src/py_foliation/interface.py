@@ -14,7 +14,7 @@ The interface is written in English. Another language has a file in the
 
 A text is found by its English, with its spaces made single (so a text may
 be laid out on several lines); the translation is shown as written. A text
-may have named parts, as ``{path}``, which tr() fills in; the translation
+may have named parts, such as ``{path}``, which tr() fills in; the translation
 has the same parts. What the file doesn't translate is shown in English.
 
 The language is the setting ``interface`` of the configuration file

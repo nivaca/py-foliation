@@ -170,7 +170,7 @@ def uninstall_linux() -> list[Path]:
 ICO = ICON_DIR / "windows" / f"{APP_ID}.ico"
 
 #  Makes a shortcut with the Windows Script Host, from values in the
-#  environment (which spares quoting them in the script).
+#  environment (which saves quoting them in the script).
 SHORTCUT_SCRIPT = (
     "$s = (New-Object -ComObject WScript.Shell).CreateShortcut($env:PYI_LNK);"
     " $s.TargetPath = $env:PYI_TARGET;"

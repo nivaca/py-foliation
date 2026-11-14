@@ -190,7 +190,7 @@ def test_find_label():
     ranges = [Range(1, "r"), Range(9)]
     assert labels.find_label(ranges, N, "xii") == []
     assert labels.find_label(ranges, N, "vii") == [7]
-    assert labels.find_label(ranges, N, "VII") == [7]  # (but for capitals)
+    assert labels.find_label(ranges, N, "VII") == [7]  # (ignoring case)
     assert labels.find_label(ranges, N, "7") == [15]
 
 

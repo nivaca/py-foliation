@@ -268,7 +268,7 @@ def print_spans(ranges: list[labels.Range], n: int) -> None:
 
 def change(a, inputs: list[Path], make, write=labels.write_labels, describe=print_spans) -> int:
     """Give each of INPUTS what MAKE(pdf, n) returns (with WRITE(pdf, it): page labels
-    unless said otherwise), and save it (or, with --dry-run, only say what it would be);
+    by default), and save it (or, with --dry-run, only say what it would be);
     then DESCRIBE(it, n)."""
     if a.output is not None and len(inputs) > 1:
         raise LabelError(tr("--output takes one input only; with several, each is saved as "

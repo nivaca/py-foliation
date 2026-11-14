@@ -435,7 +435,7 @@ def page_labels(ranges: list[Range], n: int) -> list[str]:
 
 
 def find_label(ranges: list[Range], n: int, label: str) -> list[int]:
-    """The pages (1-based) labelled LABEL; if none, those labelled so but for capitals."""
+    """The pages (1-based) labelled LABEL; if none, those labelled so ignoring case."""
     labels = page_labels(ranges, n)
     exact = [i + 1 for i, x in enumerate(labels) if x == label]
     return exact or [i + 1 for i, x in enumerate(labels) if x.casefold() == label.casefold()]
@@ -525,7 +525,7 @@ def number_pages(ranges: list[Range], n: int, pages, style: str, prefix: str = "
 
 
 def continue_numbering(ranges: list[Range], n: int, pages) -> list[Range]:
-    """RANGES with each run of PAGES numbered on from the page before it."""
+    """RANGES with each run of PAGES numbered to continue from the page before it."""
     specs = _page_specs(ranges, n)
     requests = []
     for first, last in blocks(pages):

@@ -8,7 +8,7 @@
 It writes FOLDER/gui_<shot>_<lang>.png and FOLDER/cli_<lang>.png, in each
 language of the interface (by default in docs/img/, where README.md takes the
 English ones and README_es.md the Spanish ones), at SCALE times the size on
-the screen (2 by default, sharp on screens of high resolution).
+the screen (2 by default, sharp on high-resolution screens).
 
 * The window runs in a process of its own with Qt's "offscreen" platform:
   nothing appears on the screen, the size and scale don't depend on the

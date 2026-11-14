@@ -62,7 +62,7 @@ sudo dnf install ./py-foliation-*.noarch.rpm
 
 ### Desde el código fuente
 
-Se necesita Python 3.12 o posterior y [uv](https://docs.astral.sh/uv/).
+Se necesitan Python 3.12 o posterior y [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone https://github.com/nivaca/py-foliation.git    # o https://codeberg.org/nivaca/py-foliation.git
@@ -100,9 +100,9 @@ la derecha, la página elegida.
 - El mismo menú establece cómo muestran los visores el documento al abrirlo
   (para todo el documento: PDF no tiene otra manera). **Disposición de
   página**: Una página, Una página continua, Páginas enfrentadas (dos páginas
-  lado a lado, las impares a la izquierda), Páginas enfrentadas continuas,
-  Portada (como Páginas enfrentadas, con la primera página sola, como la
-  portada de un libro) o Portada continua; **Vista de página**: Tamaño real,
+  una junto a otra, las impares a la izquierda), Páginas enfrentadas
+  continuas, Portada (como Páginas enfrentadas, con la primera página sola,
+  como la portada de un libro) o Portada continua; **Vista de página**: Tamaño real,
   Ajustar al ancho o Ajustar a la página; y **Abrir el documento en la
   página N**. También están en el menú **Ver**, y se guardan con las
   etiquetas.

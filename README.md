@@ -82,13 +82,13 @@ Open a PDF (or drop it on the window). The window shows the **ranges** of
 labels, each with its first page, its style (1, 2, 3; i, ii, iii; I, II,
 III; a, b, c; A, B, C; folios 1r, 1v, 2r; or no number), the number it
 starts at, a prefix and a suffix; below them, every page with its label; and
-on the right, the page chosen.
+on the right, the chosen page.
 
 ![Folios, with thumbnails of the pages](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/gui_folios_en.png)
 
 - **Add a range** starts a new range at the page shown, and so does a
-  double-click on a page; **Remove the range** lets the range before go on
-  over its pages; **No labels** removes them all.
+  double-click on a page; **Remove the range** lets the previous range go
+  on over its pages; **No labels** removes them all.
 - Select pages in the list (with Shift and Ctrl) and right-click them to
   **number them** (in any style, from any start, with a prefix and a
   suffix), **continue the numbering from before** them, **give them one
@@ -97,7 +97,7 @@ on the right, the page chosen.
 - The same menu sets how viewers show the document when they open it (for
   the whole document: PDF has no other way). **Page layout**: Single,
   Single Continuous, Facing (two pages side by side, odd pages on the
-  left), Facing Continuous, Cover (as Facing, with the first page alone,
+  left), Facing Continuous, Cover (like Facing, with the first page alone,
   as the cover of a book) or Cover Continuous; **Page view**: Actual Size,
   Fit to Width or Fit to Page; and **Open the document at page N**. They
   are also in the **View** menu, and are saved with the labels.
@@ -106,7 +106,7 @@ on the right, the page chosen.
 - **Go to the page labelled…** (Ctrl+L) finds a page by its label: `xii`,
   `12v`, `A-3`.
 - **Edit ▸ Undo / Redo** go back and forth over the changes.
-- **File ▸ Save** gives the file open the new labels; **Save as…** saves a
+- **File ▸ Save** gives the open file the new labels; **Save as…** saves a
   copy with them; **Revert to the labels of the file** drops the changes.
 - **File ▸ Copy the labels of another PDF…** takes them from another file,
   for instance an earlier export of the same book.
@@ -158,7 +158,7 @@ with the numbers they had.
 The styles are `D` or `arabic` (1, 2, 3), `r` or `roman` (i, ii, iii), `R` or
 `ROMAN` (I, II, III), `a` or `letters` (a, b, c), `A` or `LETTERS` (A, B, C),
 `f` or `folio` (1r, 1v, 2r: the recto and verso of each leaf; the start is a
-leaf and its side, as `12v`), and `-` or `none` (the prefix only).
+leaf and its side, such as `12v`), and `-` or `none` (the prefix only).
 
 `set` replaces the labels the file had; with `--keep` it changes only the
 pages given, and `--remove PAGE` drops the range that starts at PAGE.
@@ -194,8 +194,8 @@ viewer):
 
 The page layouts are `single` (one page at a time), `single-continuous` (all
 the pages in one column), `facing` (two pages at a time, odd pages on the
-left), `facing-continuous`, `cover` (as `facing`, with the first page alone,
-as the cover of a book) and `cover-continuous`; the page views,
+left), `facing-continuous`, `cover` (like `facing`, with the first page
+alone, as the cover of a book) and `cover-continuous`; the page views,
 `actual-size`, `fit-width`, `fit-page` or a percentage (`150%`). `show`
 prints the view too, when the file has one.
 
@@ -219,7 +219,7 @@ the configuration file; `--interface CODE` changes it for one run.
     uv sync --all-extras
     uv run pytest
 
-The pictures of this README are made by `uv run python tools/screenshots.py`
+The pictures in this README are made by `uv run python tools/screenshots.py`
 (in both languages, without showing anything on the screen), and the icons by
 `uv run python tools/icons.py` (with Inkscape) from
 `src/py_foliation/icons/py-foliation.svg`.
@@ -227,8 +227,8 @@ The pictures of this README are made by `uv run python tools/screenshots.py`
 The AppImage is made by `uv run python tools/bundle-appimage.py`, the signed
 RPM by `packaging/build-rpm.sh --sign`, and each release, on GitHub, Codeberg
 and Copr, by `uv run python tools/release.py --rpm` (see `packaging/COPR.org`);
-`--pypi` also uploads it to PyPI. The manual pages are made from the help of
-the command line by `uv run python tools/manpage.py` (a test checks they are
+`--pypi` also uploads it to PyPI. The manual pages are made from the command
+line's help by `uv run python tools/manpage.py` (a test checks they are
 up to date).
 
 ## License

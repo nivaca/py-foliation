@@ -1,5 +1,5 @@
 """The main window: the ranges of page labels of a PDF, its pages with their
-labels, and a preview of the page chosen."""
+labels, and a preview of the chosen page."""
 
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
         self.saved_opening = View()  # the one the file has
         self.undo_stack: list[tuple[list[Range], View]] = []  # (ranges, view) before each change
         self.redo_stack: list[tuple[list[Range], View]] = []
-        self.password = ""  # (of the document open)
+        self.password = ""  # (of the open document)
         self._thumbs: dict[int, QIcon] = {}  # page (1-based) -> its thumbnail
         self._blank: QIcon | None = None
         self._building = False
@@ -528,7 +528,7 @@ class MainWindow(QMainWindow):
 
     def add_view_menus(self, menu: QMenu, page: int | None = None) -> None:
         """The submenus of MENU that choose the page layout and the page view of the document when
-        it is opened (for the whole document: PDF has no other), and with PAGE, the page it opens at."""
+        it is opened (for the whole document: PDF has no other way), and with PAGE, the page it opens at."""
         menu.addSection(tr("When the document is opened"))
         for title, field, current, titles, tips in (
                 (tr("Page layout"), "layout", self.opening.layout, view.LAYOUT_TITLES, view.LAYOUT_TIPS),
@@ -599,7 +599,7 @@ class MainWindow(QMainWindow):
             menu.exec(self.pages.viewport().mapToGlobal(pos))
 
     def build_pages_menu(self) -> QMenu | None:
-        """The menu of actions on the pages chosen."""
+        """The menu of actions on the chosen pages."""
         pages = self.selected_pages()
         if not pages:
             return None
