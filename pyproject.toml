@@ -8,7 +8,7 @@ license-files = ["LICENSE"]
 authors = [
     { name = "Nicolas Vaughan", email = "nivaca@fastmail.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.15"
 keywords = ["pdf", "page labels", "page numbers", "foliation", "pagination", "roman numerals", "folios"]
 classifiers = [
     "Development Status :: 4 - Beta",

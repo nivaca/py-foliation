@@ -59,7 +59,7 @@ sudo dnf install ./py-foliation-*.noarch.rpm
 
 ### From the source
 
-You need Python 3.13+ and [uv](https://docs.astral.sh/uv/).
+You need Python 3.15+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone https://github.com/nivaca/py-foliation.git    # or https://codeberg.org/nivaca/py-foliation.git
