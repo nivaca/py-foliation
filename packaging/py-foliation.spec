@@ -10,7 +10,7 @@
 # Build with packaging/build-rpm.sh, which makes the source tarball.
 
 Name:           py-foliation
-Version:        0.6.1
+Version:        0.6.2
 Release:        1%{?dist}
 Summary:        Change the page labels (the numbering a viewer shows) of PDF documents
 
@@ -96,6 +96,9 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
 %{zsh_completions_dir}/_py-foliation
 
 %changelog
+* Sat Nov 14 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.6.2-1
+- No Flatpak any more; plainer documentation and comments
+
 * Fri Nov 13 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.6.1-1
 - The window no longer stops answering at some sizes (the preview's scroll
   bars showed and hid without end)

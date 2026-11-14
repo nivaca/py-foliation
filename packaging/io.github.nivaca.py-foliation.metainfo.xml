@@ -77,6 +77,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.6.2" date="2026-11-14">
+      <description>
+        <p>No Flatpak any more, and plainer documentation and comments, in English and in Spanish. The program is the same.</p>
+      </description>
+    </release>
     <release version="0.6.1" date="2026-11-13">
       <description>
         <p>The window no longer stops answering at some sizes: the scroll bars of the page preview showed and hid without end.</p>
