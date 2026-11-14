@@ -77,6 +77,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.6.3" date="2026-11-14">
+      <description>
+        <p>Python 3.13 or later is needed (it was 3.12). The program is the same.</p>
+      </description>
+    </release>
     <release version="0.6.2" date="2026-11-14">
       <description>
         <p>No Flatpak any more, and plainer documentation and comments, in English and in Spanish. The program is the same.</p>

@@ -1,4 +1,4 @@
-# py-foliation 0.6.2: descripción
+# py-foliation 0.6.3: descripción
 
 ## Análisis
 
