@@ -68,7 +68,7 @@ copr-cli create py-foliation \
    then the spec's, with a changelog entry:
    #+begin_src sh
    rpmdev-bumpspec -n 0.2 -c "Short description of the change" \
-       -u "Nicolas Vaughan <nivaca@fastmail.com>" packaging/py-foliation.spec
+       -u "Nicolas Vaughan <nicolasvaughan@proton.me>" packaging/py-foliation.spec
    #+end_src
    =tests/test_packaging.py= fails while the versions differ.
    - =-n VERSION= sets =Version:= and resets =Release:= to 1.

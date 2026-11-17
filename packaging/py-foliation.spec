@@ -1,5 +1,5 @@
 # py-foliation, which changes the page labels of PDF documents.
-# Copyright (C) 2026 Nicolas Vaughan <nivaca@fastmail.com>
+# Copyright (C) 2026 Nicolas Vaughan <nicolasvaughan@proton.me>
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -96,51 +96,51 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
 %{zsh_completions_dir}/_py-foliation
 
 %changelog
-* Tue Nov 17 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.8-1
+* Tue Nov 17 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.8-1
 - Watermarks; several headers and footers per page, Update and Remove the
   Bates numbers; Bates numbers through several files; date formats
 
-* Tue Nov 17 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.7.1-1
+* Tue Nov 17 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.7.1-1
 - The documentation is revised; the program works as in 0.7
 
-* Tue Nov 17 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.7-1
+* Tue Nov 17 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.7-1
 - Headers and footers (py-foliation header-footer, and Pages > Header and
   Footer in the window), with variables, Bates numbering and profiles
 
-* Sat Nov 14 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.6.4-1
+* Sat Nov 14 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.6.4-1
 - Python 3.15 or later is needed; no longer built for Fedora 44
 
-* Sat Nov 14 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.6.3-1
+* Sat Nov 14 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.6.3-1
 - Python 3.13 or later is needed
 
-* Sat Nov 14 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.6.2-1
+* Sat Nov 14 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.6.2-1
 - No Flatpak any more; plainer documentation and comments
 
-* Fri Nov 13 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.6.1-1
+* Fri Nov 13 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.6.1-1
 - The window no longer stops answering at some sizes (the preview's scroll
   bars showed and hid without end)
 
-* Fri Nov 13 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.6-1
+* Fri Nov 13 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.6-1
 - Page layout and page view, as viewers name them, from the menu of the pages;
   Settings > Language
 
-* Fri Nov 13 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.5-1
+* Fri Nov 13 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.5-1
 - The view when the file is opened: layout, zoom, panel and first page
   (py-foliation view, and File > View when opened... in the window)
 
-* Fri Nov 13 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.4-1
+* Fri Nov 13 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.4-1
 - Internal clean-up: shared helpers and smaller modules; no change in what
   the commands and the window do
 
-* Thu Nov 12 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.3-1
+* Thu Nov 12 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.3-1
 - Actions on several pages at once, from a right-click menu in the list of
   pages: number them, continue the numbering, one label, labels one by one
 
-* Thu Nov 12 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.2-1
+* Thu Nov 12 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.2-1
 - Folios (1r, 1v, 2r) and suffixes; labels from a list; copy; several files,
   --dry-run, --password; saving keeps a PDF's encryption; thumbnails and go to a
   label in the window; completions and man pages
 
-* Thu Nov 12 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.1-1
+* Thu Nov 12 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.1-1
 - First package: the command line and the window, in English or Spanish,
   with a menu entry that also opens PDF files
