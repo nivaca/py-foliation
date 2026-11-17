@@ -19,6 +19,7 @@ argumentos posicionales:
     view               mostrar o establecer cómo se abren los PDF en un
                        visor
     header-footer      añadir encabezados y pies de página a los PDF
+    watermark          añadir marcas de agua a los PDF
     completion         imprimir el script de completado de un shell
     interface          mostrar o elegir el idioma de la interfaz
 
@@ -62,8 +63,9 @@ opciones:
 .nf
 uso: py-foliation set [-h] [--interface {en,es}]
                       [-r PÁGINAS [CLAVE=VALOR] [PÁGINAS [CLAVE=VALOR] ...]]
-                      [-f LISTA] [-k] [--remove PÁGINA] [-o OUTPUT | -i]
-                      [-n] [--password CONTRASEÑA]
+                      [-f LISTA] [-k] [--remove PÁGINA] [-o OUTPUT | -i |
+                      --output-dir CARPETA] [--name-prefix TEXTO]
+                      [--name-suffix TEXTO] [-n] [--password CONTRASEÑA]
                       ARCHIVO|INTERVALO [ARCHIVO|INTERVALO ...]
 
 Da a varios PDF nuevas etiquetas de página, intervalo por intervalo. Las que tenían se reemplazan, salvo que se indique --keep.
@@ -90,6 +92,13 @@ opciones:
   -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
                         <entrada>-labelled.pdf)
   -i, --in-place        cambiar los propios archivos de entrada
+  --output-dir CARPETA  guardar los PDF en esta carpeta, con sus propios
+                        nombres salvo que se den --name-prefix o --name-
+                        suffix
+  --name-prefix TEXTO   poner esto antes de los nombres de los PDF guardados
+  --name-suffix TEXTO   poner esto después de los nombres de los PDF
+                        guardados (por defecto: -labelled, o nada con
+                        --output-dir)
   -n, --dry-run         mostrar las etiquetas que recibirían los archivos,
                         sin escribir nada
   --password CONTRASEÑA
@@ -129,8 +138,9 @@ entrada estándar), y encuentra el menor número de intervalos que las da.
 .fi
 .SS clear
 .nf
-uso: py-foliation clear [-h] [--interface {en,es}] [-o OUTPUT | -i] [-n]
-                        [--password CONTRASEÑA]
+uso: py-foliation clear [-h] [--interface {en,es}] [-o OUTPUT | -i |
+                        --output-dir CARPETA] [--name-prefix TEXTO]
+                        [--name-suffix TEXTO] [-n] [--password CONTRASEÑA]
                         ARCHIVO [ARCHIVO ...]
 
 Quita las etiquetas de página de varios PDF: los visores numeran entonces
@@ -147,6 +157,13 @@ opciones:
   -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
                         <entrada>-labelled.pdf)
   -i, --in-place        cambiar los propios archivos de entrada
+  --output-dir CARPETA  guardar los PDF en esta carpeta, con sus propios
+                        nombres salvo que se den --name-prefix o --name-
+                        suffix
+  --name-prefix TEXTO   poner esto antes de los nombres de los PDF guardados
+  --name-suffix TEXTO   poner esto después de los nombres de los PDF
+                        guardados (por defecto: -labelled, o nada con
+                        --output-dir)
   -n, --dry-run         mostrar las etiquetas que recibirían los archivos,
                         sin escribir nada
   --password CONTRASEÑA
@@ -155,8 +172,9 @@ opciones:
 .fi
 .SS copy
 .nf
-uso: py-foliation copy [-h] [--interface {en,es}] [-o OUTPUT | -i] [-n]
-                       [--password CONTRASEÑA]
+uso: py-foliation copy [-h] [--interface {en,es}] [-o OUTPUT | -i |
+                       --output-dir CARPETA] [--name-prefix TEXTO]
+                       [--name-suffix TEXTO] [-n] [--password CONTRASEÑA]
                        ORIGEN ARCHIVO [ARCHIVO ...]
 
 Da a varios PDF las etiquetas de página de otro PDF, por ejemplo de una
@@ -176,6 +194,13 @@ opciones:
   -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
                         <entrada>-labelled.pdf)
   -i, --in-place        cambiar los propios archivos de entrada
+  --output-dir CARPETA  guardar los PDF en esta carpeta, con sus propios
+                        nombres salvo que se den --name-prefix o --name-
+                        suffix
+  --name-prefix TEXTO   poner esto antes de los nombres de los PDF guardados
+  --name-suffix TEXTO   poner esto después de los nombres de los PDF
+                        guardados (por defecto: -labelled, o nada con
+                        --output-dir)
   -n, --dry-run         mostrar las etiquetas que recibirían los archivos,
                         sin escribir nada
   --password CONTRASEÑA
@@ -186,7 +211,8 @@ opciones:
 .nf
 uso: py-foliation view [-h] [--interface {en,es}] [--layout DISPOSICIÓN]
                        [--page-view VISTA] [--open-at PÁGINA] [-o OUTPUT |
-                       -i] [-n] [--password CONTRASEÑA]
+                       -i | --output-dir CARPETA] [--name-prefix TEXTO]
+                       [--name-suffix TEXTO] [-n] [--password CONTRASEÑA]
                        ARCHIVO [ARCHIVO ...]
 
 Muestra o establece la vista de los PDF al abrirse: la disposición de página, la vista de página y la página en que se abren. Un PDF tiene una sola vista para todo el documento. Sin opciones, se muestra la vista; las opciones que no se dan se conservan; 'default' deja esa parte al visor.
@@ -208,6 +234,13 @@ opciones:
   -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
                         <entrada>-labelled.pdf)
   -i, --in-place        cambiar los propios archivos de entrada
+  --output-dir CARPETA  guardar los PDF en esta carpeta, con sus propios
+                        nombres salvo que se den --name-prefix o --name-
+                        suffix
+  --name-prefix TEXTO   poner esto antes de los nombres de los PDF guardados
+  --name-suffix TEXTO   poner esto después de los nombres de los PDF
+                        guardados (por defecto: -labelled, o nada con
+                        --output-dir)
   -n, --dry-run         mostrar la vista que recibirían los archivos, sin
                         escribir nada
   --password CONTRASEÑA
@@ -248,10 +281,14 @@ uso: py-foliation header-footer [-h] [--interface {en,es}]
                                 [--even | --odd | --all-pages]
                                 [--bates-prefix TEXTO] [--bates-start N]
                                 [--bates-digits N] [--bates-suffix TEXTO]
-                                [--profile NOMBRE] [--save-profile NOMBRE]
+                                [--date-format FORMATO] [--add] [--update]
+                                [--remove] [--profile NOMBRE]
+                                [--save-profile NOMBRE]
                                 [--show-on-menu | --no-show-on-menu]
                                 [--list-profiles] [--delete-profile NOMBRE]
-                                [--remove] [-o OUTPUT | -i] [-n]
+                                [--remove-bates] [-o OUTPUT | -i |
+                                --output-dir CARPETA] [--name-prefix TEXTO]
+                                [--name-suffix TEXTO] [-n]
                                 [--password CONTRASEÑA]
                                 [ARCHIVO ...]
 
@@ -265,9 +302,18 @@ opciones:
   --interface {en,es}   el idioma de la interfaz, solo para esta ejecución
                         (para conservar una elección, use la orden
                         'interface')
+  --remove-bates        quitar solo los encabezados y pies con números Bates
+                        (en --pages, o en todas)
   -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
                         <entrada>-labelled.pdf)
   -i, --in-place        cambiar los propios archivos de entrada
+  --output-dir CARPETA  guardar los PDF en esta carpeta, con sus propios
+                        nombres salvo que se den --name-prefix o --name-
+                        suffix
+  --name-prefix TEXTO   poner esto antes de los nombres de los PDF guardados
+  --name-suffix TEXTO   poner esto después de los nombres de los PDF
+                        guardados (por defecto: -labelled, o nada con
+                        --output-dir)
   -n, --dry-run         mostrar el encabezado y el pie de la primera y la
                         última página, sin escribir nada
   --password CONTRASEÑA
@@ -324,19 +370,30 @@ Numeración Bates ($bates):
   --bates-start N       el primer número (por defecto: 1)
   --bates-digits N      los dígitos del número, como mínimo (por defecto: 6)
   --bates-suffix TEXTO  texto después del número
+  --date-format FORMATO
+                        cómo escribe $date la fecha: medium, long, m/d/yy,
+                        m/d/yyyy, mm/dd/yyyy, d/m/yy, d/m/yyyy, dd/mm/yyyy,
+                        dd.mm.yyyy, yyyy-mm-dd (por defecto: medium, como 28
+                        nov 2007)
 
-perfiles y quitar:
+añadir, actualizar y quitar:
+  --add                 conservar lo que py-foliation añadió antes a las
+                        páginas (encabezados y pies); si no, se reemplaza
+  --update              reemplazar lo último añadido (encabezados y pies),
+                        con su configuración y las opciones dadas
+  --remove              quitar lo que añadió py-foliation (encabezados y
+                        pies) (en --pages, o en todas)
+
+perfiles:
   --profile NOMBRE      partir de la configuración de este perfil
   --save-profile NOMBRE
                         guardar esta configuración como un perfil
   --show-on-menu, --no-show-on-menu
-                        con --save-profile: mostrar el perfil en el menú
-                        Encabezado y pie de página de la ventana
+                        con --save-profile: mostrar el perfil en el menú de
+                        la ventana
   --list-profiles       listar los perfiles guardados
   --delete-profile NOMBRE
                         borrar un perfil
-  --remove              quitar los encabezados y pies que añadió py-
-                        foliation (en --pages, o en todas)
 
 El texto de cada lugar puede llevar variables, escritas con $ (ponga el texto
 entre comillas simples, o el shell las toma como suyas): $page, $pagelabel,
@@ -352,14 +409,166 @@ Los márgenes son las distancias de los bordes de la página al encabezado, al
 pie y al texto de los lados. --shrink reduce el contenido de las páginas para
 que el encabezado y el pie no lo tapen.
 
-Un encabezado y pie añadidos de nuevo a una página reemplazan los que
-py-foliation había añadido antes, y --remove los quita, dejando las páginas
-como estaban. Los perfiles guardan una configuración para volver a usarla
-(--save-profile NOMBRE, y luego --profile NOMBRE); las opciones que se den se
-ponen sobre las del perfil.
+Un encabezado y pie añadidos a una página reemplazan los que py-foliation
+había añadido antes, salvo que --add los conserve; --update reemplaza el
+último añadido, con su configuración y las opciones dadas; --remove los quita
+(--remove-bates solo los que tienen números Bates), dejando las páginas como
+estaban. Con varios archivos, los números Bates siguen de un archivo al
+siguiente, en el orden dado. Los perfiles guardan una configuración para
+volver a usarla (--save-profile NOMBRE, y luego --profile NOMBRE); las opciones
+que se den se ponen sobre las del perfil.
 
 Por ejemplo: py-foliation header-footer libro.pdf --footer-center 'Página
 $pagelabel de $totalpages' --header-right '$date' --pages 9- -i
+.fi
+.SS watermark
+.nf
+uso: py-foliation watermark [-h] [--interface {en,es}] [--text TEXTO]
+                            [--file PDF] [--file-page N]
+                            [--font {helvetica,times,courier}]
+                            [--size PUNTOS] [--color #RRGGBB]
+                            [--bold | --no-bold] [--italic | --no-italic]
+                            [--scale PORCENTAJE] [--rotation GRADOS]
+                            [--opacity OPACIDAD] [--behind | --no-behind]
+                            [--print | --no-print] [--screen | --no-screen]
+                            [--horizontal {left,center,right}]
+                            [--vertical {top,center,bottom}]
+                            [--units {in,cm,pt}] [--hoffset TAMAÑO]
+                            [--voffset TAMAÑO] [--pages PÁGINAS] [--even |
+                            --odd | --all-pages] [--bates-prefix TEXTO]
+                            [--bates-start N] [--bates-digits N]
+                            [--bates-suffix TEXTO] [--date-format FORMATO]
+                            [--add] [--update] [--remove] [--profile NOMBRE]
+                            [--save-profile NOMBRE]
+                            [--show-on-menu | --no-show-on-menu]
+                            [--list-profiles] [--delete-profile NOMBRE]
+                            [-o OUTPUT | -i | --output-dir CARPETA]
+                            [--name-prefix TEXTO] [--name-suffix TEXTO] [-n]
+                            [--password CONTRASEÑA]
+                            [ARCHIVO ...]
+
+Pone una marca de agua en las páginas de los PDF: un texto, como Borrador o Copia, o una página de otro PDF, delante o detrás de su contenido, girada, a escala y con algo de transparencia. Como los encabezados y pies, cambia las páginas mismas.
+
+argumentos posicionales:
+  ARCHIVO               PDF de origen
+
+opciones:
+  -h, --help            mostrar esta ayuda y terminar
+  --interface {en,es}   el idioma de la interfaz, solo para esta ejecución
+                        (para conservar una elección, use la orden
+                        'interface')
+  -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
+                        <entrada>-labelled.pdf)
+  -i, --in-place        cambiar los propios archivos de entrada
+  --output-dir CARPETA  guardar los PDF en esta carpeta, con sus propios
+                        nombres salvo que se den --name-prefix o --name-
+                        suffix
+  --name-prefix TEXTO   poner esto antes de los nombres de los PDF guardados
+  --name-suffix TEXTO   poner esto después de los nombres de los PDF
+                        guardados (por defecto: -labelled, o nada con
+                        --output-dir)
+  -n, --dry-run         mostrar la marca de agua de la primera y la última
+                        página, sin escribir nada
+  --password CONTRASEÑA
+                        la contraseña para abrir los PDF (su protección se
+                        conserva al guardarlos)
+
+qué:
+  --text TEXTO          el texto de la marca de agua (\en empieza otra línea)
+  --file PDF            un PDF una de cuyas páginas es la marca de agua
+  --file-page N         la página de --file (por defecto: 1)
+
+apariencia:
+  --font {helvetica,times,courier}
+                        la fuente (por defecto: helvetica)
+  --size PUNTOS         el tamaño de la fuente (por defecto: 60)
+  --color #RRGGBB       el color del texto (por defecto: #808080)
+  --bold, --no-bold     texto en negrita
+  --italic, --no-italic
+                        texto en cursiva
+  --scale PORCENTAJE    ocupar este porcentaje de la página (por defecto: 0,
+                        su propio tamaño)
+  --rotation GRADOS     girarla, en sentido contrario a las agujas del reloj
+                        (por defecto: 45)
+  --opacity OPACIDAD    de 0 a 1, o de 0% a 100% (por defecto: 0.5)
+  --behind, --no-behind
+                        detrás del contenido de las páginas (por defecto:
+                        delante)
+  --print, --no-print   se muestra al imprimir (por defecto: sí)
+  --screen, --no-screen
+                        se muestra en pantalla (por defecto: sí)
+
+posición:
+  --horizontal {left,center,right}
+                        left, center o right: izquierda, centro o derecha
+                        (por defecto: center)
+  --vertical {top,center,bottom}
+                        top, center o bottom: arriba, centro o abajo (por
+                        defecto: center)
+  --units {in,cm,pt}    las unidades de los desplazamientos (por defecto:
+                        cm)
+  --hoffset TAMAÑO      desplazarla en horizontal, desde el lado elegido (o
+                        a la derecha del centro)
+  --voffset TAMAÑO      desplazarla en vertical, desde el borde elegido (o
+                        hacia arriba desde el centro)
+
+páginas:
+  --pages PÁGINAS       las páginas, como 9-200 o 1,3,9- (por defecto:
+                        todas; LAST cuenta desde el final)
+  --even                solo las páginas pares
+  --odd                 solo las páginas impares
+  --all-pages           páginas pares e impares (con un perfil que tiene
+                        solo unas)
+
+Numeración Bates ($bates):
+  --bates-prefix TEXTO  texto antes del número
+  --bates-start N       el primer número (por defecto: 1)
+  --bates-digits N      los dígitos del número, como mínimo (por defecto: 6)
+  --bates-suffix TEXTO  texto después del número
+  --date-format FORMATO
+                        cómo escribe $date la fecha: medium, long, m/d/yy,
+                        m/d/yyyy, mm/dd/yyyy, d/m/yy, d/m/yyyy, dd/mm/yyyy,
+                        dd.mm.yyyy, yyyy-mm-dd (por defecto: medium, como 28
+                        nov 2007)
+
+añadir, actualizar y quitar:
+  --add                 conservar lo que py-foliation añadió antes a las
+                        páginas (marcas de agua); si no, se reemplaza
+  --update              reemplazar lo último añadido (marcas de agua), con
+                        su configuración y las opciones dadas
+  --remove              quitar lo que añadió py-foliation (marcas de agua)
+                        (en --pages, o en todas)
+
+perfiles:
+  --profile NOMBRE      partir de la configuración de este perfil
+  --save-profile NOMBRE
+                        guardar esta configuración como un perfil
+  --show-on-menu, --no-show-on-menu
+                        con --save-profile: mostrar el perfil en el menú de
+                        la ventana
+  --list-profiles       listar los perfiles guardados
+  --delete-profile NOMBRE
+                        borrar un perfil
+
+Una marca de agua es un texto (--text, con las variables de header-footer,
+como $page o $date; póngalo entre comillas simples) o una página de otro PDF
+(--file, --file-page). --scale hace que ocupe ese porcentaje de la página
+(por defecto conserva su propio tamaño); --rotation la gira, en sentido
+contrario a las agujas del reloj; --opacity va de 0 (invisible) a 1 (o de 0%
+a 100%).
+
+Va en el centro de la página salvo que --horizontal y --vertical digan otra
+cosa, desplazada desde allí por --hoffset y --voffset. --behind la pone detrás
+del contenido de las páginas (donde una página pintada de blanco la taparía).
+--no-print o --no-screen la muestran solo en pantalla o solo al imprimir, en
+los visores que siguen esas indicaciones.
+
+Una marca de agua añadida a una página reemplaza las que py-foliation había
+añadido antes, salvo que --add las conserve; --update reemplaza la última
+añadida; --remove las quita, dejando las páginas como estaban.
+
+Por ejemplo: py-foliation watermark libro.pdf --text BORRADOR --opacity 30%
+--scale 60 -i
 .fi
 .SS completion
 .nf

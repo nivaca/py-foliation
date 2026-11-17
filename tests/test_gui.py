@@ -344,11 +344,11 @@ def test_header_and_footer(app, window, book, monkeypatch):
     window.open_path(book)
     asked = []
 
-    def ask(hf, page):
+    def ask(kind, hf, page, existing=False):
         asked.append((hf.pages, page))
-        return HeaderFooter(footer_center="p. $pagelabel", pages=hf.pages)
+        return HeaderFooter(footer_center="p. $pagelabel", pages=hf.pages), False
 
-    window.ask_header_footer = ask
+    window.ask_stamp = ask
     window.pages.setCurrentRow(8)
     window.pages.item(9).setSelected(True)
     menu = window.build_pages_menu()
@@ -361,7 +361,7 @@ def test_header_and_footer(app, window, book, monkeypatch):
     window.undo()
     assert window.hf_changes == () and not window.is_modified()
     window.redo()
-    assert window.save() and not window.is_modified() and window.stamped == [9, 10]
+    assert window.save() and not window.is_modified() and window.pages_with() == {9, 10}
     with pikepdf.open(book) as pdf:
         assert headfoot.pages_with(pdf) == [9, 10]
         assert b"(p. 1)" in pdf.pages[8].obj.Contents[-1].read_bytes()
@@ -372,7 +372,7 @@ def test_header_and_footer(app, window, book, monkeypatch):
     headfoot.save_profile(HeaderFooter(header_right="$date", name="Dated", show_on_menu=True))
     window._fill_headfoot_menu()
     names = [a.text() for a in window.m_headfoot.actions()]
-    assert names[:2] == ["Add…", "Remove all"] and "Dated" in names
+    assert names[:4] == ["Add…", "Update…", "Remove all", "Remove the Bates numbers"] and "Dated" in names
     next(a for a in window.m_headfoot.actions() if a.text() == "Dated").trigger()
     assert window.pages_with_header_footer() == set(range(1, 101))
     next(a for a in window.m_headfoot.actions() if a.text() == "Remove all").trigger()
@@ -392,7 +392,7 @@ def test_header_footer_dialog(app, window, book, monkeypatch):
     assert dlg.problem.text() == "" and dlg.preview.pixmap() is not None and not dlg.preview.pixmap().isNull()
     dlg.slots["header_left"].setFocus()
     dlg.target = dlg.slots["header_left"]
-    dlg.insert("pagelabel")
+    dlg.insert("$pagelabel")
     assert dlg.slots["header_left"].text() == "$pagelabel"
     dlg.units.setCurrentIndex(dlg.units.findData("in"))  # (the margins keep their place)
     assert dlg.margins["top"].value() == pytest.approx(1.0)

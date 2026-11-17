@@ -8,12 +8,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from . import config, headfoot, interface, labels, view
+from . import config, headfoot, interface, labels, stamps, view, watermark
+from .changes import Change
 from .files import open_pdf, read_list, save_pdf
 from .interface import N_, ntr, tr
 from .labels import LabelError, pages_text, set_command
 
-COMMANDS = ("show", "set", "clear", "copy", "view", "header-footer", "completion", "interface")
+COMMANDS = ("show", "set", "clear", "copy", "view", "header-footer", "watermark", "completion", "interface")
 
 SET_EPILOG = N_("""A range is written PAGES:STYLE[:START[:PREFIX]]:
 
@@ -72,13 +73,36 @@ Margins are the distances from the edges of the page to the header, the
 footer and the text at the sides. --shrink scales the content of the pages
 down so that the header and footer don't cover it.
 
-A header and footer added again to a page replaces the one py-foliation
-added before, and --remove takes them away, putting the pages back as they
-were. Profiles keep settings to use again (--save-profile NAME, then
+A header and footer added to a page replaces those py-foliation added
+before, unless --add keeps them; --update replaces the last one added, with
+its settings and the options given; --remove takes them away (--remove-bates
+only those with Bates numbers), putting the pages back as they were. With
+several files, the Bates numbers go on from one file to the next, in the
+order given. Profiles keep settings to use again (--save-profile NAME, then
 --profile NAME); the options given are laid over those of the profile.
 
 For instance: py-foliation header-footer book.pdf --footer-center 'Page
 $pagelabel of $totalpages' --header-right '$date' --pages 9- -i""")
+
+
+WATERMARK_EPILOG = N_("""A watermark is a text (--text, with the variables of header-footer, such as
+$page or $date; put it in single quotes) or a page of another PDF (--file,
+--file-page). --scale fills that percent of the page with it (by default,
+it keeps its own size); --rotation turns it, counterclockwise; --opacity
+goes from 0 (invisible) to 1 (or 0% to 100%).
+
+It goes in the middle of the page unless --horizontal and --vertical say
+otherwise, moved by --hoffset and --voffset from there. --behind draws it
+behind the content of the pages (where a page painted white would hide it).
+--no-print or --no-screen shows it only on the screen or only when
+printing, in viewers that follow such settings.
+
+A watermark added to a page replaces those py-foliation added before,
+unless --add keeps them; --update replaces the last one added; --remove
+takes them away, putting the pages back as they were.
+
+For instance: py-foliation watermark book.pdf --text DRAFT --opacity 30%
+--scale 60 -i""")
 
 
 def interface_option(argv: list[str]) -> str | None:
@@ -121,9 +145,52 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
         g.add_argument("-o", "--output", type=Path,
                        help=tr("output PDF, with one input only (default: <input>-labelled.pdf)"))
         g.add_argument("-i", "--in-place", action="store_true", help=tr("change the input files themselves"))
+        g.add_argument("--output-dir", type=Path, metavar=tr("FOLDER"),
+                       help=tr("save the PDFs in this folder, with their own names unless --name-prefix or "
+                               "--name-suffix are given"))
+        sp.add_argument("--name-prefix", default="", metavar=tr("TEXT"),
+                        help=tr("put this before the names of the PDFs saved"))
+        sp.add_argument("--name-suffix", metavar=tr("TEXT"),
+                        help=tr("put this after the names of the PDFs saved (default: -labelled, or nothing "
+                                "with --output-dir)"))
         sp.add_argument("-n", "--dry-run", action="store_true",
                         help=dry_run_help or tr("show the labels the files would get, without writing anything"))
         password(sp)
+
+    def stamp_options(sp, what: str):
+        """The options headers and footers share with watermarks."""
+        g = sp.add_argument_group(tr("pages"))
+        g.add_argument("--pages", metavar=tr("PAGES"),
+                       help=tr("the pages, as 9-200 or 1,3,9- (default: all; LAST counts from the end)"))
+        parity = g.add_mutually_exclusive_group()
+        parity.add_argument("--even", dest="parity", action="store_const", const="even", help=tr("even pages only"))
+        parity.add_argument("--odd", dest="parity", action="store_const", const="odd", help=tr("odd pages only"))
+        parity.add_argument("--all-pages", dest="parity", action="store_const", const="all",
+                            help=tr("even and odd pages (with a profile that has only some)"))
+        g = sp.add_argument_group(tr("Bates numbering ($bates)"))
+        g.add_argument("--bates-prefix", metavar=tr("TEXT"), help=tr("text before the number"))
+        g.add_argument("--bates-start", type=int, metavar="N", help=tr("the first number (default: 1)"))
+        g.add_argument("--bates-digits", type=int, metavar="N",
+                       help=tr("the digits of the number, at least (default: 6)"))
+        g.add_argument("--bates-suffix", metavar=tr("TEXT"), help=tr("text after the number"))
+        g.add_argument("--date-format", choices=list(stamps.DATE_FORMATS), metavar=tr("FORMAT"),
+                       help=tr("how $date writes the date: {formats} (default: medium, as Nov 28, 2007)",
+                               formats=", ".join(stamps.DATE_FORMATS)))
+        g = sp.add_argument_group(tr("adding, updating and removing"))
+        g.add_argument("--add", action="store_true",
+                       help=tr("keep the {what} py-foliation added to the pages before (else they are replaced)",
+                               what=what))
+        g.add_argument("--update", action="store_true",
+                       help=tr("replace the last {what} added, with its settings and the options given", what=what))
+        g.add_argument("--remove", action="store_true",
+                       help=tr("take away the {what} py-foliation added (on --pages, or all)", what=what))
+        g = sp.add_argument_group(tr("profiles"))
+        g.add_argument("--profile", metavar=tr("NAME"), help=tr("start from the settings of this profile"))
+        g.add_argument("--save-profile", metavar=tr("NAME"), help=tr("keep these settings as a profile"))
+        g.add_argument("--show-on-menu", action=argparse.BooleanOptionalAction, default=None,
+                       help=tr("with --save-profile: list the profile in the window's menu"))
+        g.add_argument("--list-profiles", action="store_true", help=tr("list the profiles kept"))
+        g.add_argument("--delete-profile", metavar=tr("NAME"), help=tr("forget a profile"))
 
     sp = sub.add_parser("show", parents=[common], help=tr("show the page labels of PDFs"),
                         description=tr("Show the ranges of page labels of PDFs, and the command that "
@@ -213,29 +280,53 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
     g.add_argument("--border-color", metavar="#RRGGBB", help=tr("the color of the border"))
     g.add_argument("--border-width", type=float, metavar=tr("POINTS"), help=tr("the width of the border"))
     g.add_argument("--background", metavar="#RRGGBB", help=tr("a background color behind each text ('none': no background)"))
-    g = sp.add_argument_group(tr("pages"))
-    g.add_argument("--pages", metavar=tr("PAGES"),
-                   help=tr("the pages, as 9-200 or 1,3,9- (default: all; LAST counts from the end)"))
-    parity = g.add_mutually_exclusive_group()
-    parity.add_argument("--even", dest="parity", action="store_const", const="even", help=tr("even pages only"))
-    parity.add_argument("--odd", dest="parity", action="store_const", const="odd", help=tr("odd pages only"))
-    parity.add_argument("--all-pages", dest="parity", action="store_const", const="all",
-                        help=tr("even and odd pages (with a profile that has only some)"))
-    g = sp.add_argument_group(tr("Bates numbering ($bates)"))
-    g.add_argument("--bates-prefix", metavar=tr("TEXT"), help=tr("text before the number"))
-    g.add_argument("--bates-start", type=int, metavar="N", help=tr("the first number (default: 1)"))
-    g.add_argument("--bates-digits", type=int, metavar="N", help=tr("the digits of the number, at least (default: 6)"))
-    g.add_argument("--bates-suffix", metavar=tr("TEXT"), help=tr("text after the number"))
-    g = sp.add_argument_group(tr("profiles and removing"))
-    g.add_argument("--profile", metavar=tr("NAME"), help=tr("start from the settings of this profile"))
-    g.add_argument("--save-profile", metavar=tr("NAME"), help=tr("keep these settings as a profile"))
-    g.add_argument("--show-on-menu", action=argparse.BooleanOptionalAction, default=None,
-                   help=tr("with --save-profile: list the profile in the window's Header and Footer menu"))
-    g.add_argument("--list-profiles", action="store_true", help=tr("list the profiles kept"))
-    g.add_argument("--delete-profile", metavar=tr("NAME"), help=tr("forget a profile"))
-    g.add_argument("--remove", action="store_true",
-                   help=tr("take away the headers and footers py-foliation added (on --pages, or all)"))
+    stamp_options(sp, tr("headers and footers"))
+    sp.add_argument("--remove-bates", action="store_true",
+                    help=tr("take away only the headers and footers with Bates numbers (on --pages, or all)"))
     output_options(sp, tr("show the header and footer of the first and last pages, without writing anything"))
+
+    sp = sub.add_parser("watermark", parents=[common], help=tr("add watermarks to PDFs"),
+                        description=tr("Draw a watermark on the pages of PDFs: a text, such as Draft or Copy, "
+                                       "or a page of another PDF, in front of their content or behind it, "
+                                       "turned, scaled and with some transparency. Like headers and footers, "
+                                       "it changes the pages themselves."),
+                        epilog=translate_paragraphs(WATERMARK_EPILOG),
+                        formatter_class=argparse.RawDescriptionHelpFormatter)
+    sp.add_argument("inputs", nargs="*", type=Path, metavar=tr("FILE"), help=tr("source PDF"))
+    g = sp.add_argument_group(tr("what"))
+    g.add_argument("--text", metavar=tr("TEXT"), help=tr("the text of the watermark (\\n starts another line)"))
+    g.add_argument("--file", dest="source", metavar=tr("PDF"), help=tr("a PDF whose page is the watermark"))
+    g.add_argument("--file-page", dest="source_page", type=int, metavar="N",
+                   help=tr("the page of --file (default: 1)"))
+    g = sp.add_argument_group(tr("appearance"))
+    g.add_argument("--font", choices=list(headfoot.FAMILIES), help=tr("the font (default: helvetica)"))
+    g.add_argument("--size", type=float, metavar=tr("POINTS"), help=tr("the font size (default: 60)"))
+    g.add_argument("--color", metavar="#RRGGBB", help=tr("the color of the text (default: #808080)"))
+    g.add_argument("--bold", action=argparse.BooleanOptionalAction, default=None, help=tr("bold text"))
+    g.add_argument("--italic", action=argparse.BooleanOptionalAction, default=None, help=tr("italic text"))
+    g.add_argument("--scale", type=float, metavar=tr("PERCENT"),
+                   help=tr("fill this percent of the page (default: 0, its own size)"))
+    g.add_argument("--rotation", type=float, metavar=tr("DEGREES"),
+                   help=tr("turn it, counterclockwise (default: 45)"))
+    g.add_argument("--opacity", metavar=tr("OPACITY"), help=tr("from 0 to 1, or 0%% to 100%% (default: 0.5)"))
+    g.add_argument("--behind", action=argparse.BooleanOptionalAction, default=None,
+                   help=tr("behind the content of the pages (default: in front of it)"))
+    g.add_argument("--print", dest="on_print", action=argparse.BooleanOptionalAction, default=None,
+                   help=tr("shown when printing (default: yes)"))
+    g.add_argument("--screen", dest="on_screen", action=argparse.BooleanOptionalAction, default=None,
+                   help=tr("shown on the screen (default: yes)"))
+    g = sp.add_argument_group(tr("position"))
+    g.add_argument("--horizontal", dest="halign", choices=list(watermark.HALIGNS),
+                   help=tr("left, center or right (default: center)"))
+    g.add_argument("--vertical", dest="valign", choices=list(watermark.VALIGNS),
+                   help=tr("top, center or bottom (default: center)"))
+    g.add_argument("--units", choices=list(headfoot.POINTS), help=tr("the units of the offsets (default: cm)"))
+    g.add_argument("--hoffset", type=float, metavar=tr("SIZE"),
+                   help=tr("move it across, from the side chosen (or to the right of the center)"))
+    g.add_argument("--voffset", type=float, metavar=tr("SIZE"),
+                   help=tr("move it up or down, from the edge chosen (or up from the center)"))
+    stamp_options(sp, tr("watermarks"))
+    output_options(sp, tr("show the watermark of the first and last pages, without writing anything"))
 
     sp = sub.add_parser("completion", parents=[common], help=tr("print the completion script of a shell"),
                         description=tr("Print the script that completes py-foliation's commands, options and "
@@ -271,7 +362,7 @@ def show(a) -> int:
                 n = len(pdf.pages)
                 ranges = labels.read_labels(pdf)
                 shown = view.read_view(pdf)
-                stamped = headfoot.pages_with(pdf)
+                added = stamps.additions(pdf)
         except LabelError as e:
             report(e)
             failed = True
@@ -289,10 +380,7 @@ def show(a) -> int:
                 failed = True
         else:
             print_ranges(path, ranges, n, shown)
-            if stamped:
-                print(ntr("Header and footer added by py-foliation on {count} page: {pages}",
-                          "Header and footer added by py-foliation on {count} pages: {pages}", len(stamped),
-                          pages=headfoot.compact_pages(stamped)))
+            print_additions(added)
     return 1 if failed else 0
 
 
@@ -314,6 +402,19 @@ def print_ranges(path: Path, ranges: list[labels.Range], n: int, shown: view.Vie
         return
     print(tr("To give these labels to another file:"))
     print("  " + set_command(Path("FILE.pdf"), ranges).replace("FILE.pdf", tr("FILE.pdf")))
+
+
+def print_additions(added: list[stamps.Addition]) -> None:
+    """What py-foliation added to the pages of a file (its headers and footers, and watermarks)."""
+    if not added:
+        return
+    print(tr("Added to the pages by py-foliation:"))
+    for a in added:
+        what = tr("header and footer") if a.kind == stamps.HEADER_FOOTER else tr("watermark")
+        if a.bates:
+            what += " " + tr("(with Bates numbers)")
+        print("  " + ntr("{what}, on {count} page: {pages}", "{what}, on {count} pages: {pages}", len(a.pages),
+                         what=what, pages=stamps.compact_pages(a.pages)))
 
 
 def print_view(v: view.View, title: str | None = None) -> None:
@@ -340,9 +441,17 @@ def is_file(item: str) -> bool:
 
 
 def output_path(a, path: Path) -> Path:
+    """Where the changed PATH is saved: itself (--in-place), --output, or a name made from its own
+    (in --output-dir, or next to it), with --name-prefix and --name-suffix."""
     if a.in_place:
         return path
-    return a.output or path.with_name(path.stem + "-labelled.pdf")
+    if a.output:
+        return a.output
+    folder = getattr(a, "output_dir", None)
+    suffix = getattr(a, "name_suffix", None)
+    if suffix is None:
+        suffix = "" if folder else "-labelled"
+    return (folder or path.parent) / f"{getattr(a, 'name_prefix', '')}{path.stem}{suffix}.pdf"
 
 
 def print_spans(ranges: list[labels.Range], n: int) -> None:
@@ -357,6 +466,13 @@ def change(a, inputs: list[Path], make, write=labels.write_labels, describe=prin
     if a.output is not None and len(inputs) > 1:
         raise LabelError(tr("--output takes one input only; with several, each is saved as "
                             "<input>-labelled.pdf, or changed with --in-place"))
+    if (a.in_place or a.output) and (getattr(a, "name_prefix", "") or getattr(a, "name_suffix", None) is not None):
+        raise LabelError(tr("--name-prefix and --name-suffix go with --output-dir, or alone"))
+    if getattr(a, "output_dir", None) is not None and not a.dry_run:
+        try:
+            a.output_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise LabelError(tr("{path} cannot be written: {error}", path=a.output_dir, error=e)) from None
     failed = False
     for path in inputs:
         try:
@@ -435,62 +551,122 @@ def view_command(a) -> int:
                   write=view.write_view, describe=lambda v, n: print_view(v, tr("When it is opened:")))
 
 
-def header_footer_settings(a) -> headfoot.HeaderFooter:
-    """The settings the options give, laid over those of --profile (or the defaults)."""
-    base = headfoot.HeaderFooter()
-    if a.profile:
-        profiles = headfoot.read_profiles()
-        if a.profile not in profiles:
-            raise LabelError(tr("there is no profile {name!r} (see --list-profiles)", name=a.profile))
-        base = profiles[a.profile]
+# what header-footer and watermark take from the options (besides those of each one)
+STAMP_KEYS = ("pages", "parity", "bates_prefix", "bates_start", "bates_digits", "bates_suffix", "date_format",
+              "show_on_menu", "font", "size", "color", "bold", "italic", "units")
+HEADER_FOOTER_KEYS = STAMP_KEYS + ("top", "bottom", "left", "right", "shrink", "border", "border_color",
+                                   "border_width")
+WATERMARK_KEYS = STAMP_KEYS + ("source", "source_page", "scale", "rotation", "behind", "on_print", "on_screen",
+                               "halign", "valign", "hoffset", "voffset")
+
+
+def opacity(value: str) -> float:
+    """0.3 or 30%: an opacity from 0 to 1."""
+    text = value.strip()
+    try:
+        return float(text[:-1]) / 100 if text.endswith("%") else float(text)
+    except ValueError:
+        raise LabelError(tr("the opacity must be from 0 to 1, or 0% to 100% (not {value!r})", value=value)) from None
+
+
+def stamp_changes(a, kind: str) -> dict:
+    """The settings the options of header-footer or watermark give (those not given are left out)."""
     changes = {}
-    for slot in headfoot.SLOTS:
-        if getattr(a, slot) is not None:
-            changes[slot] = getattr(a, slot).replace("\\n", "\n")
-    for key in ("units", "top", "bottom", "left", "right", "shrink", "font", "size", "color", "bold", "italic",
-                "border", "border_color", "border_width", "pages", "parity", "bates_prefix", "bates_start",
-                "bates_digits", "bates_suffix", "show_on_menu"):
-        if getattr(a, key) is not None:
+    if kind == stamps.HEADER_FOOTER:
+        for slot in headfoot.SLOTS:
+            if getattr(a, slot) is not None:
+                changes[slot] = getattr(a, slot).replace("\\n", "\n")
+        keys = HEADER_FOOTER_KEYS
+    else:
+        if a.text is not None:
+            changes["text"] = a.text.replace("\\n", "\n")
+            if a.source is None:
+                changes["source"] = ""
+        if a.source is not None and a.text is None:
+            changes["text"] = ""
+        if a.opacity is not None:
+            changes["opacity"] = opacity(a.opacity)
+        keys = WATERMARK_KEYS
+    for key in keys:
+        if getattr(a, key, None) is not None:
             changes[key] = getattr(a, key)
-    if a.background is not None:
+    if kind == stamps.HEADER_FOOTER and a.background is not None:
         changes["background"] = "" if a.background.strip().lower() in ("", "none") else a.background
     if a.save_profile:
         changes["name"] = a.save_profile
-    return headfoot.check(dataclasses.replace(base, **changes))
+    return changes
 
 
-def print_header_footer(made, n: int) -> None:
-    change, doc = made
-    if change.hf is None:
-        print("  " + tr("headers and footers taken away"))
+def stamp_settings(a, kind: str, module, base=None):
+    """The settings the options give, laid over BASE, or those of --profile, or the defaults."""
+    cls = headfoot.HeaderFooter if kind == stamps.HEADER_FOOTER else watermark.Watermark
+    if base is None:
+        base = cls()
+        if a.profile:
+            found = module.read_profiles()
+            if a.profile not in found:
+                raise LabelError(tr("there is no profile {name!r} (see --list-profiles)", name=a.profile))
+            base = found[a.profile]
+    return module.check(dataclasses.replace(base, **stamp_changes(a, kind)))
+
+
+def header_footer_settings(a) -> headfoot.HeaderFooter:
+    return stamp_settings(a, stamps.HEADER_FOOTER, headfoot)
+
+
+def describe_stamp(made, n: int) -> None:
+    change, doc, offset = made
+    if change.settings is None:
+        what = (tr("headers and footers with Bates numbers taken away") if change.bates_only
+                else tr("headers and footers taken away") if change.kind == stamps.HEADER_FOOTER
+                else tr("watermarks taken away"))
+        print("  " + what)
         return
-    texts = headfoot.page_texts(change.hf, doc, datetime.now())
-    for number, page in (texts[0], texts[-1]) if len(texts) > 1 else texts[:1]:
+    if isinstance(change.settings, headfoot.HeaderFooter):
+        pages = [(number, [(tr(headfoot.SLOT_TITLES[slot]), text) for slot, text in texts.items() if text.strip()])
+                 for number, texts in headfoot.page_texts(change.settings, doc, datetime.now(), offset)]
+    else:
+        pages = [(number, [(tr("Watermark"), text or tr("page {page} of {path}", page=change.settings.source_page,
+                                                         path=change.settings.source))])
+                 for number, text in watermark.page_texts(change.settings, doc, datetime.now(), offset)]
+    if change.replaces is not None:
+        print("  " + tr("(replacing the last one added)"))
+    for number, texts in (pages[0], pages[-1]) if len(pages) > 1 else pages[:1]:
         print("  " + tr("page {page}", page=number) + ":")
-        for slot, text in page.items():
-            if text.strip():
-                print(f"    {tr(headfoot.SLOT_TITLES[slot])}: {text}".replace("\n", " / "))
-    print("  " + ntr("on {count} page", "on {count} pages", len(texts)))
+        for what, text in texts:
+            print(f"    {what}: {text}".replace("\n", " / "))
+    print("  " + ntr("on {count} page", "on {count} pages", len(pages)))
 
 
-def header_footer(a) -> int:
+def stamp_command(a, kind: str) -> int:
+    """header-footer and watermark."""
+    module = headfoot if kind == stamps.HEADER_FOOTER else watermark
     if a.list_profiles:
-        profiles = headfoot.read_profiles()
-        if not profiles:
-            print(tr("No profiles kept ({path})", path=headfoot.profiles_path()))
-        for name, hf in profiles.items():
-            texts = "; ".join(f"{tr(headfoot.SLOT_TITLES[s])}: {t}" for s, t in hf.texts().items() if t.strip())
-            print(f"  {'*' if hf.show_on_menu else ' '} {name}  ({texts})")
+        found = module.read_profiles()
+        if not found:
+            print(tr("No profiles kept ({path})", path=module.profiles_path()))
+        for name, settings in found.items():
+            if kind == stamps.HEADER_FOOTER:
+                summary = "; ".join(f"{tr(headfoot.SLOT_TITLES[s])}: {t}" for s, t in settings.texts().items()
+                                    if t.strip())
+            else:
+                summary = settings.text or settings.source
+            print(f"  {'*' if settings.show_on_menu else ' '} {name}  ({summary})")
         return 0
     if a.delete_profile:
-        if not headfoot.delete_profile(a.delete_profile):
+        if not module.delete_profile(a.delete_profile):
             raise LabelError(tr("there is no profile {name!r} (see --list-profiles)", name=a.delete_profile))
         print(tr("Profile {name!r} forgotten", name=a.delete_profile))
         return 0
-    hf = None if a.remove else header_footer_settings(a)
+    removing = a.remove or getattr(a, "remove_bates", False)
+    if sum([removing, a.update, a.add]) > 1:
+        raise LabelError(tr("--add, --update and --remove go one at a time"))
+    settings = None if (removing or a.update) else stamp_settings(a, kind, module)
     if a.save_profile:
+        if settings is None:
+            raise LabelError(tr("--save-profile keeps new settings: it doesn't go with --update or --remove"))
         try:
-            path = headfoot.save_profile(hf)
+            path = module.save_profile(settings)
         except OSError as e:
             raise LabelError(tr("Could not keep the setting: {error}", error=e)) from None
         print(tr("Profile {name!r} kept in {path}", name=a.save_profile, path=path))
@@ -498,17 +674,43 @@ def header_footer(a) -> int:
             return 0
     if not a.inputs:
         raise LabelError(tr("no PDF given (the files must end in .pdf)"))
-    pages = a.pages or ""
+    bates = {"offset": 0, "last": None}  # (Bates numbers go on from one file to the next)
 
     def make(pdf, n):
-        doc = headfoot.document_of(pdf, Path(pdf.filename))
-        change = headfoot.Change(None, pages) if hf is None else headfoot.Change(hf)
-        if hf is not None:
-            headfoot.page_texts(hf, doc, datetime.now())  # (the texts can be written, before anything is)
-        return change, doc
+        doc = stamps.document_of(pdf, Path(pdf.filename))
+        if removing:
+            change = Change(None, kind=kind, pages=a.pages or "", bates_only=getattr(a, "remove_bates", False))
+        elif a.update:
+            last = module.last(pdf)
+            if last is None:
+                raise LabelError(tr("{path} has no {what} added by this version of py-foliation to update",
+                                    path=pdf.filename, what=tr("header and footer") if kind == stamps.HEADER_FOOTER
+                                    else tr("watermark")))
+            change = Change(stamp_settings(a, kind, module, last[1]), replaces=last[0])
+        else:
+            change = Change(settings, keep=a.add)
+        offset = bates["offset"]
+        if change.settings is not None:
+            module.page_texts(change.settings, doc, datetime.now(), offset)  # (they can be written, first)
+            used = change.bates_pages(n)
+            if used:
+                bates["offset"] += used
+                bates["last"] = change.settings
+        return change, doc, offset
 
-    return change(a, a.inputs, make, write=lambda pdf, made: made[0].apply(pdf, made[1]),
-                  describe=print_header_footer)
+    result = change(a, a.inputs, make, write=lambda pdf, made: made[0].apply(pdf, made[1], bates_offset=made[2]),
+                    describe=describe_stamp)
+    if bates["last"] is not None:
+        print(tr("Next Bates number: {number}", number=stamps.bates_number(bates["last"], bates["offset"])))
+    return result
+
+
+def header_footer(a) -> int:
+    return stamp_command(a, stamps.HEADER_FOOTER)
+
+
+def watermark_command(a) -> int:
+    return stamp_command(a, stamps.WATERMARK)
 
 
 def completion(a) -> int:
@@ -549,7 +751,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     a, extra = parser.parse_known_args(argv)
     # (argparse takes the positionals of a command in one go: those after an option are left over)
-    if extra and a.command in ("set", "show", "clear", "copy", "view", "header-footer") \
+    if extra and a.command in ("set", "show", "clear", "copy", "view", "header-footer", "watermark") \
             and not any(t.startswith("-") and t != "-" for t in extra):
         if a.command == "set":
             a.items += extra
@@ -561,7 +763,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
     commands = {"show": show, "set": set_labels, "clear": clear, "copy": copy, "view": view_command,
-                "header-footer": header_footer,
+                "header-footer": header_footer, "watermark": watermark_command,
                 "completion": completion, "interface": choose_interface}
     try:
         return commands[a.command](a)

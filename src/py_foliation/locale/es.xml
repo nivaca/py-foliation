@@ -1245,14 +1245,6 @@ cover-continuous.</tr>
     <tr>(perfil nuevo)</tr>
   </text>
   <text>
-    <en>A header and footer added again to a page replaces the one py-foliation added before, and --remove takes them away, putting the pages back as they were. Profiles keep settings to use again (--save-profile NAME, then --profile NAME); the options given are laid over those of the profile.</en>
-    <tr>Un encabezado y pie añadidos de nuevo a una página reemplazan los que
-py-foliation había añadido antes, y --remove los quita, dejando las páginas
-como estaban. Los perfiles guardan una configuración para volver a usarla
-(--save-profile NOMBRE, y luego --profile NOMBRE); las opciones que se den se
-ponen sobre las del perfil.</tr>
-  </text>
-  <text>
     <en>AM or PM</en>
     <tr>AM o PM</tr>
   </text>
@@ -1366,14 +1358,6 @@ $pagelabel de $totalpages' --header-right '$date' --pages 9- -i</tr>
     <tr>Encabezado y pie añadidos (se escriben al guardar el archivo)</tr>
   </text>
   <text>
-    <en>Header and footer added by py-foliation on {count} page: {pages}</en>
-    <tr>Encabezado y pie añadidos por py-foliation en {count} página: {pages}</tr>
-  </text>
-  <text>
-    <en>Header and footer added by py-foliation on {count} pages: {pages}</en>
-    <tr>Encabezado y pie añadidos por py-foliation en {count} páginas: {pages}</tr>
-  </text>
-  <text>
     <en>Header and footer on these pages…</en>
     <tr>Encabezado y pie en estas páginas…</tr>
   </text>
@@ -1392,10 +1376,6 @@ $pagelabel de $totalpages' --header-right '$date' --pages 9- -i</tr>
   <text>
     <en>Header right</en>
     <tr>Encabezado, derecha</tr>
-  </text>
-  <text>
-    <en>Headers and footers taken away (when the file is saved)</en>
-    <tr>Encabezados y pies quitados (al guardar el archivo)</tr>
   </text>
   <text>
     <en>Insert:</en>
@@ -1424,10 +1404,6 @@ $pagelabel de $totalpages' --header-right '$date' --pages 9- -i</tr>
   <text>
     <en>Left</en>
     <tr>Izquierdo</tr>
-  </text>
-  <text>
-    <en>List this profile in the Header and Footer menu, to apply it at once</en>
-    <tr>Mostrar este perfil en el menú Encabezado y pie de página, para aplicarlo de una vez</tr>
   </text>
   <text>
     <en>Mar</en>
@@ -1486,10 +1462,6 @@ que el encabezado y el pie no lo tapen.</tr>
   <text>
     <en>Page</en>
     <tr>Página</tr>
-  </text>
-  <text>
-    <en>Page label</en>
-    <tr>Etiqueta de página</tr>
   </text>
   <text>
     <en>Page number</en>
@@ -1570,10 +1542,6 @@ que el encabezado y el pie no lo tapen.</tr>
   <text>
     <en>TEXT</en>
     <tr>TEXTO</tr>
-  </text>
-  <text>
-    <en>Take away the headers and footers py-foliation added to this file</en>
-    <tr>Quitar los encabezados y pies que py-foliation añadió a este archivo</tr>
   </text>
   <text>
     <en>The fonts are the standard fonts of PDF, which every viewer has: they write Latin script, with its accents and signs, but not Greek or Cyrillic.</en>
@@ -1730,10 +1698,6 @@ $ampm y $bates; $$ escribe un $. Un salto de línea en el texto (\n en
     <tr>puntos</tr>
   </text>
   <text>
-    <en>profiles and removing</en>
-    <tr>perfiles y quitar</tr>
-  </text>
-  <text>
     <en>right</en>
     <tr>derecho</tr>
   </text>
@@ -1748,10 +1712,6 @@ $ampm y $bates; $$ escribe un $. Un salto de línea en el texto (\n en
   <text>
     <en>start from the settings of this profile</en>
     <tr>partir de la configuración de este perfil</tr>
-  </text>
-  <text>
-    <en>take away the headers and footers py-foliation added (on --pages, or all)</en>
-    <tr>quitar los encabezados y pies que añadió py-foliation (en --pages, o en todas)</tr>
   </text>
   <text>
     <en>text</en>
@@ -1812,10 +1772,6 @@ $ampm y $bates; $$ escribe un $. Un salto de línea en el texto (\n en
   <text>
     <en>the font size (default: 10)</en>
     <tr>el tamaño de la fuente (por defecto: 10)</tr>
-  </text>
-  <text>
-    <en>the font size must be from 1 to 200 points (not {value})</en>
-    <tr>el tamaño de la fuente debe ir de 1 a 200 puntos (no {value})</tr>
   </text>
   <text>
     <en>the full path of the file</en>
@@ -1926,16 +1882,8 @@ $ampm y $bates; $$ escribe un $. Un salto de línea en el texto (\n en
     <tr>la fecha de hoy, como 28/11/07</tr>
   </text>
   <text>
-    <en>today's date, as Nov 28, 2007</en>
-    <tr>la fecha de hoy, como 28 nov 2007</tr>
-  </text>
-  <text>
     <en>top</en>
     <tr>superior</tr>
-  </text>
-  <text>
-    <en>with --save-profile: list the profile in the window's Header and Footer menu</en>
-    <tr>con --save-profile: mostrar el perfil en el menú Encabezado y pie de página de la ventana</tr>
   </text>
   <text>
     <en>{hour}:{minute} {ampm}</en>
@@ -1948,5 +1896,700 @@ $ampm y $bates; $$ escribe un $. Un salto de línea en el texto (\n en
   <text>
     <en>{month}/{day}/{year}</en>
     <tr>{day}/{month}/{year}</tr>
+  </text>
+  <text>
+    <en>$page of $totalpages</en>
+    <tr>$page de $totalpages</tr>
+  </text>
+  <text>
+    <en>(replacing the last one added)</en>
+    <tr>(reemplazando el último añadido)</tr>
+  </text>
+  <text>
+    <en>(with Bates numbers)</en>
+    <tr>(con números Bates)</tr>
+  </text>
+  <text>
+    <en>--add, --update and --remove go one at a time</en>
+    <tr>--add, --update y --remove van de uno en uno</tr>
+  </text>
+  <text>
+    <en>--name-prefix and --name-suffix go with --output-dir, or alone</en>
+    <tr>--name-prefix y --name-suffix van con --output-dir, o solos</tr>
+  </text>
+  <text>
+    <en>--save-profile keeps new settings: it doesn't go with --update or --remove</en>
+    <tr>--save-profile guarda una configuración nueva: no va con --update ni con --remove</tr>
+  </text>
+  <text>
+    <en>1</en>
+    <tr>1</tr>
+  </text>
+  <text>
+    <en>1 of n</en>
+    <tr>1 de n</tr>
+  </text>
+  <text>
+    <en>A header and footer added to a page replaces those py-foliation added before, unless --add keeps them; --update replaces the last one added, with its settings and the options given; --remove takes them away (--remove-bates only those with Bates numbers), putting the pages back as they were. With several files, the Bates numbers go on from one file to the next, in the order given. Profiles keep settings to use again (--save-profile NAME, then --profile NAME); the options given are laid over those of the profile.</en>
+    <tr>Un encabezado y pie añadidos a una página reemplazan los que py-foliation
+había añadido antes, salvo que --add los conserve; --update reemplaza el
+último añadido, con su configuración y las opciones dadas; --remove los quita
+(--remove-bates solo los que tienen números Bates), dejando las páginas como
+estaban. Con varios archivos, los números Bates siguen de un archivo al
+siguiente, en el orden dado. Los perfiles guardan una configuración para
+volver a usarla (--save-profile NOMBRE, y luego --profile NOMBRE); las opciones
+que se den se ponen sobre las del perfil.</tr>
+  </text>
+  <text>
+    <en>A watermark added to a page replaces those py-foliation added before, unless --add keeps them; --update replaces the last one added; --remove takes them away, putting the pages back as they were.</en>
+    <tr>Una marca de agua añadida a una página reemplaza las que py-foliation había
+añadido antes, salvo que --add las conserve; --update reemplaza la última
+añadida; --remove las quita, dejando las páginas como estaban.</tr>
+  </text>
+  <text>
+    <en>A watermark is a text (--text, with the variables of header-footer, such as $page or $date; put it in single quotes) or a page of another PDF (--file, --file-page). --scale fills that percent of the page with it (by default, it keeps its own size); --rotation turns it, counterclockwise; --opacity goes from 0 (invisible) to 1 (or 0% to 100%).</en>
+    <tr>Una marca de agua es un texto (--text, con las variables de header-footer,
+como $page o $date; póngalo entre comillas simples) o una página de otro PDF
+(--file, --file-page). --scale hace que ocupe ese porcentaje de la página
+(por defecto conserva su propio tamaño); --rotation la gira, en sentido
+contrario a las agujas del reloj; --opacity va de 0 (invisible) a 1 (o de 0%
+a 100%).</tr>
+  </text>
+  <text>
+    <en>Across</en>
+    <tr>En horizontal</tr>
+  </text>
+  <text>
+    <en>Add a folder</en>
+    <tr>Añadir una carpeta</tr>
+  </text>
+  <text>
+    <en>Add a folder…</en>
+    <tr>Añadir una carpeta…</tr>
+  </text>
+  <text>
+    <en>Add a header and footer</en>
+    <tr>Añadir un encabezado y pie</tr>
+  </text>
+  <text>
+    <en>Add a watermark</en>
+    <tr>Añadir una marca de agua</tr>
+  </text>
+  <text>
+    <en>Add files</en>
+    <tr>Añadir archivos</tr>
+  </text>
+  <text>
+    <en>Add files…</en>
+    <tr>Añadir archivos…</tr>
+  </text>
+  <text>
+    <en>Add or remove headers and footers, Bates numbers or watermarks on several PDFs at once, the Bates numbers going on from one file to the next</en>
+    <tr>Añadir o quitar encabezados y pies, números Bates o marcas de agua en varios PDF a la vez; los números Bates siguen de un archivo al siguiente</tr>
+  </text>
+  <text>
+    <en>Added to the pages by py-foliation:</en>
+    <tr>Añadido a las páginas por py-foliation:</tr>
+  </text>
+  <text>
+    <en>After the names</en>
+    <tr>Después de los nombres</tr>
+  </text>
+  <text>
+    <en>April</en>
+    <tr>abril</tr>
+  </text>
+  <text>
+    <en>August</en>
+    <tr>agosto</tr>
+  </text>
+  <text>
+    <en>Before the names</en>
+    <tr>Antes de los nombres</tr>
+  </text>
+  <text>
+    <en>Behind the content</en>
+    <tr>Detrás del contenido</tr>
+  </text>
+  <text>
+    <en>Center</en>
+    <tr>Centro</tr>
+  </text>
+  <text>
+    <en>Change the files themselves</en>
+    <tr>Cambiar los propios archivos</tr>
+  </text>
+  <text>
+    <en>Change the settings of the last one added</en>
+    <tr>Cambiar la configuración del último añadido</tr>
+  </text>
+  <text>
+    <en>Choose the settings</en>
+    <tr>Elija la configuración</tr>
+  </text>
+  <text>
+    <en>Choose…</en>
+    <tr>Elegir…</tr>
+  </text>
+  <text>
+    <en>DEGREES</en>
+    <tr>GRADOS</tr>
+  </text>
+  <text>
+    <en>Date:</en>
+    <tr>Fecha:</tr>
+  </text>
+  <text>
+    <en>December</en>
+    <tr>diciembre</tr>
+  </text>
+  <text>
+    <en>Draw a watermark on the pages of PDFs: a text, such as Draft or Copy, or a page of another PDF, in front of their content or behind it, turned, scaled and with some transparency. Like headers and footers, it changes the pages themselves.</en>
+    <tr>Pone una marca de agua en las páginas de los PDF: un texto, como Borrador o Copia, o una página de otro PDF, delante o detrás de su contenido, girada, a escala y con algo de transparencia. Como los encabezados y pies, cambia las páginas mismas.</tr>
+  </text>
+  <text>
+    <en>Else they are replaced, on the pages this one goes on</en>
+    <tr>Si no, se reemplazan, en las páginas en que va este</tr>
+  </text>
+  <text>
+    <en>FOLDER</en>
+    <tr>CARPETA</tr>
+  </text>
+  <text>
+    <en>FORMAT</en>
+    <tr>FORMATO</tr>
+  </text>
+  <text>
+    <en>February</en>
+    <tr>febrero</tr>
+  </text>
+  <text>
+    <en>Files</en>
+    <tr>Archivos</tr>
+  </text>
+  <text>
+    <en>Font:</en>
+    <tr>Fuente:</tr>
+  </text>
+  <text>
+    <en>For instance: py-foliation watermark book.pdf --text DRAFT --opacity 30% --scale 60 -i</en>
+    <tr>Por ejemplo: py-foliation watermark libro.pdf --text BORRADOR --opacity 30%
+--scale 60 -i</tr>
+  </text>
+  <text>
+    <en>Header, footer and watermark</en>
+    <tr>Encabezado, pie y marca de agua</tr>
+  </text>
+  <text>
+    <en>How $date writes the date</en>
+    <tr>Cómo escribe $date la fecha</tr>
+  </text>
+  <text>
+    <en>In front of the content</en>
+    <tr>Delante del contenido</tr>
+  </text>
+  <text>
+    <en>In this folder:</en>
+    <tr>En esta carpeta:</tr>
+  </text>
+  <text>
+    <en>Insert</en>
+    <tr>Insertar</tr>
+  </text>
+  <text>
+    <en>It goes in the middle of the page unless --horizontal and --vertical say otherwise, moved by --hoffset and --voffset from there. --behind draws it behind the content of the pages (where a page painted white would hide it). --no-print or --no-screen shows it only on the screen or only when printing, in viewers that follow such settings.</en>
+    <tr>Va en el centro de la página salvo que --horizontal y --vertical digan otra
+cosa, desplazada desde allí por --hoffset y --voffset. --behind la pone detrás
+del contenido de las páginas (donde una página pintada de blanco la taparía).
+--no-print o --no-screen la muestran solo en pantalla o solo al imprimir, en
+los visores que siguen esas indicaciones.</tr>
+  </text>
+  <text>
+    <en>January</en>
+    <tr>enero</tr>
+  </text>
+  <text>
+    <en>July</en>
+    <tr>julio</tr>
+  </text>
+  <text>
+    <en>June</en>
+    <tr>junio</tr>
+  </text>
+  <text>
+    <en>Keep the headers and footers already on the pages (add another)</en>
+    <tr>Conservar los encabezados y pies que ya tienen las páginas (añadir otro)</tr>
+  </text>
+  <text>
+    <en>Keep the watermarks already on the pages (add another)</en>
+    <tr>Conservar las marcas de agua que ya tienen las páginas (añadir otra)</tr>
+  </text>
+  <text>
+    <en>Label (iv, 12v ...)</en>
+    <tr>Etiqueta (iv, 12v ...)</tr>
+  </text>
+  <text>
+    <en>List this profile in its menu, to apply it at once</en>
+    <tr>Mostrar este perfil en su menú, para aplicarlo de una vez</tr>
+  </text>
+  <text>
+    <en>March</en>
+    <tr>marzo</tr>
+  </text>
+  <text>
+    <en>May (month)</en>
+    <tr>mayo</tr>
+  </text>
+  <text>
+    <en>Move down</en>
+    <tr>Bajar</tr>
+  </text>
+  <text>
+    <en>Move up</en>
+    <tr>Subir</tr>
+  </text>
+  <text>
+    <en>Next Bates number: {number}</en>
+    <tr>Siguiente número Bates: {number}</tr>
+  </text>
+  <text>
+    <en>Next to each file</en>
+    <tr>Junto a cada archivo</tr>
+  </text>
+  <text>
+    <en>Nov 28, 2007</en>
+    <tr>28 nov 2007</tr>
+  </text>
+  <text>
+    <en>November</en>
+    <tr>noviembre</tr>
+  </text>
+  <text>
+    <en>November 28, 2007</en>
+    <tr>28 de noviembre de 2007</tr>
+  </text>
+  <text>
+    <en>OPACITY</en>
+    <tr>OPACIDAD</tr>
+  </text>
+  <text>
+    <en>October</en>
+    <tr>octubre</tr>
+  </text>
+  <text>
+    <en>On several files</en>
+    <tr>En varios archivos</tr>
+  </text>
+  <text>
+    <en>On several files…</en>
+    <tr>En varios archivos…</tr>
+  </text>
+  <text>
+    <en>Opacity</en>
+    <tr>Opacidad</tr>
+  </text>
+  <text>
+    <en>PDF</en>
+    <tr>PDF</tr>
+  </text>
+  <text>
+    <en>PERCENT</en>
+    <tr>PORCENTAJE</tr>
+  </text>
+  <text>
+    <en>Page $page</en>
+    <tr>Página $page</tr>
+  </text>
+  <text>
+    <en>Page $page of $totalpages</en>
+    <tr>Página $page de $totalpages</tr>
+  </text>
+  <text>
+    <en>Page $pagelabel of $totalpages</en>
+    <tr>Página $pagelabel de $totalpages</tr>
+  </text>
+  <text>
+    <en>Page 1</en>
+    <tr>Página 1</tr>
+  </text>
+  <text>
+    <en>Page 1 of n</en>
+    <tr>Página 1 de n</tr>
+  </text>
+  <text>
+    <en>Page label of n</en>
+    <tr>Página (etiqueta) de n</tr>
+  </text>
+  <text>
+    <en>Page of a PDF:</en>
+    <tr>Página de un PDF:</tr>
+  </text>
+  <text>
+    <en>Position</en>
+    <tr>Posición</tr>
+  </text>
+  <text>
+    <en>Relative to the page:</en>
+    <tr>Relativa a la página:</tr>
+  </text>
+  <text>
+    <en>Remove</en>
+    <tr>Quitar</tr>
+  </text>
+  <text>
+    <en>Remove its watermark</en>
+    <tr>Quitar su marca de agua</tr>
+  </text>
+  <text>
+    <en>Remove the Bates numbers</en>
+    <tr>Quitar los números Bates</tr>
+  </text>
+  <text>
+    <en>Remove the headers and footers</en>
+    <tr>Quitar los encabezados y pies</tr>
+  </text>
+  <text>
+    <en>Remove the watermarks</en>
+    <tr>Quitar las marcas de agua</tr>
+  </text>
+  <text>
+    <en>Remove their watermark</en>
+    <tr>Quitar su marca de agua</tr>
+  </text>
+  <text>
+    <en>Rotation</en>
+    <tr>Rotación</tr>
+  </text>
+  <text>
+    <en>Run</en>
+    <tr>Ejecutar</tr>
+  </text>
+  <text>
+    <en>Save in</en>
+    <tr>Guardar en</tr>
+  </text>
+  <text>
+    <en>Saving</en>
+    <tr>Guardado</tr>
+  </text>
+  <text>
+    <en>September</en>
+    <tr>septiembre</tr>
+  </text>
+  <text>
+    <en>Settings chosen</en>
+    <tr>Configuración elegida</tr>
+  </text>
+  <text>
+    <en>Settings…</en>
+    <tr>Configuración…</tr>
+  </text>
+  <text>
+    <en>Show on the screen</en>
+    <tr>Mostrar en pantalla</tr>
+  </text>
+  <text>
+    <en>Show when printing</en>
+    <tr>Mostrar al imprimir</tr>
+  </text>
+  <text>
+    <en>Sort by name</en>
+    <tr>Ordenar por nombre</tr>
+  </text>
+  <text>
+    <en>Take away all those py-foliation added to this file</en>
+    <tr>Quitar todos los que py-foliation añadió a este archivo</tr>
+  </text>
+  <text>
+    <en>Take away only the headers and footers with Bates numbers</en>
+    <tr>Quitar solo los encabezados y pies con números Bates</tr>
+  </text>
+  <text>
+    <en>Taken away (when the file is saved)</en>
+    <tr>Quitados (al guardar el archivo)</tr>
+  </text>
+  <text>
+    <en>Text:</en>
+    <tr>Texto:</tr>
+  </text>
+  <text>
+    <en>The Bates numbers go on from one file to the next, in this order</en>
+    <tr>Los números Bates siguen de un archivo al siguiente, en este orden</tr>
+  </text>
+  <text>
+    <en>The PDF of the watermark</en>
+    <tr>El PDF de la marca de agua</tr>
+  </text>
+  <text>
+    <en>The watermark doesn't go on this page.</en>
+    <tr>La marca de agua no va en esta página.</tr>
+  </text>
+  <text>
+    <en>There is nothing to update</en>
+    <tr>No hay nada que actualizar</tr>
+  </text>
+  <text>
+    <en>Up and down</en>
+    <tr>En vertical</tr>
+  </text>
+  <text>
+    <en>Update…</en>
+    <tr>Actualizar…</tr>
+  </text>
+  <text>
+    <en>Watermark</en>
+    <tr>Marca de agua</tr>
+  </text>
+  <text>
+    <en>Watermark added (it is written when the file is saved)</en>
+    <tr>Marca de agua añadida (se escribe al guardar el archivo)</tr>
+  </text>
+  <text>
+    <en>Watermark on these pages…</en>
+    <tr>Marca de agua en estas páginas…</tr>
+  </text>
+  <text>
+    <en>Watermark on this page…</en>
+    <tr>Marca de agua en esta página…</tr>
+  </text>
+  <text>
+    <en>Watermark {number}</en>
+    <tr>Marca de agua {number}</tr>
+  </text>
+  <text>
+    <en>What to do</en>
+    <tr>Qué hacer</tr>
+  </text>
+  <text>
+    <en>Wrote {path}</en>
+    <tr>Se escribió {path}</tr>
+  </text>
+  <text>
+    <en>a PDF file</en>
+    <tr>un archivo PDF</tr>
+  </text>
+  <text>
+    <en>a PDF whose page is the watermark</en>
+    <tr>un PDF una de cuyas páginas es la marca de agua</tr>
+  </text>
+  <text>
+    <en>a watermark is a text or a page of a PDF (one of the two)</en>
+    <tr>una marca de agua es un texto o una página de un PDF (una de las dos cosas)</tr>
+  </text>
+  <text>
+    <en>a watermark shown neither when printing nor on the screen is never shown</en>
+    <tr>una marca de agua que no se muestra ni al imprimir ni en pantalla no se muestra nunca</tr>
+  </text>
+  <text>
+    <en>add watermarks to PDFs</en>
+    <tr>añadir marcas de agua a los PDF</tr>
+  </text>
+  <text>
+    <en>adding, updating and removing</en>
+    <tr>añadir, actualizar y quitar</tr>
+  </text>
+  <text>
+    <en>behind the content of the pages (default: in front of it)</en>
+    <tr>detrás del contenido de las páginas (por defecto: delante)</tr>
+  </text>
+  <text>
+    <en>e.g. DRAFT, or Copy for $author</en>
+    <tr>p. ej. BORRADOR, o Copia para $author</tr>
+  </text>
+  <text>
+    <en>fill this percent of the page (default: 0, its own size)</en>
+    <tr>ocupar este porcentaje de la página (por defecto: 0, su propio tamaño)</tr>
+  </text>
+  <text>
+    <en>from 0 to 1, or 0%% to 100%% (default: 0.5)</en>
+    <tr>de 0 a 1, o de 0%% a 100%% (por defecto: 0.5)</tr>
+  </text>
+  <text>
+    <en>header and footer</en>
+    <tr>encabezado y pie</tr>
+  </text>
+  <text>
+    <en>headers and footers</en>
+    <tr>encabezados y pies</tr>
+  </text>
+  <text>
+    <en>headers and footers with Bates numbers taken away</en>
+    <tr>encabezados y pies con números Bates quitados</tr>
+  </text>
+  <text>
+    <en>how $date writes the date: {formats} (default: medium, as Nov 28, 2007)</en>
+    <tr>cómo escribe $date la fecha: {formats} (por defecto: medium, como 28 nov 2007)</tr>
+  </text>
+  <text>
+    <en>keep the {what} py-foliation added to the pages before (else they are replaced)</en>
+    <tr>conservar lo que py-foliation añadió antes a las páginas ({what}); si no, se reemplaza</tr>
+  </text>
+  <text>
+    <en>left, center or right (default: center)</en>
+    <tr>left, center o right: izquierda, centro o derecha (por defecto: center)</tr>
+  </text>
+  <text>
+    <en>move it across, from the side chosen (or to the right of the center)</en>
+    <tr>desplazarla en horizontal, desde el lado elegido (o a la derecha del centro)</tr>
+  </text>
+  <text>
+    <en>move it up or down, from the edge chosen (or up from the center)</en>
+    <tr>desplazarla en vertical, desde el borde elegido (o hacia arriba desde el centro)</tr>
+  </text>
+  <text>
+    <en>moved</en>
+    <tr>desplazada</tr>
+  </text>
+  <text>
+    <en>page {page} of {path}</en>
+    <tr>página {page} de {path}</tr>
+  </text>
+  <text>
+    <en>position</en>
+    <tr>posición</tr>
+  </text>
+  <text>
+    <en>profiles</en>
+    <tr>perfiles</tr>
+  </text>
+  <text>
+    <en>put this after the names of the PDFs saved (default: -labelled, or nothing with --output-dir)</en>
+    <tr>poner esto después de los nombres de los PDF guardados (por defecto: -labelled, o nada con --output-dir)</tr>
+  </text>
+  <text>
+    <en>put this before the names of the PDFs saved</en>
+    <tr>poner esto antes de los nombres de los PDF guardados</tr>
+  </text>
+  <text>
+    <en>replace the last {what} added, with its settings and the options given</en>
+    <tr>reemplazar lo último añadido ({what}), con su configuración y las opciones dadas</tr>
+  </text>
+  <text>
+    <en>save the PDFs in this folder, with their own names unless --name-prefix or --name-suffix are given</en>
+    <tr>guardar los PDF en esta carpeta, con sus propios nombres salvo que se den --name-prefix o --name-suffix</tr>
+  </text>
+  <text>
+    <en>show the watermark of the first and last pages, without writing anything</en>
+    <tr>mostrar la marca de agua de la primera y la última página, sin escribir nada</tr>
+  </text>
+  <text>
+    <en>shown on the screen (default: yes)</en>
+    <tr>se muestra en pantalla (por defecto: sí)</tr>
+  </text>
+  <text>
+    <en>shown when printing (default: yes)</en>
+    <tr>se muestra al imprimir (por defecto: sí)</tr>
+  </text>
+  <text>
+    <en>take away only the headers and footers with Bates numbers (on --pages, or all)</en>
+    <tr>quitar solo los encabezados y pies con números Bates (en --pages, o en todas)</tr>
+  </text>
+  <text>
+    <en>take away the {what} py-foliation added (on --pages, or all)</en>
+    <tr>quitar lo que añadió py-foliation ({what}) (en --pages, o en todas)</tr>
+  </text>
+  <text>
+    <en>the color of the text (default: #808080)</en>
+    <tr>el color del texto (por defecto: #808080)</tr>
+  </text>
+  <text>
+    <en>the font size (default: 60)</en>
+    <tr>el tamaño de la fuente (por defecto: 60)</tr>
+  </text>
+  <text>
+    <en>the font size must be from 1 to 500 points (not {value})</en>
+    <tr>el tamaño de la fuente debe ir de 1 a 500 puntos (no {value})</tr>
+  </text>
+  <text>
+    <en>the opacity must be from 0 to 1 (not {value})</en>
+    <tr>la opacidad debe ir de 0 a 1 (no {value})</tr>
+  </text>
+  <text>
+    <en>the opacity must be from 0 to 1, or 0% to 100% (not {value!r})</en>
+    <tr>la opacidad debe ir de 0 a 1, o de 0% a 100% (no {value!r})</tr>
+  </text>
+  <text>
+    <en>the page of --file (default: 1)</en>
+    <tr>la página de --file (por defecto: 1)</tr>
+  </text>
+  <text>
+    <en>the page of the watermark's PDF must be 1 or more</en>
+    <tr>la página del PDF de la marca de agua debe ser 1 o más</tr>
+  </text>
+  <text>
+    <en>the scale must be from 0 to 1000 percent (not {value})</en>
+    <tr>la escala debe ir de 0 a 1000 por ciento (no {value})</tr>
+  </text>
+  <text>
+    <en>the text of the watermark (\n starts another line)</en>
+    <tr>el texto de la marca de agua (\n empieza otra línea)</tr>
+  </text>
+  <text>
+    <en>the units of the offsets (default: cm)</en>
+    <tr>las unidades de los desplazamientos (por defecto: cm)</tr>
+  </text>
+  <text>
+    <en>the watermark goes left, center or right, and top, center or bottom</en>
+    <tr>la marca de agua va a la izquierda, al centro o a la derecha, y arriba, al centro o abajo</tr>
+  </text>
+  <text>
+    <en>today's date, in the date format chosen</en>
+    <tr>la fecha de hoy, en el formato de fecha elegido</tr>
+  </text>
+  <text>
+    <en>top, center or bottom (default: center)</en>
+    <tr>top, center o bottom: arriba, centro o abajo (por defecto: center)</tr>
+  </text>
+  <text>
+    <en>turn it, counterclockwise (default: 45)</en>
+    <tr>girarla, en sentido contrario a las agujas del reloj (por defecto: 45)</tr>
+  </text>
+  <text>
+    <en>unknown date format {value!r} (one of: {names})</en>
+    <tr>formato de fecha desconocido: {value!r} (uno de: {names})</tr>
+  </text>
+  <text>
+    <en>watermark</en>
+    <tr>marca de agua</tr>
+  </text>
+  <text>
+    <en>watermarks</en>
+    <tr>marcas de agua</tr>
+  </text>
+  <text>
+    <en>watermarks taken away</en>
+    <tr>marcas de agua quitadas</tr>
+  </text>
+  <text>
+    <en>what</en>
+    <tr>qué</tr>
+  </text>
+  <text>
+    <en>with --save-profile: list the profile in the window's menu</en>
+    <tr>con --save-profile: mostrar el perfil en el menú de la ventana</tr>
+  </text>
+  <text>
+    <en>{long_month} {day}, {year}</en>
+    <tr>{day} de {long_month} de {year}</tr>
+  </text>
+  <text>
+    <en>{path} has no page {page}</en>
+    <tr>{path} no tiene página {page}</tr>
+  </text>
+  <text>
+    <en>{path} has no {what} added by this version of py-foliation to update</en>
+    <tr>{path} no tiene nada que actualizar añadido por esta versión de py-foliation ({what})</tr>
+  </text>
+  <text>
+    <en>{path}: {error}</en>
+    <tr>{path}: {error}</tr>
+  </text>
+  <text>
+    <en>{what}, on {count} page: {pages}</en>
+    <tr>{what}, en {count} página: {pages}</tr>
+  </text>
+  <text>
+    <en>{what}, on {count} pages: {pages}</en>
+    <tr>{what}, en {count} páginas: {pages}</tr>
   </text>
 </interface>

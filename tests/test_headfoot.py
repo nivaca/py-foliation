@@ -10,7 +10,7 @@ from pathlib import Path
 import pikepdf
 import pytest
 
-from py_foliation import config, headfoot, interface, labels, main
+from py_foliation import config, headfoot, interface, labels, main, stamps
 from py_foliation.headfoot import HeaderFooter
 from py_foliation.labels import LabelError, Range
 
@@ -131,7 +131,7 @@ def test_apply_and_remove(book, tmp_path):
         assert headfoot.pages_with(pdf) == [10, 12]
         assert headfoot.remove(pdf) == 2
         assert [p.obj.Contents.read_bytes() for p in pdf.pages] == before  # (the pages as they were)
-        assert all(headfoot.PRIVATE not in p.obj for p in pdf.pages)
+        assert all(stamps.KEY not in p.obj for p in pdf.pages)
 
 
 def test_applied_again_replaces(book):
@@ -205,7 +205,7 @@ def test_command(book, capsys):
     assert "page 9:" in out and "Footer center: p. 1" in out and "on 46 pages" in out
     assert text_of(book, 11) == "100 11 p. 3"
     assert main(["show", str(book)]) == 0
-    assert "Header and footer added by py-foliation on 46 pages: 9,11,13" in capsys.readouterr().out
+    assert "header and footer, on 46 pages: 9,11,13" in capsys.readouterr().out
     assert main(["header-footer", str(book), "--remove", "-i"]) == 0
     with pikepdf.open(book) as pdf:
         assert headfoot.pages_with(pdf) == []

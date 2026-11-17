@@ -43,7 +43,7 @@ def save_pdf(pdf: Pdf, out: Path) -> None:
 
 def apply_all(pdf: Pdf, ranges: list[Range], view: View | None = None, changes=(), path: Path | None = None) -> None:
     """Give PDF these page labels, VIEW (if given: see view.write_view) and the header and footer
-    CHANGES (headfoot.Change, in order; their variables see these labels and PATH)."""
+    CHANGES (changes.Change: headers and footers, and watermarks, in order; their variables see these labels and PATH)."""
     labels.write_labels(pdf, ranges)
     if view is not None:
         write_view(pdf, view)
@@ -83,3 +83,44 @@ def read_list(name: str) -> list[str]:
     if lines and all(numbered) and [int(m[1]) for m in numbered] == list(range(1, len(lines) + 1)):
         return [m[2] or "" for m in numbered]
     return lines
+
+
+def batch_target(source: Path, folder: Path | None = None, prefix: str = "", suffix: str = "-labelled",
+                 overwrite: bool = False) -> Path:
+    """Where batch() saves SOURCE: itself (OVERWRITE), or its name with PREFIX and SUFFIX, in FOLDER (or
+    next to it)."""
+    if overwrite:
+        return source
+    return (folder or source.parent) / f"{prefix}{source.stem}{suffix}.pdf"
+
+
+def batch(sources: list[Path], change, *, folder: Path | None = None, prefix: str = "", suffix: str = "-labelled",
+          overwrite: bool = False) -> tuple[list[tuple[Path, Path | None, str]], int]:
+    """Make CHANGE (a changes.Change) on each of SOURCES, in that order, the Bates numbers going on from
+    one file to the next, and save them (see batch_target). ([(source, target or None, error or '')],
+    the Bates numbers used)."""
+    results, offset = [], 0
+    for source in sources:
+        target = batch_target(source, folder, prefix, suffix, overwrite)
+        if not overwrite and target.resolve() == source.resolve():
+            results.append((source, None, tr("the output is the input file; use --in-place to change it")))
+            continue
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            fd, tmp = tempfile.mkstemp(suffix=".pdf", dir=target.parent)
+            os.close(fd)
+            try:
+                with open_pdf(source) as pdf:
+                    doc = headfoot.document_of(pdf, source)
+                    change.apply(pdf, doc, bates_offset=offset)
+                    offset += change.bates_pages(len(pdf.pages))
+                    _save(pdf, tmp)
+                os.replace(tmp, target)
+            except BaseException:
+                Path(tmp).unlink(missing_ok=True)
+                raise
+        except (LabelError, OSError, pikepdf.PdfError) as e:
+            results.append((source, None, str(e)))
+            continue
+        results.append((source, target, ""))
+    return results, offset

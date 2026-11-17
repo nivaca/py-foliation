@@ -37,6 +37,10 @@
       <li xml:lang="es">La vista inicial del archivo: disposición de página (Una página, Páginas enfrentadas, Portada …), vista de página y primera página</li>
       <li>Headers and footers: the page label, the page number, the date, Bates numbers or any text, with profiles</li>
       <li xml:lang="es">Encabezados y pies de página: la etiqueta de página, el número de página, la fecha, números Bates o cualquier texto, con perfiles</li>
+      <li>Watermarks: a text or a page of another PDF, turned, scaled and transparent, in front of the pages or behind them</li>
+      <li xml:lang="es">Marcas de agua: un texto o una página de otro PDF, girados, a escala y transparentes, delante de las páginas o detrás</li>
+      <li>Several files at once, with Bates numbers going on from one to the next</li>
+      <li xml:lang="es">Varios archivos a la vez, con números Bates que siguen de uno al siguiente</li>
       <li>A command line with the same features, in English or Spanish</li>
       <li xml:lang="es">Una línea de órdenes con las mismas funciones, en inglés o en español</li>
     </ul>

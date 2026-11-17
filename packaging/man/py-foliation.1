@@ -18,6 +18,7 @@ positional arguments:
     copy               give PDFs the page labels of another
     view               show or set how PDFs open in a viewer
     header-footer      add headers and footers to PDFs
+    watermark          add watermarks to PDFs
     completion         print the completion script of a shell
     interface          show or choose the language of the interface
 
@@ -57,8 +58,9 @@ options:
 .nf
 usage: py-foliation set [-h] [--interface {en,es}]
                         [-r PAGES [KEY=VALUE] [PAGES [KEY=VALUE] ...]]
-                        [-f LIST] [-k] [--remove PAGE] [-o OUTPUT | -i] [-n]
-                        [--password PASSWORD]
+                        [-f LIST] [-k] [--remove PAGE] [-o OUTPUT | -i |
+                        --output-dir FOLDER] [--name-prefix TEXT]
+                        [--name-suffix TEXT] [-n] [--password PASSWORD]
                         FILE|RANGE [FILE|RANGE ...]
 
 Give PDFs new page labels, range by range. The labels they had are replaced, unless --keep is given.
@@ -83,6 +85,11 @@ options:
   -o, --output OUTPUT   output PDF, with one input only (default:
                         <input>-labelled.pdf)
   -i, --in-place        change the input files themselves
+  --output-dir FOLDER   save the PDFs in this folder, with their own names
+                        unless --name-prefix or --name-suffix are given
+  --name-prefix TEXT    put this before the names of the PDFs saved
+  --name-suffix TEXT    put this after the names of the PDFs saved (default:
+                        -labelled, or nothing with --output-dir)
   -n, --dry-run         show the labels the files would get, without writing
                         anything
   --password PASSWORD   the password to open the PDFs (their protection is
@@ -120,8 +127,9 @@ standard input), and finds the fewest ranges that give them.
 .fi
 .SS clear
 .nf
-usage: py-foliation clear [-h] [--interface {en,es}] [-o OUTPUT | -i] [-n]
-                          [--password PASSWORD]
+usage: py-foliation clear [-h] [--interface {en,es}] [-o OUTPUT | -i |
+                          --output-dir FOLDER] [--name-prefix TEXT]
+                          [--name-suffix TEXT] [-n] [--password PASSWORD]
                           FILE [FILE ...]
 
 Remove the page labels of PDFs: viewers then number their pages 1, 2, 3 ...
@@ -136,6 +144,11 @@ options:
   -o, --output OUTPUT  output PDF, with one input only (default:
                        <input>-labelled.pdf)
   -i, --in-place       change the input files themselves
+  --output-dir FOLDER  save the PDFs in this folder, with their own names
+                       unless --name-prefix or --name-suffix are given
+  --name-prefix TEXT   put this before the names of the PDFs saved
+  --name-suffix TEXT   put this after the names of the PDFs saved (default:
+                       -labelled, or nothing with --output-dir)
   -n, --dry-run        show the labels the files would get, without writing
                        anything
   --password PASSWORD  the password to open the PDFs (their protection is
@@ -143,8 +156,9 @@ options:
 .fi
 .SS copy
 .nf
-usage: py-foliation copy [-h] [--interface {en,es}] [-o OUTPUT | -i] [-n]
-                         [--password PASSWORD]
+usage: py-foliation copy [-h] [--interface {en,es}] [-o OUTPUT | -i |
+                         --output-dir FOLDER] [--name-prefix TEXT]
+                         [--name-suffix TEXT] [-n] [--password PASSWORD]
                          FROM FILE [FILE ...]
 
 Give PDFs the page labels of another PDF, for instance a new export of the
@@ -162,6 +176,11 @@ options:
   -o, --output OUTPUT  output PDF, with one input only (default:
                        <input>-labelled.pdf)
   -i, --in-place       change the input files themselves
+  --output-dir FOLDER  save the PDFs in this folder, with their own names
+                       unless --name-prefix or --name-suffix are given
+  --name-prefix TEXT   put this before the names of the PDFs saved
+  --name-suffix TEXT   put this after the names of the PDFs saved (default:
+                       -labelled, or nothing with --output-dir)
   -n, --dry-run        show the labels the files would get, without writing
                        anything
   --password PASSWORD  the password to open the PDFs (their protection is
@@ -171,7 +190,8 @@ options:
 .nf
 usage: py-foliation view [-h] [--interface {en,es}] [--layout LAYOUT]
                          [--page-view VIEW] [--open-at PAGE] [-o OUTPUT |
-                         -i] [-n] [--password PASSWORD]
+                         -i | --output-dir FOLDER] [--name-prefix TEXT]
+                         [--name-suffix TEXT] [-n] [--password PASSWORD]
                          FILE [FILE ...]
 
 Show or set the view of PDFs when they are opened: the page layout, the page view and the page they open at. A PDF has one view for the whole document. Without options, the view is shown; the options not given are kept; 'default' leaves that part to the viewer.
@@ -191,6 +211,11 @@ options:
   -o, --output OUTPUT   output PDF, with one input only (default:
                         <input>-labelled.pdf)
   -i, --in-place        change the input files themselves
+  --output-dir FOLDER   save the PDFs in this folder, with their own names
+                        unless --name-prefix or --name-suffix are given
+  --name-prefix TEXT    put this before the names of the PDFs saved
+  --name-suffix TEXT    put this after the names of the PDFs saved (default:
+                        -labelled, or nothing with --output-dir)
   -n, --dry-run         show the view the files would get, without writing
                         anything
   --password PASSWORD   the password to open the PDFs (their protection is
@@ -228,10 +253,14 @@ usage: py-foliation header-footer [-h] [--interface {en,es}]
                                   [--even | --odd | --all-pages]
                                   [--bates-prefix TEXT] [--bates-start N]
                                   [--bates-digits N] [--bates-suffix TEXT]
-                                  [--profile NAME] [--save-profile NAME]
+                                  [--date-format FORMAT] [--add] [--update]
+                                  [--remove] [--profile NAME]
+                                  [--save-profile NAME]
                                   [--show-on-menu | --no-show-on-menu]
                                   [--list-profiles] [--delete-profile NAME]
-                                  [--remove] [-o OUTPUT | -i] [-n]
+                                  [--remove-bates] [-o OUTPUT | -i |
+                                  --output-dir FOLDER] [--name-prefix TEXT]
+                                  [--name-suffix TEXT] [-n]
                                   [--password PASSWORD]
                                   [FILE ...]
 
@@ -244,9 +273,16 @@ options:
   -h, --help            show this help message and exit
   --interface {en,es}   the language of the interface, for this run only (to
                         keep a choice, use the 'interface' command)
+  --remove-bates        take away only the headers and footers with Bates
+                        numbers (on --pages, or all)
   -o, --output OUTPUT   output PDF, with one input only (default:
                         <input>-labelled.pdf)
   -i, --in-place        change the input files themselves
+  --output-dir FOLDER   save the PDFs in this folder, with their own names
+                        unless --name-prefix or --name-suffix are given
+  --name-prefix TEXT    put this before the names of the PDFs saved
+  --name-suffix TEXT    put this after the names of the PDFs saved (default:
+                        -labelled, or nothing with --output-dir)
   -n, --dry-run         show the header and footer of the first and last
                         pages, without writing anything
   --password PASSWORD   the password to open the PDFs (their protection is
@@ -300,18 +336,28 @@ Bates numbering ($bates):
   --bates-start N       the first number (default: 1)
   --bates-digits N      the digits of the number, at least (default: 6)
   --bates-suffix TEXT   text after the number
+  --date-format FORMAT  how $date writes the date: medium, long, m/d/yy,
+                        m/d/yyyy, mm/dd/yyyy, d/m/yy, d/m/yyyy, dd/mm/yyyy,
+                        dd.mm.yyyy, yyyy-mm-dd (default: medium, as Nov 28,
+                        2007)
 
-profiles and removing:
+adding, updating and removing:
+  --add                 keep the headers and footers py-foliation added to
+                        the pages before (else they are replaced)
+  --update              replace the last headers and footers added, with its
+                        settings and the options given
+  --remove              take away the headers and footers py-foliation added
+                        (on --pages, or all)
+
+profiles:
   --profile NAME        start from the settings of this profile
   --save-profile NAME   keep these settings as a profile
   --show-on-menu, --no-show-on-menu
                         with --save-profile: list the profile in the
-                        window's Header and Footer menu
+                        window's menu
   --list-profiles       list the profiles kept
   --delete-profile NAME
                         forget a profile
-  --remove              take away the headers and footers py-foliation added
-                        (on --pages, or all)
 
 The text of each place may hold variables, written with $ (put the text in
 single quotes, or the shell takes them as its own): $page, $pagelabel,
@@ -327,13 +373,155 @@ Margins are the distances from the edges of the page to the header, the
 footer and the text at the sides. --shrink scales the content of the pages
 down so that the header and footer don't cover it.
 
-A header and footer added again to a page replaces the one py-foliation
-added before, and --remove takes them away, putting the pages back as they
-were. Profiles keep settings to use again (--save-profile NAME, then
+A header and footer added to a page replaces those py-foliation added
+before, unless --add keeps them; --update replaces the last one added, with
+its settings and the options given; --remove takes them away (--remove-bates
+only those with Bates numbers), putting the pages back as they were. With
+several files, the Bates numbers go on from one file to the next, in the
+order given. Profiles keep settings to use again (--save-profile NAME, then
 --profile NAME); the options given are laid over those of the profile.
 
 For instance: py-foliation header-footer book.pdf --footer-center 'Page
 $pagelabel of $totalpages' --header-right '$date' --pages 9- -i
+.fi
+.SS watermark
+.nf
+usage: py-foliation watermark [-h] [--interface {en,es}] [--text TEXT]
+                              [--file PDF] [--file-page N]
+                              [--font {helvetica,times,courier}]
+                              [--size POINTS] [--color #RRGGBB]
+                              [--bold | --no-bold] [--italic | --no-italic]
+                              [--scale PERCENT] [--rotation DEGREES]
+                              [--opacity OPACITY] [--behind | --no-behind]
+                              [--print | --no-print]
+                              [--screen | --no-screen]
+                              [--horizontal {left,center,right}]
+                              [--vertical {top,center,bottom}]
+                              [--units {in,cm,pt}] [--hoffset SIZE]
+                              [--voffset SIZE] [--pages PAGES] [--even |
+                              --odd | --all-pages] [--bates-prefix TEXT]
+                              [--bates-start N] [--bates-digits N]
+                              [--bates-suffix TEXT] [--date-format FORMAT]
+                              [--add] [--update] [--remove] [--profile NAME]
+                              [--save-profile NAME]
+                              [--show-on-menu | --no-show-on-menu]
+                              [--list-profiles] [--delete-profile NAME]
+                              [-o OUTPUT | -i | --output-dir FOLDER]
+                              [--name-prefix TEXT] [--name-suffix TEXT] [-n]
+                              [--password PASSWORD]
+                              [FILE ...]
+
+Draw a watermark on the pages of PDFs: a text, such as Draft or Copy, or a page of another PDF, in front of their content or behind it, turned, scaled and with some transparency. Like headers and footers, it changes the pages themselves.
+
+positional arguments:
+  FILE                  source PDF
+
+options:
+  -h, --help            show this help message and exit
+  --interface {en,es}   the language of the interface, for this run only (to
+                        keep a choice, use the 'interface' command)
+  -o, --output OUTPUT   output PDF, with one input only (default:
+                        <input>-labelled.pdf)
+  -i, --in-place        change the input files themselves
+  --output-dir FOLDER   save the PDFs in this folder, with their own names
+                        unless --name-prefix or --name-suffix are given
+  --name-prefix TEXT    put this before the names of the PDFs saved
+  --name-suffix TEXT    put this after the names of the PDFs saved (default:
+                        -labelled, or nothing with --output-dir)
+  -n, --dry-run         show the watermark of the first and last pages,
+                        without writing anything
+  --password PASSWORD   the password to open the PDFs (their protection is
+                        kept when they are saved)
+
+what:
+  --text TEXT           the text of the watermark (\en starts another line)
+  --file PDF            a PDF whose page is the watermark
+  --file-page N         the page of --file (default: 1)
+
+appearance:
+  --font {helvetica,times,courier}
+                        the font (default: helvetica)
+  --size POINTS         the font size (default: 60)
+  --color #RRGGBB       the color of the text (default: #808080)
+  --bold, --no-bold     bold text
+  --italic, --no-italic
+                        italic text
+  --scale PERCENT       fill this percent of the page (default: 0, its own
+                        size)
+  --rotation DEGREES    turn it, counterclockwise (default: 45)
+  --opacity OPACITY     from 0 to 1, or 0% to 100% (default: 0.5)
+  --behind, --no-behind
+                        behind the content of the pages (default: in front
+                        of it)
+  --print, --no-print   shown when printing (default: yes)
+  --screen, --no-screen
+                        shown on the screen (default: yes)
+
+position:
+  --horizontal {left,center,right}
+                        left, center or right (default: center)
+  --vertical {top,center,bottom}
+                        top, center or bottom (default: center)
+  --units {in,cm,pt}    the units of the offsets (default: cm)
+  --hoffset SIZE        move it across, from the side chosen (or to the
+                        right of the center)
+  --voffset SIZE        move it up or down, from the edge chosen (or up from
+                        the center)
+
+pages:
+  --pages PAGES         the pages, as 9-200 or 1,3,9- (default: all; LAST
+                        counts from the end)
+  --even                even pages only
+  --odd                 odd pages only
+  --all-pages           even and odd pages (with a profile that has only
+                        some)
+
+Bates numbering ($bates):
+  --bates-prefix TEXT   text before the number
+  --bates-start N       the first number (default: 1)
+  --bates-digits N      the digits of the number, at least (default: 6)
+  --bates-suffix TEXT   text after the number
+  --date-format FORMAT  how $date writes the date: medium, long, m/d/yy,
+                        m/d/yyyy, mm/dd/yyyy, d/m/yy, d/m/yyyy, dd/mm/yyyy,
+                        dd.mm.yyyy, yyyy-mm-dd (default: medium, as Nov 28,
+                        2007)
+
+adding, updating and removing:
+  --add                 keep the watermarks py-foliation added to the pages
+                        before (else they are replaced)
+  --update              replace the last watermarks added, with its settings
+                        and the options given
+  --remove              take away the watermarks py-foliation added (on
+                        --pages, or all)
+
+profiles:
+  --profile NAME        start from the settings of this profile
+  --save-profile NAME   keep these settings as a profile
+  --show-on-menu, --no-show-on-menu
+                        with --save-profile: list the profile in the
+                        window's menu
+  --list-profiles       list the profiles kept
+  --delete-profile NAME
+                        forget a profile
+
+A watermark is a text (--text, with the variables of header-footer, such as
+$page or $date; put it in single quotes) or a page of another PDF (--file,
+--file-page). --scale fills that percent of the page with it (by default,
+it keeps its own size); --rotation turns it, counterclockwise; --opacity
+goes from 0 (invisible) to 1 (or 0% to 100%).
+
+It goes in the middle of the page unless --horizontal and --vertical say
+otherwise, moved by --hoffset and --voffset from there. --behind draws it
+behind the content of the pages (where a page painted white would hide it).
+--no-print or --no-screen shows it only on the screen or only when
+printing, in viewers that follow such settings.
+
+A watermark added to a page replaces those py-foliation added before,
+unless --add keeps them; --update replaces the last one added; --remove
+takes them away, putting the pages back as they were.
+
+For instance: py-foliation watermark book.pdf --text DRAFT --opacity 30%
+--scale 60 -i
 .fi
 .SS completion
 .nf

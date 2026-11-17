@@ -19,13 +19,15 @@ from PySide6.QtWidgets import (
     QTableWidget, QVBoxLayout, QWidget,
 )
 
-from .. import __version__, config, headfoot, interface, labels, view
+from .. import __version__, config, headfoot, interface, labels, stamps, view, watermark
+from ..changes import Change
 from ..view import View, read_view
 from ..files import read_list, write_copy
 from ..interface import tr
 from ..labels import LabelError, Range
 from . import thumbnails
 from .headfoot_dialog import ask_header_footer
+from .watermark_dialog import ask_watermark
 from .widgets import FIELDS, LABELS, NumberDialog, edited_signal, fit_columns, range_row
 
 RECENT = 10  # documents in File ▸ Open recent
@@ -68,9 +70,9 @@ class MainWindow(QMainWindow):
         self.saved: list[Range] = []  # the labels of the file
         self.opening = View()  # the view of the document when it is opened
         self.saved_opening = View()  # the one the file has
-        # headers and footers to add or remove when the file is saved (headfoot.Change, in order)
-        self.hf_changes: tuple[headfoot.Change, ...] = ()
-        self.stamped: list[int] = []  # the pages of the file with a header or footer added by py-foliation
+        # headers and footers, and watermarks, to add, update or remove when the file is saved (in order)
+        self.hf_changes: tuple[Change, ...] = ()
+        self.added: list[stamps.Addition] = []  # what the pages have, with those changes made
         # (ranges, view, header and footer changes) before each change
         self.undo_stack: list[tuple[list[Range], View, tuple]] = []
         self.redo_stack: list[tuple[list[Range], View, tuple]] = []
@@ -226,6 +228,14 @@ class MainWindow(QMainWindow):
         self.m_headfoot.aboutToShow.connect(self._fill_headfoot_menu)
         self.m_headfoot.setToolTipsVisible(True)
         self._fill_headfoot_menu()
+        self.m_watermark = m.addMenu(tr("Watermark"))
+        self.m_watermark.aboutToShow.connect(self._fill_watermark_menu)
+        self.m_watermark.setToolTipsVisible(True)
+        self._fill_watermark_menu()
+        m.addSeparator()
+        self._action(m, tr("On several files…"), self.batch_dialog,
+                     tip=tr("Add or remove headers and footers, Bates numbers or watermarks on several PDFs at "
+                            "once, the Bates numbers going on from one file to the next"))
         m = self.menuBar().addMenu(tr("&Settings"))
         lang = m.addMenu(tr("Language"))
         group = QActionGroup(self)
@@ -390,7 +400,7 @@ class MainWindow(QMainWindow):
         self._previewed = None
         with pikepdf.open(path, password=self.password) as pdf:
             self.count = len(pdf.pages)
-            self.stamped = headfoot.pages_with(pdf)
+            self.added = stamps.additions(pdf)
 
     def save(self) -> bool:
         if self.path is None:
@@ -429,7 +439,7 @@ class MainWindow(QMainWindow):
             self.undo_stack.clear()
             self.redo_stack.clear()
         with pikepdf.open(target, password=self.password) as pdf:
-            self.stamped = headfoot.pages_with(pdf)
+            self.added = stamps.additions(pdf)
         self.saved, self.saved_opening, self.hf_changes = list(self.ranges), self.opening, ()
         self._previewed = None
         if target == self.path:
@@ -543,78 +553,142 @@ class MainWindow(QMainWindow):
 
     # ----------------------------------------------------------------- headers and footers
 
-    def pages_with_header_footer(self) -> set[int]:
-        """The pages that will have a header or footer added by py-foliation once saved."""
-        pages = set(self.stamped)
-        for c in self.hf_changes:
-            chosen = set(headfoot.chosen_pages(c.hf if c.hf is not None else headfoot.HeaderFooter(pages=c.pages),
-                                               self.count))
-            pages = pages | chosen if c.hf is not None else pages - chosen
-        return pages
+    def pages_with(self, kind: str = stamps.HEADER_FOOTER, bates_only: bool = False) -> set[int]:
+        """The pages that will have a layer of KIND (only with Bates numbers, if BATES_ONLY) once saved."""
+        return {p for a in self.added if a.kind == kind and (a.bates or not bates_only) for p in a.pages}
 
-    def last_header_footer(self) -> headfoot.HeaderFooter:
-        """The settings to start the dialog with: those of the last header and footer added."""
+    def pages_with_header_footer(self) -> set[int]:
+        return self.pages_with(stamps.HEADER_FOOTER)
+
+    def last_added(self, kind: str):
+        """(addition, settings) of the last layer of KIND the pages will have (None if none)."""
+        found = stamps.last_addition(self.added, kind)
+        if found is None or not found.settings:
+            return None
+        cls = headfoot.HeaderFooter if kind == stamps.HEADER_FOOTER else watermark.Watermark
+        try:
+            return found.id, cls.from_dict(found.settings)
+        except LabelError:
+            return None
+
+    def _start_settings(self, kind: str):
+        """The settings a dialog of KIND starts with: those added last, or the defaults."""
         for c in reversed(self.hf_changes):
-            if c.hf is not None:
-                return c.hf
-        return headfoot.HeaderFooter()
+            if c.settings is not None and c.settings.KIND == kind:
+                return c.settings
+        last = self.last_added(kind)
+        if last is not None:
+            return last[1]
+        return headfoot.HeaderFooter() if kind == stamps.HEADER_FOOTER else watermark.Watermark()
+
+    def stamp_dialog(self, kind: str = stamps.HEADER_FOOTER, pages: list[int] | None = None,
+                     update: bool = False) -> bool:
+        """Ask for a header and footer, or a watermark (on PAGES, if given), and add it; with UPDATE,
+        replace the last one added."""
+        if self.path is None:
+            return False
+        replaces = None
+        if update:
+            last = self.last_added(kind)
+            if last is None:
+                self.status(tr("There is nothing to update"), error=True)
+                return False
+            replaces, settings = last
+        else:
+            settings = self._start_settings(kind)
+        if pages is not None:
+            settings = dataclasses.replace(settings, pages=stamps.compact_pages(pages), parity="all")
+        answer = self.ask_stamp(kind, settings, pages[0] if pages else self.current_page(),
+                                existing=bool(self.pages_with(kind)) and not update)
+        if answer is None:
+            return False
+        settings, keep = answer
+        return self.add_stamp(settings, keep, replaces)
 
     def header_footer_dialog(self, pages: list[int] | None = None) -> bool:
-        """Ask for a header and footer (on PAGES, if given) and add it."""
+        return self.stamp_dialog(stamps.HEADER_FOOTER, pages)
+
+    def ask_stamp(self, kind: str, settings, page: int, existing: bool = False):
+        """(settings, keep) from the dialog of KIND (None if cancelled)."""
+        ask = ask_header_footer if kind == stamps.HEADER_FOOTER else ask_watermark
+        return ask(self, settings, self.path, self.password, labels.page_labels(self.ranges, self.count), page,
+                   existing)
+
+    def add_stamp(self, settings, keep: bool = False, replaces: int | None = None) -> bool:
+        """Add SETTINGS (a header and footer, or a watermark) when the file is saved (undoably)."""
         if self.path is None:
             return False
-        hf = self.last_header_footer()
-        if pages is not None:
-            hf = dataclasses.replace(hf, pages=headfoot.compact_pages(pages), parity="all")
-        hf = self.ask_header_footer(hf, pages[0] if pages else self.current_page())
-        if hf is None:
-            return False
-        return self.add_header_footer(hf)
-
-    def ask_header_footer(self, hf: headfoot.HeaderFooter, page: int) -> headfoot.HeaderFooter | None:
-        return ask_header_footer(self, hf, self.path, self.password, labels.page_labels(self.ranges, self.count),
-                                 page)
-
-    def add_header_footer(self, hf: headfoot.HeaderFooter) -> bool:
-        if self.path is None:
-            return False
+        module = headfoot if settings.KIND == stamps.HEADER_FOOTER else watermark
         try:
-            hf = headfoot.check(hf)
-            headfoot.chosen_pages(hf, self.count)
+            settings = module.check(settings)
+            stamps.chosen_pages(settings, self.count)
         except LabelError as e:
             self.status(str(e), error=True)
             return False
-        self.change(self.ranges, hf_changes=self.hf_changes + (headfoot.Change(hf),))
-        self.status(tr("Header and footer added (they are written when the file is saved)"))
+        self.change(self.ranges, hf_changes=self.hf_changes + (Change(settings, keep=keep, replaces=replaces),))
+        if settings.KIND == stamps.HEADER_FOOTER:
+            self.status(tr("Header and footer added (they are written when the file is saved)"))
+        else:
+            self.status(tr("Watermark added (it is written when the file is saved)"))
+        return True
+
+    def add_header_footer(self, hf: headfoot.HeaderFooter, keep: bool = False) -> bool:
+        return self.add_stamp(hf, keep)
+
+    def remove_stamps(self, kind: str = stamps.HEADER_FOOTER, pages: list[int] | None = None,
+                      bates_only: bool = False) -> bool:
+        """Take away the layers of KIND py-foliation added (on PAGES, or all; only those with Bates
+        numbers, if BATES_ONLY), when the file is saved."""
+        if self.path is None or not self.pages_with(kind, bates_only):
+            return False
+        spec = stamps.compact_pages(pages) if pages else ""
+        self.change(self.ranges, hf_changes=self.hf_changes + (Change(None, kind=kind, pages=spec,
+                                                                       bates_only=bates_only),))
+        self.status(tr("Taken away (when the file is saved)"))
         return True
 
     def remove_header_footer(self, pages: list[int] | None = None) -> bool:
-        """Take away the headers and footers py-foliation added (on PAGES, or all)."""
-        if self.path is None or not self.pages_with_header_footer():
-            return False
-        spec = headfoot.compact_pages(pages) if pages else ""
-        self.change(self.ranges, hf_changes=self.hf_changes + (headfoot.Change(None, spec),))
-        self.status(tr("Headers and footers taken away (when the file is saved)"))
-        return True
+        return self.remove_stamps(stamps.HEADER_FOOTER, pages)
 
-    def apply_profile(self, name: str) -> bool:
-        profile = headfoot.read_profiles().get(name)
-        return profile is not None and self.add_header_footer(profile)
+    def apply_profile(self, name: str, kind: str = stamps.HEADER_FOOTER) -> bool:
+        module = headfoot if kind == stamps.HEADER_FOOTER else watermark
+        profile = module.read_profiles().get(name)
+        return profile is not None and self.add_stamp(profile)
 
-    def _fill_headfoot_menu(self):
-        m = self.m_headfoot
+    def _fill_stamp_menu(self, m: QMenu, kind: str):
         m.clear()
         has = self.path is not None
-        m.addAction(tr("Add…"), lambda *_: self.header_footer_dialog()).setEnabled(has)
-        a = m.addAction(tr("Remove all"), lambda *_: self.remove_header_footer())
-        a.setToolTip(tr("Take away the headers and footers py-foliation added to this file"))
-        a.setEnabled(has and bool(self.pages_with_header_footer()))
-        shown = [hf for hf in headfoot.read_profiles().values() if hf.show_on_menu]
+        module = headfoot if kind == stamps.HEADER_FOOTER else watermark
+        m.addAction(tr("Add…"), lambda *_: self.stamp_dialog(kind)).setEnabled(has)
+        a = m.addAction(tr("Update…"), lambda *_: self.stamp_dialog(kind, update=True))
+        a.setToolTip(tr("Change the settings of the last one added"))
+        a.setEnabled(has and self.last_added(kind) is not None)
+        a = m.addAction(tr("Remove all"), lambda *_: self.remove_stamps(kind))
+        a.setToolTip(tr("Take away all those py-foliation added to this file"))
+        a.setEnabled(has and bool(self.pages_with(kind)))
+        if kind == stamps.HEADER_FOOTER:
+            a = m.addAction(tr("Remove the Bates numbers"), lambda *_: self.remove_stamps(kind, bates_only=True))
+            a.setToolTip(tr("Take away only the headers and footers with Bates numbers"))
+            a.setEnabled(has and bool(self.pages_with(kind, bates_only=True)))
+        shown = [p for p in module.read_profiles().values() if p.show_on_menu]
         if shown:
             m.addSection(tr("Profiles"))
-            for hf in shown:
-                a = m.addAction(hf.name, lambda *_, n=hf.name: self.apply_profile(n))
+            for p in shown:
+                a = m.addAction(p.name, lambda *_, n=p.name: self.apply_profile(n, kind))
                 a.setEnabled(has)
+
+    def _fill_headfoot_menu(self):
+        self._fill_stamp_menu(self.m_headfoot, stamps.HEADER_FOOTER)
+
+    def _fill_watermark_menu(self):
+        self._fill_stamp_menu(self.m_watermark, stamps.WATERMARK)
+
+    def batch_dialog(self) -> bool:
+        """Headers and footers, Bates numbers or watermarks on several files at once."""
+        from .batch_dialog import BatchDialog
+        dlg = BatchDialog(self, [self.path] if self.path else [], Path(self.last_dir()))
+        dlg.exec()
+        return bool(dlg.written)
 
     def _update_preview(self):
         """Show in the preview the file, or a copy of it with the headers and footers waiting."""
@@ -637,6 +711,11 @@ class MainWindow(QMainWindow):
         page = self.current_page()
         self.doc.close()
         self.doc.load(str(source))
+        try:
+            with pikepdf.open(source, password=self.password) as pdf:
+                self.added = stamps.additions(pdf)
+        except (OSError, pikepdf.PdfError):
+            pass
         self._thumbs = {}
         self._previewed = key
         if self.count:
@@ -744,12 +823,17 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction(tr("Start a range at page {page}", page=pages[0]), lambda: self.start_range_at(pages[0]))
         menu.addAction(tr("Copy their labels") if count > 1 else tr("Copy its label"), lambda: self.copy_labels())
-        menu.addSection(tr("Header and footer"))
+        menu.addSection(tr("Header, footer and watermark"))
         menu.addAction(tr("Header and footer on these pages…") if count > 1 else tr("Header and footer on this page…"),
-                       lambda *_: self.header_footer_dialog(pages))
+                       lambda *_: self.stamp_dialog(stamps.HEADER_FOOTER, pages))
+        menu.addAction(tr("Watermark on these pages…") if count > 1 else tr("Watermark on this page…"),
+                       lambda *_: self.stamp_dialog(stamps.WATERMARK, pages))
         a = menu.addAction(tr("Remove their header and footer") if count > 1 else tr("Remove its header and footer"),
-                           lambda *_: self.remove_header_footer(pages))
-        a.setEnabled(bool(self.pages_with_header_footer() & set(pages)))
+                           lambda *_: self.remove_stamps(stamps.HEADER_FOOTER, pages))
+        a.setEnabled(bool(self.pages_with(stamps.HEADER_FOOTER) & set(pages)))
+        a = menu.addAction(tr("Remove their watermark") if count > 1 else tr("Remove its watermark"),
+                           lambda *_: self.remove_stamps(stamps.WATERMARK, pages))
+        a.setEnabled(bool(self.pages_with(stamps.WATERMARK) & set(pages)))
         self.add_view_menus(menu, pages[0])
         return menu
 

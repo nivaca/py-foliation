@@ -124,12 +124,21 @@ la derecha, la página elegida.
 - **Editar ▸ Copiar línea de órdenes** copia la orden que da las mismas
   etiquetas a otro archivo.
 - **Páginas ▸ Encabezado y pie de página ▸ Añadir…** escribe un encabezado y
-  un pie en las páginas, y el menú de las páginas lo hace en las elegidas
-  (véase [Encabezados y pies de página](#encabezados-y-pies-de-página)). Se
-  ven enseguida en la vista previa y se escriben al guardar el archivo;
-  **Quitar todos** quita los que añadió py-foliation. Los perfiles marcados
-  con **Mostrar en el menú** también aparecen allí, para aplicarlos con un
-  clic.
+  un pie en las páginas, y **Páginas ▸ Marca de agua ▸ Añadir…** una marca de
+  agua; el menú de las páginas lo hace en las elegidas (véanse [Encabezados y
+  pies de página](#encabezados-y-pies-de-página) y [Marcas de
+  agua](#marcas-de-agua)). Se ven enseguida en la vista previa y se escriben
+  al guardar el archivo. Una página puede tener varios: el diálogo pregunta si
+  conservar los que tiene. **Actualizar…** cambia la configuración del último
+  añadido, **Quitar todos** quita los que añadió py-foliation, y **Quitar los
+  números Bates** solo los encabezados y pies con números Bates. Los perfiles
+  marcados con **Mostrar en el menú** también aparecen allí, para aplicarlos
+  con un clic.
+- **Páginas ▸ En varios archivos…** añade o quita encabezados y pies, números
+  Bates o marcas de agua en una lista de PDF a la vez, en el orden de la lista
+  (los números Bates siguen de un archivo al siguiente), y los guarda junto a
+  cada archivo, en otra carpeta o sobre los propios archivos, con un texto
+  antes o después de sus nombres.
 
 Los archivos protegidos con contraseña la piden, y conservan su protección al
 guardarlos.
@@ -149,6 +158,7 @@ guardarlos.
     py-foliation clear libro.pdf -o simple.pdf      # sin etiquetas
     py-foliation view libro.pdf                     # cómo se abre en un visor
     py-foliation header-footer libro.pdf --footer-center '$pagelabel' -i   # un pie de página
+    py-foliation watermark libro.pdf --text BORRADOR --opacity 30% -i     # una marca de agua
 
 Un intervalo se escribe `PÁGINAS:ESTILO[:INICIO[:PREFIJO]]`:
 
@@ -221,7 +231,8 @@ vista, si el archivo tiene una.
 Un encabezado y un pie de página tienen tres lugares cada uno: izquierda,
 centro y derecha. Su texto puede llevar variables: `$page` (la página del
 archivo), `$pagelabel`, `$bookmark` (el marcador bajo el que está la página),
-`$totalpages`, `$author`, `$filename`, `$filepath`, `$date` (28 nov 2007),
+`$totalpages`, `$author`, `$filename`, `$filepath`, `$date` (28 nov 2007, o
+como diga `--date-format`: `long`, `d/m/yy`, `dd/mm/yyyy`, `yyyy-mm-dd` …),
 `$shortdate`, `$time`, `$day`, `$month`, `$year`, `$shortyear`, `$hour`,
 `$longhour`, `$minute`, `$second`, `$ampm` y `$bates`; `$$` escribe un `$`. En
 la línea de órdenes, ese texto va entre comillas simples; si no, el shell
@@ -252,10 +263,53 @@ Las demás opciones:
 
 Las fuentes son las estándar de PDF, que todo visor tiene: escriben la
 escritura latina, con sus acentos y signos, pero no la griega ni la
-cirílica. Un encabezado y pie añadidos de nuevo a una página reemplazan los
-que py-foliation había añadido antes, y `--remove` (o **Quitar todos**)
-deja las páginas exactamente como estaban, enlaces incluidos. `show` dice
-qué páginas los tienen.
+cirílica.
+
+Un encabezado y pie añadidos a una página reemplazan los que py-foliation
+había añadido antes, salvo que `--add` los conserve; así una página puede
+tener varios. `--update` reemplaza el último añadido, partiendo de su propia
+configuración (guardada en el archivo) con las opciones dadas encima.
+`--remove` (o **Quitar todos**) deja las páginas exactamente como estaban,
+enlaces incluidos, y `--remove-bates` quita solo los encabezados y pies con
+números Bates. `show` lista lo que py-foliation añadió a un archivo.
+
+Con varios archivos, los números Bates siguen de uno al siguiente, en el
+orden en que se dan, y la orden dice qué número viene después, para empezar
+con él el lote siguiente:
+
+    py-foliation header-footer vol1.pdf vol2.pdf vol3.pdf --footer-right '$bates' \
+        --bates-prefix ABC- --output-dir producidos
+    Siguiente número Bates: ABC-000913
+
+`--output-dir` guarda los archivos en otra carpeta, con sus propios nombres,
+y `--name-prefix` y `--name-suffix` añaden un texto antes o después de los
+nombres; todas las órdenes que escriben archivos tienen estas opciones.
+
+### Marcas de agua
+
+Una marca de agua es un texto, como BORRADOR o COPIA (que puede llevar las
+mismas variables), o una página de otro PDF, delante del contenido de las
+páginas o detrás:
+
+    py-foliation watermark libro.pdf --text BORRADOR --opacity 30% --scale 60 -i
+    py-foliation watermark libro.pdf --text 'Copia para $author' --rotation 0 \
+        --vertical bottom --voffset 3 --no-screen -i
+    py-foliation watermark libro.pdf --file sello.pdf --scale 15 --horizontal right \
+        --vertical top --behind -i
+
+- **Qué**: `--text`, con `--font`, `--size`, `--color`, `--bold` e
+  `--italic`; o `--file`, un PDF, y `--file-page`, la página que se usa.
+- **Apariencia**: `--scale` (el porcentaje de la página que ocupa; por
+  defecto conserva su propio tamaño), `--rotation` (grados, en sentido
+  contrario a las agujas del reloj; 45 por defecto), `--opacity` (de 0 a 1, o
+  de 0% a 100%), `--behind` (detrás del contenido, donde una página pintada de
+  blanco la tapa) y `--no-print` o `--no-screen` (solo en pantalla, o solo al
+  imprimir, en los visores que siguen esas indicaciones).
+- **Posición**: `--horizontal left|center|right` y `--vertical
+  top|center|bottom` (el centro por defecto), desplazada por `--hoffset` y
+  `--voffset` en `--units`.
+- **Páginas**, **numeración Bates**, **perfiles**, `--add`, `--update` y
+  `--remove`, como para los encabezados y pies.
 
 ### Completado y manual
 

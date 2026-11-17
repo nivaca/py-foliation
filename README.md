@@ -118,11 +118,20 @@ on the right, the chosen page.
 - **Edit ▸ Copy command line** copies the command that gives the same labels
   to another file.
 - **Pages ▸ Header and Footer ▸ Add…** draws a header and a footer on the
-  pages, and the menu of the pages does it on the chosen ones (see
-  [Headers and footers](#headers-and-footers)). They are shown in the
-  preview at once and written when the file is saved; **Remove all** takes
-  away those py-foliation added. Profiles marked **Show on menu** are listed
-  there too, to apply in one click.
+  pages, and **Pages ▸ Watermark ▸ Add…** a watermark; the menu of the pages
+  does it on the chosen ones (see [Headers and footers](#headers-and-footers)
+  and [Watermarks](#watermarks)). They are shown in the preview at once and
+  written when the file is saved. A page may have several: the dialog asks
+  whether to keep those it has. **Update…** changes the settings of the last
+  one added, **Remove all** takes away those py-foliation added, and **Remove
+  the Bates numbers** only the headers and footers with Bates numbers.
+  Profiles marked **Show on menu** are listed there too, to apply in one
+  click.
+- **Pages ▸ On several files…** adds or removes headers and footers, Bates
+  numbers or watermarks on a list of PDFs at once, in the order of the list
+  (the Bates numbers go on from one file to the next), saving them next to
+  each file, in another folder, or over the files themselves, with a text
+  before or after their names.
 
 Files protected by a password ask for it, and keep their protection when
 they are saved.
@@ -142,6 +151,7 @@ they are saved.
     py-foliation clear book.pdf -o plain.pdf       # no labels
     py-foliation view book.pdf                     # how it opens in a viewer
     py-foliation header-footer book.pdf --footer-center '$pagelabel' -i   # a footer
+    py-foliation watermark book.pdf --text DRAFT --opacity 30% -i         # a watermark
 
 A range is written `PAGES:STYLE[:START[:PREFIX]]`:
 
@@ -213,7 +223,8 @@ prints the view too, when the file has one.
 A header and a footer have three places each, left, center and right. Their
 text can hold variables: `$page` (the page of the file), `$pagelabel`,
 `$bookmark` (the bookmark the page is under), `$totalpages`, `$author`,
-`$filename`, `$filepath`, `$date` (Nov 28, 2007), `$shortdate`, `$time`,
+`$filename`, `$filepath`, `$date` (Nov 28, 2007, or as `--date-format`
+says: `long`, `m/d/yy`, `dd/mm/yyyy`, `yyyy-mm-dd` …), `$shortdate`, `$time`,
 `$day`, `$month`, `$year`, `$shortyear`, `$hour`, `$longhour`, `$minute`,
 `$second`, `$ampm` and `$bates`; `$$` writes a `$`. On the command line, put
 such text in single quotes, or the shell reads the variables as its own:
@@ -242,10 +253,53 @@ The other options:
   them. The window shares them.
 
 The fonts are the standard fonts of PDF, which every viewer has: they write
-Latin script, with its accents and signs, but not Greek or Cyrillic. A
-header and footer added again to a page replaces the one py-foliation added
-before, and `--remove` (or **Remove all**) puts the pages back exactly as
-they were, links included. `show` says which pages have one.
+Latin script, with its accents and signs, but not Greek or Cyrillic.
+
+A header and footer added to a page replaces those py-foliation added
+before, unless `--add` keeps them, so that a page can have several.
+`--update` replaces the last one added, starting from its own settings (kept
+in the file) with the options given laid over them. `--remove` (or **Remove
+all**) puts the pages back exactly as they were, links included, and
+`--remove-bates` takes away only the headers and footers with Bates numbers.
+`show` lists what py-foliation added to a file.
+
+With several files, the Bates numbers go on from one to the next, in the
+order they are given, and the command says which number comes next, to
+start the next batch with it:
+
+    py-foliation header-footer vol1.pdf vol2.pdf vol3.pdf --footer-right '$bates' \
+        --bates-prefix ABC- --output-dir produced
+    Next Bates number: ABC-000913
+
+`--output-dir` saves the files in another folder, with their own names, and
+`--name-prefix` and `--name-suffix` add a text before or after the names;
+every command that writes files has these options.
+
+### Watermarks
+
+A watermark is a text, such as DRAFT or COPY (it can hold the same
+variables), or a page of another PDF, drawn in front of the content of the
+pages or behind it:
+
+    py-foliation watermark book.pdf --text DRAFT --opacity 30% --scale 60 -i
+    py-foliation watermark book.pdf --text 'Copy for $author' --rotation 0 \
+        --vertical bottom --voffset 3 --no-screen -i
+    py-foliation watermark book.pdf --file seal.pdf --scale 15 --horizontal right \
+        --vertical top --behind -i
+
+- **What**: `--text`, with `--font`, `--size`, `--color`, `--bold` and
+  `--italic`; or `--file`, a PDF, and `--file-page`, the page of it to use.
+- **Appearance**: `--scale` (the percent of the page it fills; by default
+  it keeps its own size), `--rotation` (degrees, counterclockwise; 45 by
+  default), `--opacity` (0 to 1, or 0% to 100%), `--behind` (behind the
+  content, where a page painted white hides it) and `--no-print` or
+  `--no-screen` (shown only on the screen, or only when printing, in the
+  viewers that follow such settings).
+- **Position**: `--horizontal left|center|right` and `--vertical
+  top|center|bottom` (the center by default), moved by `--hoffset` and
+  `--voffset` in `--units`.
+- **Pages**, **Bates numbering**, **profiles**, `--add`, `--update` and
+  `--remove`, as for headers and footers.
 
 ### Completion and manual
 

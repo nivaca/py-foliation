@@ -10,7 +10,7 @@ pages of the file.  Only the labels change; the pages themselves are left
 as they are.  Nicolas Vaughan made it in 2026.  It has a window, for
 seeing and editing the labels page by page, and a command line, for doing
 the same in scripts, in English or in Spanish.  Here I explain how it was
-made, in eight stages.
+made, in nine stages.
 
 py-foliation is free software, under the GNU General Public License,
 version 3 or later.  It is written in Python and relies on pikepdf (based
@@ -223,10 +223,45 @@ one.  In the window, a dialog has every option and a preview of any page;
 the header and footer are shown at once, in a copy of the file, and are
 written when the file is saved, undone and redone like the labels.
 
+9. Several headers and footers, watermarks and batches
+------------------------------------------------------
+
+The first headers and footers allowed one on a page: a new one replaced
+the old.  But a document may need a running title and, apart from it, a
+Bates number that someone else will take away later.  So what py-foliation
+adds to a page became a stack of *layers* (`stamps.py`).  Each keeps, in the
+page dictionary, its kind, the addition it belongs to (the same on every
+page it went on), its settings as JSON, and whether it writes Bates
+numbers.  Any layer can then be taken away, not only the last: the
+content streams of the others are balanced pairs, and the links each one
+moved are put where the layers that are left would have them.  A new
+header and footer replaces the ones on its pages unless it is asked to
+keep them; *Update* takes the settings of the last one added, from the
+file itself, and replaces it; the Bates numbers can be removed and the
+rest kept.  Pages marked by version 0.7, with one record and no settings,
+are still read and cleaned.
+
+Watermarks (`watermark.py`) are layers of another kind: a text, with the
+same variables, or a page of another PDF, made a form XObject, scaled,
+turned, placed by its side and an offset, with an opacity set by a
+graphics state, in front of the content or behind it.  One shown only
+when printing, or only on the screen, goes in an optional content group
+whose automatic states say so; the group goes away with the last layer
+that uses it.
+
+Bates numbers are meant to run through a whole production of documents,
+so they go on from one file to the next: on the command line, through the
+files in the order given, and in the window, through a list of files that
+*On several files…* lets one put in order.  At the end the program says
+which number comes next.  Every command that writes files can now save
+them in another folder and add a text before or after their names.  The
+date that `$date` writes has a choice of formats, and the dialog inserts
+page numbers in the usual forms (1 of n, Page 1 of n …).
+
 Testing
 -------
 
-The program has 118 automated tests (`tests/`), run with pytest.  They
+The program has 130 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, the reading and
 writing of the number tree, including odd trees, the ranges found in
@@ -234,7 +269,10 @@ lists of labels, the view when the file is opened, written and read
 back in every form, with what the program does not understand kept, and
 headers and footers: their variables, their place on the page, as
 pdftotext reads it, on rotated pages too, and their removal, which must
-give the pages back byte for byte.
+give the pages back byte for byte; several layers on a page, taking one
+from between others, updating, the files of 0.7, watermarks of text and
+of a page, behind and only for printing, the date formats, and Bates
+numbers going on through several files.
 The command line is run from start to finish on the example document,
 docs/example/numbers-100.pdf, whose pages each show their number, and on
 broken input.  The window is tested without a screen, with Qt's
