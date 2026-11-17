@@ -232,7 +232,7 @@ toma las variables como suyas:
     py-foliation header-footer libro.pdf --footer-right '$bates' --bates-prefix ABC- --odd -i
     py-foliation header-footer libro.pdf --remove -i
 
-Lo demás sigue las opciones de Xodo PDF Studio:
+Las demás opciones:
 
 - **Márgenes** (`--units in|cm|pt`, `--top`, `--bottom`, `--left`,
   `--right`): de los bordes de la página al encabezado, al pie y al texto de

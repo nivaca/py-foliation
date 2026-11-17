@@ -114,7 +114,7 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
   bars showed and hid without end)
 
 * Fri Nov 13 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.6-1
-- Page layout and page view as Xodo names them, from the menu of the pages;
+- Page layout and page view, as viewers name them, from the menu of the pages;
   Settings > Language
 
 * Fri Nov 13 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.5-1

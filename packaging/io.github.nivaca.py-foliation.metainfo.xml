@@ -81,7 +81,7 @@
   <releases>
     <release version="0.7" date="2026-11-17">
       <description>
-        <p>Headers and footers, with the options of Xodo PDF Studio: a left, center and right place in each, with variables such as the page label, the page number, the date or a Bates number; margins, shrinking the pages to leave room, font, color, border and background; all the pages, some, or the even or odd ones; and profiles, to use again. In the window, Pages ▸ Header and Footer and the menu of the pages, with a preview; on the command line, py-foliation header-footer. They can be removed, leaving the pages as they were.</p>
+        <p>Headers and footers: a left, center and right place in each, with variables such as the page label, the page number, the date or a Bates number; margins, shrinking the pages to leave room, font, color, border and background; all the pages, some, or the even or odd ones; and profiles, to use again. In the window, Pages ▸ Header and Footer and the menu of the pages, with a preview; on the command line, py-foliation header-footer. They can be removed, leaving the pages as they were.</p>
       </description>
     </release>
     <release version="0.6.4" date="2026-11-14">
@@ -106,7 +106,7 @@
     </release>
     <release version="0.6" date="2026-11-13">
       <description>
-        <p>The initial view of the document is set from the right-click menu of the pages, or the View menu, as Xodo names it: Page layout (Single, Single Continuous, Facing, Facing Continuous, Cover, Cover Continuous) and Page view (Actual Size, Fit to Width, Fit to Page). The Settings menu has Language instead of Interface Language.</p>
+        <p>The initial view of the document is set from the right-click menu of the pages, or the View menu, as viewers name it: Page layout (Single, Single Continuous, Facing, Facing Continuous, Cover, Cover Continuous) and Page view (Actual Size, Fit to Width, Fit to Page). The Settings menu has Language instead of Interface Language.</p>
       </description>
     </release>
     <release version="0.5" date="2026-11-13">

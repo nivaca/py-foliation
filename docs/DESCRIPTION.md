@@ -155,7 +155,7 @@ it was ever submitted.)
 
 Besides its labels, a PDF can say how viewers should show it when they
 open it, its *initial view*: the page layout, the page view and the page to
-start at.  It names them as Xodo and other viewers do: the layouts Single,
+start at.  It names them as PDF viewers do: the layouts Single,
 Single Continuous, Facing (two pages side by side, odd pages on the left),
 Facing Continuous, Cover (like Facing, with the first page alone, as the
 cover of a book) and Cover Continuous; the page views Actual Size, Fit to
@@ -192,8 +192,8 @@ the window to modules of their own.
 ----------------------
 
 Everything before changes what a PDF says about its pages; headers and
-footers change the pages.  They follow the options of Xodo PDF Studio: a
-left, center and right place in each, with variables (`$pagelabel`,
+footers change the pages.  They have the options PDF editors usually
+give them: a left, center and right place in each, with variables (`$pagelabel`,
 `$page`, `$totalpages`, `$bookmark`, the date and time, `$bates` …),
 margins in inches, centimeters or points, the font, its size, color, bold
 and italic, a border and a background, the pages (a list of them, and of

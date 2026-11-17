@@ -2,7 +2,7 @@
 what size, and at which page.
 
 A PDF keeps these for the whole document (not for each page), in its catalog;
-viewers such as Xodo call them its initial view:
+viewers call them its initial view:
 
     /PageLayout   the page layout: SinglePage (Single), OneColumn (Single
                   Continuous), TwoPageLeft (Facing), TwoColumnLeft (Facing

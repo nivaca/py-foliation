@@ -223,7 +223,7 @@ such text in single quotes, or the shell reads the variables as its own:
     py-foliation header-footer book.pdf --footer-right '$bates' --bates-prefix ABC- --odd -i
     py-foliation header-footer book.pdf --remove -i
 
-The rest follows the options of Xodo PDF Studio:
+The other options:
 
 - **Margins** (`--units in|cm|pt`, `--top`, `--bottom`, `--left`,
   `--right`): from the edges of the page to the header, the footer and the
