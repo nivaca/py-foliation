@@ -493,15 +493,12 @@ def _lines_per_band(hf: HeaderFooter) -> tuple[int, int]:
 # =========================================================================== applying and removing
 
 
-def _contents(page: pikepdf.Page) -> Array:
-    """The /Contents of PAGE, as an array (made one if it was a single stream)."""
+def _contents(page: pikepdf.Page) -> list:
+    """The content streams of PAGE (its /Contents, one stream or an array of them)."""
     contents = page.obj.get("/Contents")
     if contents is None:
-        contents = Array()
-    elif not isinstance(contents, Array):
-        contents = Array([contents])
-    page.obj.Contents = contents
-    return contents
+        return []
+    return list(contents) if isinstance(contents, Array) else [contents]
 
 
 def has_header_footer(page: pikepdf.Page) -> bool:
@@ -584,9 +581,7 @@ def stamp_page(pdf: Pdf, page: pikepdf.Page, hf: HeaderFooter, texts: dict[str, 
              + draw(hf, blocks, str(font_name)[1:]) + b"\nQ")
     before_stream = pdf.make_indirect(pikepdf.Stream(pdf, before))
     after_stream = pdf.make_indirect(pikepdf.Stream(pdf, after))
-    contents = _contents(page)
-    contents.insert(0, before_stream)
-    contents.append(after_stream)
+    page.obj.Contents = Array([before_stream, *_contents(page), after_stream])
     record.Streams = Array([before_stream, after_stream])
     record.Font = font_name
     page.obj[PRIVATE] = record
