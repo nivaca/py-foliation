@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-__version__ = "0.6.4"
+__version__ = "0.7"
 
 from .cli import main  # noqa: E402
 

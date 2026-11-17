@@ -10,7 +10,7 @@
 # Build with packaging/build-rpm.sh, which makes the source tarball.
 
 Name:           py-foliation
-Version:        0.6.4
+Version:        0.7
 Release:        1%{?dist}
 Summary:        Change the page labels (the numbering a viewer shows) of PDF documents
 
@@ -96,6 +96,10 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
 %{zsh_completions_dir}/_py-foliation
 
 %changelog
+* Tue Nov 17 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.7-1
+- Headers and footers (py-foliation header-footer, and Pages > Header and
+  Footer in the window), with variables, Bates numbering and profiles
+
 * Sat Nov 14 2026 Nicolas Vaughan <nivaca@fastmail.com> - 0.6.4-1
 - Python 3.15 or later is needed; no longer built for Fedora 44
 

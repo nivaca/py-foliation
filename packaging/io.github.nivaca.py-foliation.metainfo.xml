@@ -79,6 +79,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.7" date="2026-11-17">
+      <description>
+        <p>Headers and footers, with the options of Xodo PDF Studio: a left, center and right place in each, with variables such as the page label, the page number, the date or a Bates number; margins, shrinking the pages to leave room, font, color, border and background; all the pages, some, or the even or odd ones; and profiles, to use again. In the window, Pages ▸ Header and Footer and the menu of the pages, with a preview; on the command line, py-foliation header-footer. They can be removed, leaving the pages as they were.</p>
+      </description>
+    </release>
     <release version="0.6.4" date="2026-11-14">
       <description>
         <p>Python 3.15 or later is needed (it was 3.13). The program is the same.</p>
