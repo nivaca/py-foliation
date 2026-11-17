@@ -83,6 +83,12 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.8" date="2026-11-17">
+      <description>
+        <p>Watermarks: a text or a page of another PDF, turned, scaled and transparent, in front of the pages or behind them, shown only when printing or only on the screen.</p>
+        <p>A page may have several headers and footers; the last one added can be updated, and the Bates numbers removed apart from the rest. Bates numbers go on from one file to the next, through several files at once, and the date has a choice of formats.</p>
+      </description>
+    </release>
     <release version="0.7.1" date="2026-11-17">
       <description>
         <p>The documentation is revised; the program works as in 0.7.</p>
