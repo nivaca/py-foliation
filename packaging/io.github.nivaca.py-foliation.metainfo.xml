@@ -79,6 +79,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.7.1" date="2026-11-17">
+      <description>
+        <p>The documentation is revised; the program works as in 0.7.</p>
+      </description>
+    </release>
     <release version="0.7" date="2026-11-17">
       <description>
         <p>Headers and footers: a left, center and right place in each, with variables such as the page label, the page number, the date or a Bates number; margins, shrinking the pages to leave room, font, color, border and background; all the pages, some, or the even or odd ones; and profiles, to use again. In the window, Pages ▸ Header and Footer and the menu of the pages, with a preview; on the command line, py-foliation header-footer. They can be removed, leaving the pages as they were.</p>
