@@ -17,6 +17,7 @@ positional arguments:
     clear              remove the page labels of PDFs
     copy               give PDFs the page labels of another
     view               show or set how PDFs open in a viewer
+    header-footer      add headers and footers to PDFs
     completion         print the completion script of a shell
     interface          show or choose the language of the interface
 
@@ -205,6 +206,134 @@ or a percentage (150%).
 
 For instance: py-foliation view book.pdf --layout cover --page-view fit-page
 --open-at 9 -i
+.fi
+.SS header-footer
+.nf
+usage: py-foliation header-footer [-h] [--interface {en,es}]
+                                  [--header-left TEXT]
+                                  [--header-center TEXT]
+                                  [--header-right TEXT] [--footer-left TEXT]
+                                  [--footer-center TEXT]
+                                  [--footer-right TEXT] [--units {in,cm,pt}]
+                                  [--top SIZE] [--bottom SIZE] [--left SIZE]
+                                  [--right SIZE] [--shrink | --no-shrink]
+                                  [--font {helvetica,times,courier}]
+                                  [--size POINTS] [--color #RRGGBB]
+                                  [--bold | --no-bold]
+                                  [--italic | --no-italic]
+                                  [--border | --no-border]
+                                  [--border-color #RRGGBB]
+                                  [--border-width POINTS]
+                                  [--background #RRGGBB] [--pages PAGES]
+                                  [--even | --odd | --all-pages]
+                                  [--bates-prefix TEXT] [--bates-start N]
+                                  [--bates-digits N] [--bates-suffix TEXT]
+                                  [--profile NAME] [--save-profile NAME]
+                                  [--show-on-menu | --no-show-on-menu]
+                                  [--list-profiles] [--delete-profile NAME]
+                                  [--remove] [-o OUTPUT | -i] [-n]
+                                  [--password PASSWORD]
+                                  [FILE ...]
+
+Draw text at the top and bottom of the pages of PDFs: a header and a footer, each with a left, center and right place, with variables such as the page label or the date. Unlike the labels, they change the pages themselves.
+
+positional arguments:
+  FILE                  source PDF
+
+options:
+  -h, --help            show this help message and exit
+  --interface {en,es}   the language of the interface, for this run only (to
+                        keep a choice, use the 'interface' command)
+  -o, --output OUTPUT   output PDF, with one input only (default:
+                        <input>-labelled.pdf)
+  -i, --in-place        change the input files themselves
+  -n, --dry-run         show the header and footer of the first and last
+                        pages, without writing anything
+  --password PASSWORD   the password to open the PDFs (their protection is
+                        kept when they are saved)
+
+text:
+  --header-left TEXT    the text of the header left
+  --header-center TEXT  the text of the header center
+  --header-right TEXT   the text of the header right
+  --footer-left TEXT    the text of the footer left
+  --footer-center TEXT  the text of the footer center
+  --footer-right TEXT   the text of the footer right
+
+margins:
+  --units {in,cm,pt}    the units of the margins (default: cm)
+  --top SIZE            the top margin
+  --bottom SIZE         the bottom margin
+  --left SIZE           the left margin
+  --right SIZE          the right margin
+  --shrink, --no-shrink
+                        scale the content of the pages down to leave room
+                        for the header and footer
+
+appearance:
+  --font {helvetica,times,courier}
+                        the font (default: helvetica)
+  --size POINTS         the font size (default: 10)
+  --color #RRGGBB       the color of the text
+  --bold, --no-bold     bold text
+  --italic, --no-italic
+                        italic text
+  --border, --no-border
+                        a border around each text
+  --border-color #RRGGBB
+                        the color of the border
+  --border-width POINTS
+                        the width of the border
+  --background #RRGGBB  a background color behind each text ('none': no
+                        background)
+
+pages:
+  --pages PAGES         the pages, as 9-200 or 1,3,9- (default: all; LAST
+                        counts from the end)
+  --even                even pages only
+  --odd                 odd pages only
+  --all-pages           even and odd pages (with a profile that has only
+                        some)
+
+Bates numbering ($bates):
+  --bates-prefix TEXT   text before the number
+  --bates-start N       the first number (default: 1)
+  --bates-digits N      the digits of the number, at least (default: 6)
+  --bates-suffix TEXT   text after the number
+
+profiles and removing:
+  --profile NAME        start from the settings of this profile
+  --save-profile NAME   keep these settings as a profile
+  --show-on-menu, --no-show-on-menu
+                        with --save-profile: list the profile in the
+                        window's Header and Footer menu
+  --list-profiles       list the profiles kept
+  --delete-profile NAME
+                        forget a profile
+  --remove              take away the headers and footers py-foliation added
+                        (on --pages, or all)
+
+The text of each place may hold variables, written with $ (put the text in
+single quotes, or the shell takes them as its own): $page, $pagelabel,
+$bookmark, $totalpages, $author, $filename, $filepath, $date, $shortdate,
+$time, $day, $month, $year, $shortyear, $hour, $longhour, $minute, $second,
+$ampm and $bates; $$ writes a $. A new line in the text (\en in --*-left and
+the rest) starts another line.
+
+The fonts are the standard fonts of PDF, which every viewer has: they write
+Latin script, with its accents and signs, but not Greek or Cyrillic.
+
+Margins are the distances from the edges of the page to the header, the
+footer and the text at the sides. --shrink scales the content of the pages
+down so that the header and footer don't cover it.
+
+A header and footer added again to a page replaces the one py-foliation
+added before, and --remove takes them away, putting the pages back as they
+were. Profiles keep settings to use again (--save-profile NAME, then
+--profile NAME); the options given are laid over those of the profile.
+
+For instance: py-foliation header-footer book.pdf --footer-center 'Page
+$pagelabel of $totalpages' --header-right '$date' --pages 9- -i
 .fi
 .SS completion
 .nf

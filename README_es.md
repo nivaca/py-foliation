@@ -9,7 +9,9 @@ en 1 puede mostrar esos números en el visor, en lugar del simple 1, 2, 3 … de
 las páginas del archivo. Solo cambian las etiquetas; las páginas quedan como
 están.
 
-Tiene una ventana, para ver y editar las etiquetas página por página, y una
+También puede añadir encabezados y pies a las páginas (la etiqueta de la
+página, su número, la fecha, números Bates o cualquier texto), y esos sí
+cambian las páginas. Tiene una ventana, para ver y editar las etiquetas página por página, y una
 línea de órdenes, para hacer lo mismo en scripts.
 
 ## Instalación
@@ -121,6 +123,13 @@ la derecha, la página elegida.
   lista…** escribe uno, para editarlo en cualquier editor u hoja de cálculo.
 - **Editar ▸ Copiar línea de órdenes** copia la orden que da las mismas
   etiquetas a otro archivo.
+- **Páginas ▸ Encabezado y pie de página ▸ Añadir…** escribe un encabezado y
+  un pie en las páginas, y el menú de las páginas lo hace en las elegidas
+  (véase [Encabezados y pies de página](#encabezados-y-pies-de-página)). Se
+  ven enseguida en la vista previa y se escriben al guardar el archivo;
+  **Quitar todos** quita los que añadió py-foliation. Los perfiles marcados
+  con **Mostrar en el menú** también aparecen allí, para aplicarlos con un
+  clic.
 
 Los archivos protegidos con contraseña la piden, y conservan su protección al
 guardarlos.
@@ -139,6 +148,7 @@ guardarlos.
     py-foliation copy viejo.pdf nuevo.pdf -i        # las etiquetas de viejo.pdf, a nuevo.pdf
     py-foliation clear libro.pdf -o simple.pdf      # sin etiquetas
     py-foliation view libro.pdf                     # cómo se abre en un visor
+    py-foliation header-footer libro.pdf --footer-center '$pagelabel' -i   # un pie de página
 
 Un intervalo se escribe `PÁGINAS:ESTILO[:INICIO[:PREFIJO]]`:
 
@@ -205,6 +215,47 @@ cada vez, las impares a la izquierda), `facing-continuous`, `cover` (como
 `cover-continuous`; las vistas de página, `actual-size` (tamaño real),
 `fit-width`, `fit-page` o un porcentaje (`150%`). `show` también muestra la
 vista, si el archivo tiene una.
+
+### Encabezados y pies de página
+
+Un encabezado y un pie de página tienen tres lugares cada uno: izquierda,
+centro y derecha. Su texto puede llevar variables: `$page` (la página del
+archivo), `$pagelabel`, `$bookmark` (el marcador bajo el que está la página),
+`$totalpages`, `$author`, `$filename`, `$filepath`, `$date` (28 nov 2007),
+`$shortdate`, `$time`, `$day`, `$month`, `$year`, `$shortyear`, `$hour`,
+`$longhour`, `$minute`, `$second`, `$ampm` y `$bates`; `$$` escribe un `$`. En
+la línea de órdenes, ese texto va entre comillas simples; si no, el shell
+toma las variables como suyas:
+
+    py-foliation header-footer libro.pdf --footer-center 'Página $pagelabel de $totalpages' \
+        --header-right '$date' --pages 9- -i
+    py-foliation header-footer libro.pdf --footer-right '$bates' --bates-prefix ABC- --odd -i
+    py-foliation header-footer libro.pdf --remove -i
+
+Lo demás sigue las opciones de Xodo PDF Studio:
+
+- **Márgenes** (`--units in|cm|pt`, `--top`, `--bottom`, `--left`,
+  `--right`): de los bordes de la página al encabezado, al pie y al texto de
+  los lados. `--shrink` reduce el contenido de las páginas para que el
+  encabezado y el pie no lo tapen.
+- **Apariencia**: `--font helvetica|times|courier`, `--size`, `--color`,
+  `--bold`, `--italic`, `--border` (con `--border-color` y `--border-width`)
+  y `--background`.
+- **Páginas**: `--pages` (`9-200`, `1,3,9-`; todas si no se da), y de esas,
+  `--even` o `--odd`.
+- **Numeración Bates**: `$bates` escribe `--bates-prefix`, un número desde
+  `--bates-start` con al menos `--bates-digits` dígitos, y `--bates-suffix`,
+  contando las páginas en que va.
+- **Perfiles**: `--save-profile NOMBRE` guarda la configuración, `--profile
+  NOMBRE` parte de ella, y `--list-profiles` y `--delete-profile` los
+  administran. La ventana usa los mismos.
+
+Las fuentes son las estándar de PDF, que todo visor tiene: escriben la
+escritura latina, con sus acentos y signos, pero no la griega ni la
+cirílica. Un encabezado y pie añadidos de nuevo a una página reemplazan los
+que py-foliation había añadido antes, y `--remove` (o **Quitar todos**)
+deja las páginas exactamente como estaban, enlaces incluidos. `show` dice
+qué páginas los tienen.
 
 ### Completado y manual
 

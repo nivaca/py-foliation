@@ -8,6 +8,8 @@ iii … and whose text starts again at 1 can show those numbers in the viewer,
 instead of the plain 1, 2, 3 … of the pages of the file. Only the labels
 change; the pages themselves are left as they are.
 
+It can also add headers and footers to the pages (the page label, the page
+number, the date, Bates numbers or any text), and those do change the pages.
 It has a window, for seeing and editing the labels page by page, and a
 command line, for doing the same in scripts.
 
@@ -115,6 +117,12 @@ on the right, the chosen page.
   edit in any editor or spreadsheet.
 - **Edit ▸ Copy command line** copies the command that gives the same labels
   to another file.
+- **Pages ▸ Header and Footer ▸ Add…** draws a header and a footer on the
+  pages, and the menu of the pages does it on the chosen ones (see
+  [Headers and footers](#headers-and-footers)). They are shown in the
+  preview at once and written when the file is saved; **Remove all** takes
+  away those py-foliation added. Profiles marked **Show on menu** are listed
+  there too, to apply in one click.
 
 Files protected by a password ask for it, and keep their protection when
 they are saved.
@@ -133,6 +141,7 @@ they are saved.
     py-foliation copy old.pdf new.pdf -i           # the labels of old.pdf, to new.pdf
     py-foliation clear book.pdf -o plain.pdf       # no labels
     py-foliation view book.pdf                     # how it opens in a viewer
+    py-foliation header-footer book.pdf --footer-center '$pagelabel' -i   # a footer
 
 A range is written `PAGES:STYLE[:START[:PREFIX]]`:
 
@@ -198,6 +207,45 @@ left), `facing-continuous`, `cover` (like `facing`, with the first page
 alone, as the cover of a book) and `cover-continuous`; the page views,
 `actual-size`, `fit-width`, `fit-page` or a percentage (`150%`). `show`
 prints the view too, when the file has one.
+
+### Headers and footers
+
+A header and a footer have three places each, left, center and right. Their
+text can hold variables: `$page` (the page of the file), `$pagelabel`,
+`$bookmark` (the bookmark the page is under), `$totalpages`, `$author`,
+`$filename`, `$filepath`, `$date` (Nov 28, 2007), `$shortdate`, `$time`,
+`$day`, `$month`, `$year`, `$shortyear`, `$hour`, `$longhour`, `$minute`,
+`$second`, `$ampm` and `$bates`; `$$` writes a `$`. On the command line, put
+such text in single quotes, or the shell reads the variables as its own:
+
+    py-foliation header-footer book.pdf --footer-center 'Page $pagelabel of $totalpages' \
+        --header-right '$date' --pages 9- -i
+    py-foliation header-footer book.pdf --footer-right '$bates' --bates-prefix ABC- --odd -i
+    py-foliation header-footer book.pdf --remove -i
+
+The rest follows the options of Xodo PDF Studio:
+
+- **Margins** (`--units in|cm|pt`, `--top`, `--bottom`, `--left`,
+  `--right`): from the edges of the page to the header, the footer and the
+  text at the sides. `--shrink` scales the content of the pages down, so
+  that the header and footer don't cover it.
+- **Appearance**: `--font helvetica|times|courier`, `--size`, `--color`,
+  `--bold`, `--italic`, `--border` (with `--border-color` and
+  `--border-width`) and `--background`.
+- **Pages**: `--pages` (`9-200`, `1,3,9-`; all if not given), and of
+  those, `--even` or `--odd`.
+- **Bates numbering**: `$bates` writes `--bates-prefix`, a number from
+  `--bates-start` with `--bates-digits` digits at least, and
+  `--bates-suffix`, counting the pages it goes on.
+- **Profiles**: `--save-profile NAME` keeps the settings, `--profile NAME`
+  starts from them, and `--list-profiles` and `--delete-profile` manage
+  them. The window shares them.
+
+The fonts are the standard fonts of PDF, which every viewer has: they write
+Latin script, with its accents and signs, but not Greek or Cyrillic. A
+header and footer added again to a page replaces the one py-foliation added
+before, and `--remove` (or **Remove all**) puts the pages back exactly as
+they were, links included. `show` says which pages have one.
 
 ### Completion and manual
 

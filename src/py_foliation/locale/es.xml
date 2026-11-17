@@ -1236,4 +1236,717 @@ cover-continuous.</tr>
     <en>the page view (see below), or a percentage, as 150%%</en>
     <tr>la vista de página (véase abajo), o un porcentaje, como 150%%</tr>
   </text>
+  <text>
+    <en>&amp;Pages</en>
+    <tr>&amp;Páginas</tr>
+  </text>
+  <text>
+    <en>(new profile)</en>
+    <tr>(perfil nuevo)</tr>
+  </text>
+  <text>
+    <en>A header and footer added again to a page replaces the one py-foliation added before, and --remove takes them away, putting the pages back as they were. Profiles keep settings to use again (--save-profile NAME, then --profile NAME); the options given are laid over those of the profile.</en>
+    <tr>Un encabezado y pie añadidos de nuevo a una página reemplazan los que
+py-foliation había añadido antes, y --remove los quita, dejando las páginas
+como estaban. Los perfiles guardan una configuración para volver a usarla
+(--save-profile NOMBRE, y luego --profile NOMBRE); las opciones que se den se
+ponen sobre las del perfil.</tr>
+  </text>
+  <text>
+    <en>AM or PM</en>
+    <tr>AM o PM</tr>
+  </text>
+  <text>
+    <en>Add…</en>
+    <tr>Añadir…</tr>
+  </text>
+  <text>
+    <en>All pages</en>
+    <tr>Todas las páginas</tr>
+  </text>
+  <text>
+    <en>Appearance</en>
+    <tr>Apariencia</tr>
+  </text>
+  <text>
+    <en>Apply</en>
+    <tr>Aplicar</tr>
+  </text>
+  <text>
+    <en>Apr</en>
+    <tr>abr</tr>
+  </text>
+  <text>
+    <en>Aug</en>
+    <tr>ago</tr>
+  </text>
+  <text>
+    <en>Background</en>
+    <tr>Fondo</tr>
+  </text>
+  <text>
+    <en>Bates number</en>
+    <tr>Número Bates</tr>
+  </text>
+  <text>
+    <en>Bates numbering ($bates)</en>
+    <tr>Numeración Bates ($bates)</tr>
+  </text>
+  <text>
+    <en>Bold</en>
+    <tr>Negrita</tr>
+  </text>
+  <text>
+    <en>Border</en>
+    <tr>Borde</tr>
+  </text>
+  <text>
+    <en>Bottom</en>
+    <tr>Inferior</tr>
+  </text>
+  <text>
+    <en>Color</en>
+    <tr>Color</tr>
+  </text>
+  <text>
+    <en>Date</en>
+    <tr>Fecha</tr>
+  </text>
+  <text>
+    <en>Dec</en>
+    <tr>dic</tr>
+  </text>
+  <text>
+    <en>Delete</en>
+    <tr>Borrar</tr>
+  </text>
+  <text>
+    <en>Digits</en>
+    <tr>Dígitos</tr>
+  </text>
+  <text>
+    <en>Draw text at the top and bottom of the pages of PDFs: a header and a footer, each with a left, center and right place, with variables such as the page label or the date. Unlike the labels, they change the pages themselves.</en>
+    <tr>Escribe texto arriba y abajo en las páginas de los PDF: un encabezado y un pie de página, cada uno con un lugar a la izquierda, en el centro y a la derecha, con variables como la etiqueta de la página o la fecha. A diferencia de las etiquetas, cambian las páginas mismas.</tr>
+  </text>
+  <text>
+    <en>Even pages only</en>
+    <tr>Solo las páginas pares</tr>
+  </text>
+  <text>
+    <en>Feb</en>
+    <tr>feb</tr>
+  </text>
+  <text>
+    <en>Footer center</en>
+    <tr>Pie, centro</tr>
+  </text>
+  <text>
+    <en>Footer left</en>
+    <tr>Pie, izquierda</tr>
+  </text>
+  <text>
+    <en>Footer right</en>
+    <tr>Pie, derecha</tr>
+  </text>
+  <text>
+    <en>For instance: py-foliation header-footer book.pdf --footer-center 'Page $pagelabel of $totalpages' --header-right '$date' --pages 9- -i</en>
+    <tr>Por ejemplo: py-foliation header-footer libro.pdf --footer-center 'Página
+$pagelabel de $totalpages' --header-right '$date' --pages 9- -i</tr>
+  </text>
+  <text>
+    <en>Header and Footer</en>
+    <tr>Encabezado y pie de página</tr>
+  </text>
+  <text>
+    <en>Header and footer</en>
+    <tr>Encabezado y pie de página</tr>
+  </text>
+  <text>
+    <en>Header and footer added (they are written when the file is saved)</en>
+    <tr>Encabezado y pie añadidos (se escriben al guardar el archivo)</tr>
+  </text>
+  <text>
+    <en>Header and footer added by py-foliation on {count} page: {pages}</en>
+    <tr>Encabezado y pie añadidos por py-foliation en {count} página: {pages}</tr>
+  </text>
+  <text>
+    <en>Header and footer added by py-foliation on {count} pages: {pages}</en>
+    <tr>Encabezado y pie añadidos por py-foliation en {count} páginas: {pages}</tr>
+  </text>
+  <text>
+    <en>Header and footer on these pages…</en>
+    <tr>Encabezado y pie en estas páginas…</tr>
+  </text>
+  <text>
+    <en>Header and footer on this page…</en>
+    <tr>Encabezado y pie en esta página…</tr>
+  </text>
+  <text>
+    <en>Header center</en>
+    <tr>Encabezado, centro</tr>
+  </text>
+  <text>
+    <en>Header left</en>
+    <tr>Encabezado, izquierda</tr>
+  </text>
+  <text>
+    <en>Header right</en>
+    <tr>Encabezado, derecha</tr>
+  </text>
+  <text>
+    <en>Headers and footers taken away (when the file is saved)</en>
+    <tr>Encabezados y pies quitados (al guardar el archivo)</tr>
+  </text>
+  <text>
+    <en>Insert:</en>
+    <tr>Insertar:</tr>
+  </text>
+  <text>
+    <en>Italic</en>
+    <tr>Cursiva</tr>
+  </text>
+  <text>
+    <en>Jan</en>
+    <tr>ene</tr>
+  </text>
+  <text>
+    <en>Jul</en>
+    <tr>jul</tr>
+  </text>
+  <text>
+    <en>Jun</en>
+    <tr>jun</tr>
+  </text>
+  <text>
+    <en>Keep these settings as a profile</en>
+    <tr>Guardar esta configuración como un perfil</tr>
+  </text>
+  <text>
+    <en>Left</en>
+    <tr>Izquierdo</tr>
+  </text>
+  <text>
+    <en>List this profile in the Header and Footer menu, to apply it at once</en>
+    <tr>Mostrar este perfil en el menú Encabezado y pie de página, para aplicarlo de una vez</tr>
+  </text>
+  <text>
+    <en>Mar</en>
+    <tr>mar</tr>
+  </text>
+  <text>
+    <en>Margins</en>
+    <tr>Márgenes</tr>
+  </text>
+  <text>
+    <en>Margins are the distances from the edges of the page to the header, the footer and the text at the sides. --shrink scales the content of the pages down so that the header and footer don't cover it.</en>
+    <tr>Los márgenes son las distancias de los bordes de la página al encabezado, al
+pie y al texto de los lados. --shrink reduce el contenido de las páginas para
+que el encabezado y el pie no lo tapen.</tr>
+  </text>
+  <text>
+    <en>May</en>
+    <tr>may</tr>
+  </text>
+  <text>
+    <en>NAME</en>
+    <tr>NOMBRE</tr>
+  </text>
+  <text>
+    <en>No profiles kept ({path})</en>
+    <tr>No hay perfiles guardados ({path})</tr>
+  </text>
+  <text>
+    <en>Nov</en>
+    <tr>nov</tr>
+  </text>
+  <text>
+    <en>Oct</en>
+    <tr>oct</tr>
+  </text>
+  <text>
+    <en>Odd pages only</en>
+    <tr>Solo las páginas impares</tr>
+  </text>
+  <text>
+    <en>Of those:</en>
+    <tr>De esas:</tr>
+  </text>
+  <text>
+    <en>Other</en>
+    <tr>Otras</tr>
+  </text>
+  <text>
+    <en>PAGES</en>
+    <tr>PÁGINAS</tr>
+  </text>
+  <text>
+    <en>POINTS</en>
+    <tr>PUNTOS</tr>
+  </text>
+  <text>
+    <en>Page</en>
+    <tr>Página</tr>
+  </text>
+  <text>
+    <en>Page label</en>
+    <tr>Etiqueta de página</tr>
+  </text>
+  <text>
+    <en>Page number</en>
+    <tr>Número de página</tr>
+  </text>
+  <text>
+    <en>Pages</en>
+    <tr>Páginas</tr>
+  </text>
+  <text>
+    <en>Pages:</en>
+    <tr>Páginas:</tr>
+  </text>
+  <text>
+    <en>Preview</en>
+    <tr>Vista previa</tr>
+  </text>
+  <text>
+    <en>Profile {name!r} forgotten</en>
+    <tr>Perfil {name!r} borrado</tr>
+  </text>
+  <text>
+    <en>Profile {name!r} kept in {path}</en>
+    <tr>Perfil {name!r} guardado en {path}</tr>
+  </text>
+  <text>
+    <en>Profile:</en>
+    <tr>Perfil:</tr>
+  </text>
+  <text>
+    <en>Profiles</en>
+    <tr>Perfiles</tr>
+  </text>
+  <text>
+    <en>Remove all</en>
+    <tr>Quitar todos</tr>
+  </text>
+  <text>
+    <en>Remove its header and footer</en>
+    <tr>Quitar su encabezado y pie</tr>
+  </text>
+  <text>
+    <en>Remove their header and footer</en>
+    <tr>Quitar su encabezado y pie</tr>
+  </text>
+  <text>
+    <en>Right</en>
+    <tr>Derecho</tr>
+  </text>
+  <text>
+    <en>SIZE</en>
+    <tr>TAMAÑO</tr>
+  </text>
+  <text>
+    <en>Save the profile</en>
+    <tr>Guardar el perfil</tr>
+  </text>
+  <text>
+    <en>Save…</en>
+    <tr>Guardar…</tr>
+  </text>
+  <text>
+    <en>Scale the content of the pages down so that the header and footer don't cover it</en>
+    <tr>Reducir el contenido de las páginas para que el encabezado y el pie no lo tapen</tr>
+  </text>
+  <text>
+    <en>Sep</en>
+    <tr>sept</tr>
+  </text>
+  <text>
+    <en>Show on menu</en>
+    <tr>Mostrar en el menú</tr>
+  </text>
+  <text>
+    <en>Shrink the pages</en>
+    <tr>Reducir las páginas</tr>
+  </text>
+  <text>
+    <en>TEXT</en>
+    <tr>TEXTO</tr>
+  </text>
+  <text>
+    <en>Take away the headers and footers py-foliation added to this file</en>
+    <tr>Quitar los encabezados y pies que py-foliation añadió a este archivo</tr>
+  </text>
+  <text>
+    <en>The fonts are the standard fonts of PDF, which every viewer has: they write Latin script, with its accents and signs, but not Greek or Cyrillic.</en>
+    <tr>Las fuentes son las estándar de PDF, que todo visor tiene: escriben la
+escritura latina, con sus acentos y signos, pero no la griega ni la cirílica.</tr>
+  </text>
+  <text>
+    <en>The header and footer don't go on this page.</en>
+    <tr>El encabezado y el pie no van en esta página.</tr>
+  </text>
+  <text>
+    <en>The name of the profile:</en>
+    <tr>El nombre del perfil:</tr>
+  </text>
+  <text>
+    <en>The pages of the file, from 1; LAST counts from the end</en>
+    <tr>Las páginas del archivo, desde 1; LAST cuenta desde el final</tr>
+  </text>
+  <text>
+    <en>The text of each place may hold variables, written with $ (put the text in single quotes, or the shell takes them as its own): $page, $pagelabel, $bookmark, $totalpages, $author, $filename, $filepath, $date, $shortdate, $time, $day, $month, $year, $shortyear, $hour, $longhour, $minute, $second, $ampm and $bates; $$ writes a $. A new line in the text (\n in --*-left and the rest) starts another line.</en>
+    <tr>El texto de cada lugar puede llevar variables, escritas con $ (ponga el texto
+entre comillas simples, o el shell las toma como suyas): $page, $pagelabel,
+$bookmark, $totalpages, $author, $filename, $filepath, $date, $shortdate,
+$time, $day, $month, $year, $shortyear, $hour, $longhour, $minute, $second,
+$ampm y $bates; $$ escribe un $. Un salto de línea en el texto (\n en
+--*-left y las demás) empieza otra línea.</tr>
+  </text>
+  <text>
+    <en>Top</en>
+    <tr>Superior</tr>
+  </text>
+  <text>
+    <en>Units</en>
+    <tr>Unidades</tr>
+  </text>
+  <text>
+    <en>Width</en>
+    <tr>Ancho</tr>
+  </text>
+  <text>
+    <en>a background color behind each text ('none': no background)</en>
+    <tr>un color de fondo detrás de cada texto ('none': sin fondo)</tr>
+  </text>
+  <text>
+    <en>a border around each text</en>
+    <tr>un borde alrededor de cada texto</tr>
+  </text>
+  <text>
+    <en>a profile needs a name</en>
+    <tr>un perfil necesita un nombre</tr>
+  </text>
+  <text>
+    <en>add headers and footers to PDFs</en>
+    <tr>añadir encabezados y pies de página a los PDF</tr>
+  </text>
+  <text>
+    <en>appearance</en>
+    <tr>apariencia</tr>
+  </text>
+  <text>
+    <en>background color</en>
+    <tr>color de fondo</tr>
+  </text>
+  <text>
+    <en>bold text</en>
+    <tr>texto en negrita</tr>
+  </text>
+  <text>
+    <en>border color</en>
+    <tr>color del borde</tr>
+  </text>
+  <text>
+    <en>bottom</en>
+    <tr>inferior</tr>
+  </text>
+  <text>
+    <en>centimeters</en>
+    <tr>centímetros</tr>
+  </text>
+  <text>
+    <en>color</en>
+    <tr>color</tr>
+  </text>
+  <text>
+    <en>e.g. 9-200 or 1,3,9-</en>
+    <tr>p. ej. 9-200 o 1,3,9-</tr>
+  </text>
+  <text>
+    <en>even and odd pages (with a profile that has only some)</en>
+    <tr>páginas pares e impares (con un perfil que tiene solo unas)</tr>
+  </text>
+  <text>
+    <en>even pages only</en>
+    <tr>solo las páginas pares</tr>
+  </text>
+  <text>
+    <en>forget a profile</en>
+    <tr>borrar un perfil</tr>
+  </text>
+  <text>
+    <en>headers and footers taken away</en>
+    <tr>encabezados y pies quitados</tr>
+  </text>
+  <text>
+    <en>inches</en>
+    <tr>pulgadas</tr>
+  </text>
+  <text>
+    <en>italic text</en>
+    <tr>texto en cursiva</tr>
+  </text>
+  <text>
+    <en>keep these settings as a profile</en>
+    <tr>guardar esta configuración como un perfil</tr>
+  </text>
+  <text>
+    <en>left</en>
+    <tr>izquierdo</tr>
+  </text>
+  <text>
+    <en>list the profiles kept</en>
+    <tr>listar los perfiles guardados</tr>
+  </text>
+  <text>
+    <en>margins</en>
+    <tr>márgenes</tr>
+  </text>
+  <text>
+    <en>no page is chosen</en>
+    <tr>no hay ninguna página elegida</tr>
+  </text>
+  <text>
+    <en>no text for the header or the footer</en>
+    <tr>no hay texto para el encabezado ni para el pie</tr>
+  </text>
+  <text>
+    <en>odd pages only</en>
+    <tr>solo las páginas impares</tr>
+  </text>
+  <text>
+    <en>on {count} page</en>
+    <tr>en {count} página</tr>
+  </text>
+  <text>
+    <en>on {count} pages</en>
+    <tr>en {count} páginas</tr>
+  </text>
+  <text>
+    <en>pages</en>
+    <tr>páginas</tr>
+  </text>
+  <text>
+    <en>points</en>
+    <tr>puntos</tr>
+  </text>
+  <text>
+    <en>profiles and removing</en>
+    <tr>perfiles y quitar</tr>
+  </text>
+  <text>
+    <en>right</en>
+    <tr>derecho</tr>
+  </text>
+  <text>
+    <en>scale the content of the pages down to leave room for the header and footer</en>
+    <tr>reducir el contenido de las páginas para dejar sitio al encabezado y al pie</tr>
+  </text>
+  <text>
+    <en>show the header and footer of the first and last pages, without writing anything</en>
+    <tr>mostrar el encabezado y el pie de la primera y la última página, sin escribir nada</tr>
+  </text>
+  <text>
+    <en>start from the settings of this profile</en>
+    <tr>partir de la configuración de este perfil</tr>
+  </text>
+  <text>
+    <en>take away the headers and footers py-foliation added (on --pages, or all)</en>
+    <tr>quitar los encabezados y pies que añadió py-foliation (en --pages, o en todas)</tr>
+  </text>
+  <text>
+    <en>text</en>
+    <tr>texto</tr>
+  </text>
+  <text>
+    <en>text after the number</en>
+    <tr>texto después del número</tr>
+  </text>
+  <text>
+    <en>text before the number</en>
+    <tr>texto antes del número</tr>
+  </text>
+  <text>
+    <en>the Bates number starts at 0 or more, with 1 to 20 digits</en>
+    <tr>el número Bates empieza en 0 o más, con 1 a 20 dígitos</tr>
+  </text>
+  <text>
+    <en>the Bates number: the prefix, the number and the suffix (see Bates numbering)</en>
+    <tr>el número Bates: el prefijo, el número y el sufijo (véase Numeración Bates)</tr>
+  </text>
+  <text>
+    <en>the author of the document (as its properties give it)</en>
+    <tr>el autor del documento (según sus propiedades)</tr>
+  </text>
+  <text>
+    <en>the bookmark the page is under</en>
+    <tr>el marcador bajo el que está la página</tr>
+  </text>
+  <text>
+    <en>the color of the border</en>
+    <tr>el color del borde</tr>
+  </text>
+  <text>
+    <en>the color of the text</en>
+    <tr>el color del texto</tr>
+  </text>
+  <text>
+    <en>the day of the month</en>
+    <tr>el día del mes</tr>
+  </text>
+  <text>
+    <en>the digits of the number, at least (default: 6)</en>
+    <tr>los dígitos del número, como mínimo (por defecto: 6)</tr>
+  </text>
+  <text>
+    <en>the first number (default: 1)</en>
+    <tr>el primer número (por defecto: 1)</tr>
+  </text>
+  <text>
+    <en>the font (default: helvetica)</en>
+    <tr>la fuente (por defecto: helvetica)</tr>
+  </text>
+  <text>
+    <en>the font must be helvetica, times or courier (not {value!r})</en>
+    <tr>la fuente debe ser helvetica, times o courier (no {value!r})</tr>
+  </text>
+  <text>
+    <en>the font size (default: 10)</en>
+    <tr>el tamaño de la fuente (por defecto: 10)</tr>
+  </text>
+  <text>
+    <en>the font size must be from 1 to 200 points (not {value})</en>
+    <tr>el tamaño de la fuente debe ir de 1 a 200 puntos (no {value})</tr>
+  </text>
+  <text>
+    <en>the full path of the file</en>
+    <tr>la ruta completa del archivo</tr>
+  </text>
+  <text>
+    <en>the header and footer leave too little room to shrink the pages into</en>
+    <tr>el encabezado y el pie dejan muy poco sitio para reducir las páginas</tr>
+  </text>
+  <text>
+    <en>the hour, from 0 to 23</en>
+    <tr>la hora, de 0 a 23</tr>
+  </text>
+  <text>
+    <en>the hour, from 1 to 12</en>
+    <tr>la hora, de 1 a 12</tr>
+  </text>
+  <text>
+    <en>the label of the page</en>
+    <tr>la etiqueta de la página</tr>
+  </text>
+  <text>
+    <en>the minute</en>
+    <tr>el minuto</tr>
+  </text>
+  <text>
+    <en>the month, in two digits</en>
+    <tr>el mes, en dos dígitos</tr>
+  </text>
+  <text>
+    <en>the name of the file</en>
+    <tr>el nombre del archivo</tr>
+  </text>
+  <text>
+    <en>the number of pages of the document</en>
+    <tr>el número de páginas del documento</tr>
+  </text>
+  <text>
+    <en>the page number (of the file, from 1)</en>
+    <tr>el número de la página (del archivo, desde 1)</tr>
+  </text>
+  <text>
+    <en>the pages must be all, even or odd (not {value!r})</en>
+    <tr>las páginas deben ser all, even u odd (no {value!r})</tr>
+  </text>
+  <text>
+    <en>the pages, as 9-200 or 1,3,9- (default: all; LAST counts from the end)</en>
+    <tr>las páginas, como 9-200 o 1,3,9- (por defecto: todas; LAST cuenta desde el final)</tr>
+  </text>
+  <text>
+    <en>the second</en>
+    <tr>el segundo</tr>
+  </text>
+  <text>
+    <en>the standard PDF fonts cannot write {chars!r} (page {page})</en>
+    <tr>las fuentes estándar de PDF no pueden escribir {chars!r} (página {page})</tr>
+  </text>
+  <text>
+    <en>the text of the {place}</en>
+    <tr>el texto del lugar «{place}»</tr>
+  </text>
+  <text>
+    <en>the time, as 3:05 PM</en>
+    <tr>la hora, como 3:05 PM</tr>
+  </text>
+  <text>
+    <en>the units must be in, cm or pt (not {value!r})</en>
+    <tr>las unidades deben ser in, cm o pt (no {value!r})</tr>
+  </text>
+  <text>
+    <en>the units of the margins (default: cm)</en>
+    <tr>las unidades de los márgenes (por defecto: cm)</tr>
+  </text>
+  <text>
+    <en>the width of the border</en>
+    <tr>el ancho del borde</tr>
+  </text>
+  <text>
+    <en>the width of the border must be from 0 to 20 points</en>
+    <tr>el ancho del borde debe ir de 0 a 20 puntos</tr>
+  </text>
+  <text>
+    <en>the year, in four digits</en>
+    <tr>el año, en cuatro dígitos</tr>
+  </text>
+  <text>
+    <en>the year, in two digits</en>
+    <tr>el año, en dos dígitos</tr>
+  </text>
+  <text>
+    <en>the {side} margin</en>
+    <tr>el margen {side}</tr>
+  </text>
+  <text>
+    <en>the {what} margin cannot be negative</en>
+    <tr>el margen {what} no puede ser negativo</tr>
+  </text>
+  <text>
+    <en>the {what} must be a color as #RRGGBB (not {value!r})</en>
+    <tr>el {what} debe ser un color como #RRGGBB (no {value!r})</tr>
+  </text>
+  <text>
+    <en>there is no profile {name!r} (see --list-profiles)</en>
+    <tr>no hay ningún perfil {name!r} (véase --list-profiles)</tr>
+  </text>
+  <text>
+    <en>today's date, as 11/28/07</en>
+    <tr>la fecha de hoy, como 28/11/07</tr>
+  </text>
+  <text>
+    <en>today's date, as Nov 28, 2007</en>
+    <tr>la fecha de hoy, como 28 nov 2007</tr>
+  </text>
+  <text>
+    <en>top</en>
+    <tr>superior</tr>
+  </text>
+  <text>
+    <en>with --save-profile: list the profile in the window's Header and Footer menu</en>
+    <tr>con --save-profile: mostrar el perfil en el menú Encabezado y pie de página de la ventana</tr>
+  </text>
+  <text>
+    <en>{hour}:{minute} {ampm}</en>
+    <tr>{hour}:{minute} {ampm}</tr>
+  </text>
+  <text>
+    <en>{month} {day}, {year}</en>
+    <tr>{day} {month} {year}</tr>
+  </text>
+  <text>
+    <en>{month}/{day}/{year}</en>
+    <tr>{day}/{month}/{year}</tr>
+  </text>
 </interface>

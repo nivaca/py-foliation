@@ -18,6 +18,7 @@ argumentos posicionales:
     copy               dar a varios PDF las etiquetas de página de otro
     view               mostrar o establecer cómo se abren los PDF en un
                        visor
+    header-footer      añadir encabezados y pies de página a los PDF
     completion         imprimir el script de completado de un shell
     interface          mostrar o elegir el idioma de la interfaz
 
@@ -224,6 +225,141 @@ Vistas de página: actual-size (el tamaño que tendría impresa), fit-width
 
 Por ejemplo: py-foliation view libro.pdf --layout cover --page-view fit-page
 --open-at 9 -i
+.fi
+.SS header-footer
+.nf
+uso: py-foliation header-footer [-h] [--interface {en,es}]
+                                [--header-left TEXTO]
+                                [--header-center TEXTO]
+                                [--header-right TEXTO] [--footer-left TEXTO]
+                                [--footer-center TEXTO]
+                                [--footer-right TEXTO] [--units {in,cm,pt}]
+                                [--top TAMAÑO] [--bottom TAMAÑO]
+                                [--left TAMAÑO] [--right TAMAÑO]
+                                [--shrink | --no-shrink]
+                                [--font {helvetica,times,courier}]
+                                [--size PUNTOS] [--color #RRGGBB]
+                                [--bold | --no-bold]
+                                [--italic | --no-italic]
+                                [--border | --no-border]
+                                [--border-color #RRGGBB]
+                                [--border-width PUNTOS]
+                                [--background #RRGGBB] [--pages PÁGINAS]
+                                [--even | --odd | --all-pages]
+                                [--bates-prefix TEXTO] [--bates-start N]
+                                [--bates-digits N] [--bates-suffix TEXTO]
+                                [--profile NOMBRE] [--save-profile NOMBRE]
+                                [--show-on-menu | --no-show-on-menu]
+                                [--list-profiles] [--delete-profile NOMBRE]
+                                [--remove] [-o OUTPUT | -i] [-n]
+                                [--password CONTRASEÑA]
+                                [ARCHIVO ...]
+
+Escribe texto arriba y abajo en las páginas de los PDF: un encabezado y un pie de página, cada uno con un lugar a la izquierda, en el centro y a la derecha, con variables como la etiqueta de la página o la fecha. A diferencia de las etiquetas, cambian las páginas mismas.
+
+argumentos posicionales:
+  ARCHIVO               PDF de origen
+
+opciones:
+  -h, --help            mostrar esta ayuda y terminar
+  --interface {en,es}   el idioma de la interfaz, solo para esta ejecución
+                        (para conservar una elección, use la orden
+                        'interface')
+  -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
+                        <entrada>-labelled.pdf)
+  -i, --in-place        cambiar los propios archivos de entrada
+  -n, --dry-run         mostrar el encabezado y el pie de la primera y la
+                        última página, sin escribir nada
+  --password CONTRASEÑA
+                        la contraseña para abrir los PDF (su protección se
+                        conserva al guardarlos)
+
+texto:
+  --header-left TEXTO   el texto del lugar «encabezado, izquierda»
+  --header-center TEXTO
+                        el texto del lugar «encabezado, centro»
+  --header-right TEXTO  el texto del lugar «encabezado, derecha»
+  --footer-left TEXTO   el texto del lugar «pie, izquierda»
+  --footer-center TEXTO
+                        el texto del lugar «pie, centro»
+  --footer-right TEXTO  el texto del lugar «pie, derecha»
+
+márgenes:
+  --units {in,cm,pt}    las unidades de los márgenes (por defecto: cm)
+  --top TAMAÑO          el margen superior
+  --bottom TAMAÑO       el margen inferior
+  --left TAMAÑO         el margen izquierdo
+  --right TAMAÑO        el margen derecho
+  --shrink, --no-shrink
+                        reducir el contenido de las páginas para dejar sitio
+                        al encabezado y al pie
+
+apariencia:
+  --font {helvetica,times,courier}
+                        la fuente (por defecto: helvetica)
+  --size PUNTOS         el tamaño de la fuente (por defecto: 10)
+  --color #RRGGBB       el color del texto
+  --bold, --no-bold     texto en negrita
+  --italic, --no-italic
+                        texto en cursiva
+  --border, --no-border
+                        un borde alrededor de cada texto
+  --border-color #RRGGBB
+                        el color del borde
+  --border-width PUNTOS
+                        el ancho del borde
+  --background #RRGGBB  un color de fondo detrás de cada texto ('none': sin
+                        fondo)
+
+páginas:
+  --pages PÁGINAS       las páginas, como 9-200 o 1,3,9- (por defecto:
+                        todas; LAST cuenta desde el final)
+  --even                solo las páginas pares
+  --odd                 solo las páginas impares
+  --all-pages           páginas pares e impares (con un perfil que tiene
+                        solo unas)
+
+Numeración Bates ($bates):
+  --bates-prefix TEXTO  texto antes del número
+  --bates-start N       el primer número (por defecto: 1)
+  --bates-digits N      los dígitos del número, como mínimo (por defecto: 6)
+  --bates-suffix TEXTO  texto después del número
+
+perfiles y quitar:
+  --profile NOMBRE      partir de la configuración de este perfil
+  --save-profile NOMBRE
+                        guardar esta configuración como un perfil
+  --show-on-menu, --no-show-on-menu
+                        con --save-profile: mostrar el perfil en el menú
+                        Encabezado y pie de página de la ventana
+  --list-profiles       listar los perfiles guardados
+  --delete-profile NOMBRE
+                        borrar un perfil
+  --remove              quitar los encabezados y pies que añadió py-
+                        foliation (en --pages, o en todas)
+
+El texto de cada lugar puede llevar variables, escritas con $ (ponga el texto
+entre comillas simples, o el shell las toma como suyas): $page, $pagelabel,
+$bookmark, $totalpages, $author, $filename, $filepath, $date, $shortdate,
+$time, $day, $month, $year, $shortyear, $hour, $longhour, $minute, $second,
+$ampm y $bates; $$ escribe un $. Un salto de línea en el texto (\en en
+--*-left y las demás) empieza otra línea.
+
+Las fuentes son las estándar de PDF, que todo visor tiene: escriben la
+escritura latina, con sus acentos y signos, pero no la griega ni la cirílica.
+
+Los márgenes son las distancias de los bordes de la página al encabezado, al
+pie y al texto de los lados. --shrink reduce el contenido de las páginas para
+que el encabezado y el pie no lo tapen.
+
+Un encabezado y pie añadidos de nuevo a una página reemplazan los que
+py-foliation había añadido antes, y --remove los quita, dejando las páginas
+como estaban. Los perfiles guardan una configuración para volver a usarla
+(--save-profile NOMBRE, y luego --profile NOMBRE); las opciones que se den se
+ponen sobre las del perfil.
+
+Por ejemplo: py-foliation header-footer libro.pdf --footer-center 'Página
+$pagelabel de $totalpages' --header-right '$date' --pages 9- -i
 .fi
 .SS completion
 .nf

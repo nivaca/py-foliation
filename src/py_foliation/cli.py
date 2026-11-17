@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import sys
+from datetime import datetime
 from pathlib import Path
 
-from . import config, interface, labels, view
+from . import config, headfoot, interface, labels, view
 from .files import open_pdf, read_list, save_pdf
 from .interface import N_, ntr, tr
 from .labels import LabelError, pages_text, set_command
 
-COMMANDS = ("show", "set", "clear", "copy", "view", "completion", "interface")
+COMMANDS = ("show", "set", "clear", "copy", "view", "header-footer", "completion", "interface")
 
 SET_EPILOG = N_("""A range is written PAGES:STYLE[:START[:PREFIX]]:
 
@@ -54,6 +56,29 @@ or a percentage (150%).
 
 For instance: py-foliation view book.pdf --layout cover --page-view fit-page
 --open-at 9 -i""")
+
+
+HEADER_FOOTER_EPILOG = N_("""The text of each place may hold variables, written with $ (put the text in
+single quotes, or the shell takes them as its own): $page, $pagelabel,
+$bookmark, $totalpages, $author, $filename, $filepath, $date, $shortdate,
+$time, $day, $month, $year, $shortyear, $hour, $longhour, $minute, $second,
+$ampm and $bates; $$ writes a $. A new line in the text (\\n in --*-left and
+the rest) starts another line.
+
+The fonts are the standard fonts of PDF, which every viewer has: they write
+Latin script, with its accents and signs, but not Greek or Cyrillic.
+
+Margins are the distances from the edges of the page to the header, the
+footer and the text at the sides. --shrink scales the content of the pages
+down so that the header and footer don't cover it.
+
+A header and footer added again to a page replaces the one py-foliation
+added before, and --remove takes them away, putting the pages back as they
+were. Profiles keep settings to use again (--save-profile NAME, then
+--profile NAME); the options given are laid over those of the profile.
+
+For instance: py-foliation header-footer book.pdf --footer-center 'Page
+$pagelabel of $totalpages' --header-right '$date' --pages 9- -i""")
 
 
 def interface_option(argv: list[str]) -> str | None:
@@ -158,6 +183,60 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
                     help=tr("the page it opens at (the pages of the file, from 1; LAST counts from the end)"))
     output_options(sp, tr("show the view the files would get, without writing anything"))
 
+    sp = sub.add_parser("header-footer", parents=[common], help=tr("add headers and footers to PDFs"),
+                        description=tr("Draw text at the top and bottom of the pages of PDFs: a header and "
+                                       "a footer, each with a left, center and right place, with variables "
+                                       "such as the page label or the date. Unlike the labels, they change "
+                                       "the pages themselves."),
+                        epilog=translate_paragraphs(HEADER_FOOTER_EPILOG),
+                        formatter_class=argparse.RawDescriptionHelpFormatter)
+    sp.add_argument("inputs", nargs="*", type=Path, metavar=tr("FILE"), help=tr("source PDF"))
+    g = sp.add_argument_group(tr("text"))
+    for slot in headfoot.SLOTS:
+        g.add_argument("--" + slot.replace("_", "-"), dest=slot, metavar=tr("TEXT"),
+                       help=tr("the text of the {place}", place=tr(headfoot.SLOT_TITLES[slot]).lower()))
+    g = sp.add_argument_group(tr("margins"))
+    g.add_argument("--units", choices=list(headfoot.POINTS), help=tr("the units of the margins (default: cm)"))
+    for side in ("top", "bottom", "left", "right"):
+        g.add_argument("--" + side, type=float, metavar=tr("SIZE"),
+                       help=tr("the {side} margin", side=tr(headfoot.SIDES[side])))
+    g.add_argument("--shrink", action=argparse.BooleanOptionalAction, default=None,
+                   help=tr("scale the content of the pages down to leave room for the header and footer"))
+    g = sp.add_argument_group(tr("appearance"))
+    g.add_argument("--font", choices=list(headfoot.FAMILIES), help=tr("the font (default: helvetica)"))
+    g.add_argument("--size", type=float, metavar=tr("POINTS"), help=tr("the font size (default: 10)"))
+    g.add_argument("--color", metavar="#RRGGBB", help=tr("the color of the text"))
+    g.add_argument("--bold", action=argparse.BooleanOptionalAction, default=None, help=tr("bold text"))
+    g.add_argument("--italic", action=argparse.BooleanOptionalAction, default=None, help=tr("italic text"))
+    g.add_argument("--border", action=argparse.BooleanOptionalAction, default=None,
+                   help=tr("a border around each text"))
+    g.add_argument("--border-color", metavar="#RRGGBB", help=tr("the color of the border"))
+    g.add_argument("--border-width", type=float, metavar=tr("POINTS"), help=tr("the width of the border"))
+    g.add_argument("--background", metavar="#RRGGBB", help=tr("a background color behind each text ('none': no background)"))
+    g = sp.add_argument_group(tr("pages"))
+    g.add_argument("--pages", metavar=tr("PAGES"),
+                   help=tr("the pages, as 9-200 or 1,3,9- (default: all; LAST counts from the end)"))
+    parity = g.add_mutually_exclusive_group()
+    parity.add_argument("--even", dest="parity", action="store_const", const="even", help=tr("even pages only"))
+    parity.add_argument("--odd", dest="parity", action="store_const", const="odd", help=tr("odd pages only"))
+    parity.add_argument("--all-pages", dest="parity", action="store_const", const="all",
+                        help=tr("even and odd pages (with a profile that has only some)"))
+    g = sp.add_argument_group(tr("Bates numbering ($bates)"))
+    g.add_argument("--bates-prefix", metavar=tr("TEXT"), help=tr("text before the number"))
+    g.add_argument("--bates-start", type=int, metavar="N", help=tr("the first number (default: 1)"))
+    g.add_argument("--bates-digits", type=int, metavar="N", help=tr("the digits of the number, at least (default: 6)"))
+    g.add_argument("--bates-suffix", metavar=tr("TEXT"), help=tr("text after the number"))
+    g = sp.add_argument_group(tr("profiles and removing"))
+    g.add_argument("--profile", metavar=tr("NAME"), help=tr("start from the settings of this profile"))
+    g.add_argument("--save-profile", metavar=tr("NAME"), help=tr("keep these settings as a profile"))
+    g.add_argument("--show-on-menu", action=argparse.BooleanOptionalAction, default=None,
+                   help=tr("with --save-profile: list the profile in the window's Header and Footer menu"))
+    g.add_argument("--list-profiles", action="store_true", help=tr("list the profiles kept"))
+    g.add_argument("--delete-profile", metavar=tr("NAME"), help=tr("forget a profile"))
+    g.add_argument("--remove", action="store_true",
+                   help=tr("take away the headers and footers py-foliation added (on --pages, or all)"))
+    output_options(sp, tr("show the header and footer of the first and last pages, without writing anything"))
+
     sp = sub.add_parser("completion", parents=[common], help=tr("print the completion script of a shell"),
                         description=tr("Print the script that completes py-foliation's commands, options and "
                                        "files in SHELL. For instance: py-foliation completion fish > "
@@ -192,6 +271,7 @@ def show(a) -> int:
                 n = len(pdf.pages)
                 ranges = labels.read_labels(pdf)
                 shown = view.read_view(pdf)
+                stamped = headfoot.pages_with(pdf)
         except LabelError as e:
             report(e)
             failed = True
@@ -209,6 +289,10 @@ def show(a) -> int:
                 failed = True
         else:
             print_ranges(path, ranges, n, shown)
+            if stamped:
+                print(ntr("Header and footer added by py-foliation on {count} page: {pages}",
+                          "Header and footer added by py-foliation on {count} pages: {pages}", len(stamped),
+                          pages=headfoot.compact_pages(stamped)))
     return 1 if failed else 0
 
 
@@ -351,6 +435,82 @@ def view_command(a) -> int:
                   write=view.write_view, describe=lambda v, n: print_view(v, tr("When it is opened:")))
 
 
+def header_footer_settings(a) -> headfoot.HeaderFooter:
+    """The settings the options give, laid over those of --profile (or the defaults)."""
+    base = headfoot.HeaderFooter()
+    if a.profile:
+        profiles = headfoot.read_profiles()
+        if a.profile not in profiles:
+            raise LabelError(tr("there is no profile {name!r} (see --list-profiles)", name=a.profile))
+        base = profiles[a.profile]
+    changes = {}
+    for slot in headfoot.SLOTS:
+        if getattr(a, slot) is not None:
+            changes[slot] = getattr(a, slot).replace("\\n", "\n")
+    for key in ("units", "top", "bottom", "left", "right", "shrink", "font", "size", "color", "bold", "italic",
+                "border", "border_color", "border_width", "pages", "parity", "bates_prefix", "bates_start",
+                "bates_digits", "bates_suffix", "show_on_menu"):
+        if getattr(a, key) is not None:
+            changes[key] = getattr(a, key)
+    if a.background is not None:
+        changes["background"] = "" if a.background.strip().lower() in ("", "none") else a.background
+    if a.save_profile:
+        changes["name"] = a.save_profile
+    return headfoot.check(dataclasses.replace(base, **changes))
+
+
+def print_header_footer(made, n: int) -> None:
+    change, doc = made
+    if change.hf is None:
+        print("  " + tr("headers and footers taken away"))
+        return
+    texts = headfoot.page_texts(change.hf, doc, datetime.now())
+    for number, page in (texts[0], texts[-1]) if len(texts) > 1 else texts[:1]:
+        print("  " + tr("page {page}", page=number) + ":")
+        for slot, text in page.items():
+            if text.strip():
+                print(f"    {tr(headfoot.SLOT_TITLES[slot])}: {text}".replace("\n", " / "))
+    print("  " + ntr("on {count} page", "on {count} pages", len(texts)))
+
+
+def header_footer(a) -> int:
+    if a.list_profiles:
+        profiles = headfoot.read_profiles()
+        if not profiles:
+            print(tr("No profiles kept ({path})", path=headfoot.profiles_path()))
+        for name, hf in profiles.items():
+            texts = "; ".join(f"{tr(headfoot.SLOT_TITLES[s])}: {t}" for s, t in hf.texts().items() if t.strip())
+            print(f"  {'*' if hf.show_on_menu else ' '} {name}  ({texts})")
+        return 0
+    if a.delete_profile:
+        if not headfoot.delete_profile(a.delete_profile):
+            raise LabelError(tr("there is no profile {name!r} (see --list-profiles)", name=a.delete_profile))
+        print(tr("Profile {name!r} forgotten", name=a.delete_profile))
+        return 0
+    hf = None if a.remove else header_footer_settings(a)
+    if a.save_profile:
+        try:
+            path = headfoot.save_profile(hf)
+        except OSError as e:
+            raise LabelError(tr("Could not keep the setting: {error}", error=e)) from None
+        print(tr("Profile {name!r} kept in {path}", name=a.save_profile, path=path))
+        if not a.inputs:
+            return 0
+    if not a.inputs:
+        raise LabelError(tr("no PDF given (the files must end in .pdf)"))
+    pages = a.pages or ""
+
+    def make(pdf, n):
+        doc = headfoot.document_of(pdf, Path(pdf.filename))
+        change = headfoot.Change(None, pages) if hf is None else headfoot.Change(hf)
+        if hf is not None:
+            headfoot.page_texts(hf, doc, datetime.now())  # (the texts can be written, before anything is)
+        return change, doc
+
+    return change(a, a.inputs, make, write=lambda pdf, made: made[0].apply(pdf, made[1]),
+                  describe=print_header_footer)
+
+
 def completion(a) -> int:
     from .completion import script
     print(script(a.shell, build_parser()), end="")
@@ -389,7 +549,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     a, extra = parser.parse_known_args(argv)
     # (argparse takes the positionals of a command in one go: those after an option are left over)
-    if extra and a.command in ("set", "show", "clear", "copy", "view") \
+    if extra and a.command in ("set", "show", "clear", "copy", "view", "header-footer") \
             and not any(t.startswith("-") and t != "-" for t in extra):
         if a.command == "set":
             a.items += extra
@@ -401,6 +561,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
     commands = {"show": show, "set": set_labels, "clear": clear, "copy": copy, "view": view_command,
+                "header-footer": header_footer,
                 "completion": completion, "interface": choose_interface}
     try:
         return commands[a.command](a)

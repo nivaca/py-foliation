@@ -35,6 +35,8 @@
       <li xml:lang="es">Etiquetas de una lista, una para cada página, y copiadas de otro PDF</li>
       <li>The initial view of the file: page layout (Single, Facing, Cover …), page view and first page</li>
       <li xml:lang="es">La vista inicial del archivo: disposición de página (Una página, Páginas enfrentadas, Portada …), vista de página y primera página</li>
+      <li>Headers and footers: the page label, the page number, the date, Bates numbers or any text, with profiles</li>
+      <li xml:lang="es">Encabezados y pies de página: la etiqueta de página, el número de página, la fecha, números Bates o cualquier texto, con perfiles</li>
       <li>A command line with the same features, in English or Spanish</li>
       <li xml:lang="es">Una línea de órdenes con las mismas funciones, en inglés o en español</li>
     </ul>

@@ -10,7 +10,7 @@ pages of the file.  Only the labels change; the pages themselves are left
 as they are.  Nicolas Vaughan made it in 2026.  It has a window, for
 seeing and editing the labels page by page, and a command line, for doing
 the same in scripts, in English or in Spanish.  Here I explain how it was
-made, in seven stages.
+made, in eight stages.
 
 py-foliation is free software, under the GNU General Public License,
 version 3 or later.  It is written in Python and relies on pikepdf (based
@@ -188,15 +188,53 @@ went to `numbers.py`, the reading and writing of files that the command
 line and the window share to `files.py`, and the widgets and thumbnails of
 the window to modules of their own.
 
+8. Headers and footers
+----------------------
+
+Everything before changes what a PDF says about its pages; headers and
+footers change the pages.  They follow the options of Xodo PDF Studio: a
+left, center and right place in each, with variables (`$pagelabel`,
+`$page`, `$totalpages`, `$bookmark`, the date and time, `$bates` …),
+margins in inches, centimeters or points, the font, its size, color, bold
+and italic, a border and a background, the pages (a list of them, and of
+those all, the even or the odd ones), Bates numbering, an option that
+shrinks the content of the pages to leave room, and profiles that keep the
+settings, some of them listed in the menu.
+
+The text is drawn in the standard fonts of PDF, Helvetica, Times and
+Courier, which every viewer has, so nothing has to be embedded and no new
+dependency is needed; the price is that they write Latin script only.  To
+place text left, centered or right, the program needs the width of every
+character: `fontmetrics.py` has them, made by `tools/fontmetrics.py` from
+the URW fonts, whose metrics are those of Adobe's.
+
+`headfoot.py` draws them on each page in a content stream of its own,
+after the original content, which is wrapped in `q … Q` so that nothing it
+leaves set can change them, and marks them as pagination artifacts, as
+PDF asks for headers and footers.  On a rotated page they are drawn as the
+page is shown, so they stay upright at its top and bottom.  To shrink a
+page, its content is scaled and the rectangles of its links are moved with
+it.  A record in the page dictionary names everything that was added and
+moved, so the header and footer can be taken away again, or replaced by
+another, leaving the page exactly as it was.
+
+The command line has `header-footer`, and `show` says which pages have
+one.  In the window, a dialog has every option and a preview of any page;
+the header and footer are shown at once, in a copy of the file, and are
+written when the file is saved, undone and redone like the labels.
+
 Testing
 -------
 
-The program has 104 automated tests (`tests/`), run with pytest.  They
+The program has 118 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, the reading and
 writing of the number tree, including odd trees, the ranges found in
-lists of labels, and the view when the file is opened, written and read
-back in every form, with what the program does not understand kept.
+lists of labels, the view when the file is opened, written and read
+back in every form, with what the program does not understand kept, and
+headers and footers: their variables, their place on the page, as
+pdftotext reads it, on rotated pages too, and their removal, which must
+give the pages back byte for byte.
 The command line is run from start to finish on the example document,
 docs/example/numbers-100.pdf, whose pages each show their number, and on
 broken input.  The window is tested without a screen, with Qt's

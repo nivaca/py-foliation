@@ -11,7 +11,7 @@ from pathlib import Path
 import pikepdf
 from pikepdf import Pdf
 
-from . import labels
+from . import headfoot, labels
 from .interface import tr
 from .labels import LabelError, Range
 from .view import View, write_view
@@ -41,17 +41,27 @@ def save_pdf(pdf: Pdf, out: Path) -> None:
         raise LabelError(tr("{path} cannot be written: {error}", path=out, error=e)) from None
 
 
+def apply_all(pdf: Pdf, ranges: list[Range], view: View | None = None, changes=(), path: Path | None = None) -> None:
+    """Give PDF these page labels, VIEW (if given: see view.write_view) and the header and footer
+    CHANGES (headfoot.Change, in order; their variables see these labels and PATH)."""
+    labels.write_labels(pdf, ranges)
+    if view is not None:
+        write_view(pdf, view)
+    if changes:
+        doc = headfoot.document_of(pdf, path, labels.page_labels(ranges, len(pdf.pages)))
+        for change in changes:
+            change.apply(pdf, doc)
+
+
 def write_copy(source: Path, ranges: list[Range], target: Path, password: str = "",
-               view: View | None = None) -> None:
-    """SOURCE with these page labels (and VIEW, if given: see view.write_view), saved as
-    TARGET (safely: TARGET may be SOURCE), keeping its protection if it has one."""
+               view: View | None = None, changes=()) -> None:
+    """SOURCE with these page labels, VIEW and header and footer CHANGES (see apply_all), saved
+    as TARGET (safely: TARGET may be SOURCE), keeping its protection if it has one."""
     fd, tmp = tempfile.mkstemp(suffix=".pdf", dir=target.parent)
     os.close(fd)
     try:
         with pikepdf.open(source, password=password) as pdf:
-            labels.write_labels(pdf, ranges)
-            if view is not None:
-                write_view(pdf, view)
+            apply_all(pdf, ranges, view, changes, source)
             _save(pdf, tmp)
         os.replace(tmp, target)
     except BaseException:

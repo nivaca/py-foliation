@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import tempfile
 from pathlib import Path
 
 import pikepdf
@@ -18,12 +19,13 @@ from PySide6.QtWidgets import (
     QTableWidget, QVBoxLayout, QWidget,
 )
 
-from .. import __version__, config, interface, labels, view
+from .. import __version__, config, headfoot, interface, labels, view
 from ..view import View, read_view
 from ..files import read_list, write_copy
 from ..interface import tr
 from ..labels import LabelError, Range
 from . import thumbnails
+from .headfoot_dialog import ask_header_footer
 from .widgets import FIELDS, LABELS, NumberDialog, edited_signal, fit_columns, range_row
 
 RECENT = 10  # documents in File ▸ Open recent
@@ -66,8 +68,14 @@ class MainWindow(QMainWindow):
         self.saved: list[Range] = []  # the labels of the file
         self.opening = View()  # the view of the document when it is opened
         self.saved_opening = View()  # the one the file has
-        self.undo_stack: list[tuple[list[Range], View]] = []  # (ranges, view) before each change
-        self.redo_stack: list[tuple[list[Range], View]] = []
+        # headers and footers to add or remove when the file is saved (headfoot.Change, in order)
+        self.hf_changes: tuple[headfoot.Change, ...] = ()
+        self.stamped: list[int] = []  # the pages of the file with a header or footer added by py-foliation
+        # (ranges, view, header and footer changes) before each change
+        self.undo_stack: list[tuple[list[Range], View, tuple]] = []
+        self.redo_stack: list[tuple[list[Range], View, tuple]] = []
+        self._previewed = None  # what the preview shows: the file, or a copy with the changes
+        self._tmpdir: tempfile.TemporaryDirectory | None = None
         self.password = ""  # (of the open document)
         self._thumbs: dict[int, QIcon] = {}  # page (1-based) -> its thumbnail
         self._blank: QIcon | None = None
@@ -213,6 +221,11 @@ class MainWindow(QMainWindow):
         self.m_view = m
         m.aboutToShow.connect(self._fill_view_menu)
         self._fill_view_menu()
+        m = self.menuBar().addMenu(tr("&Pages"))
+        self.m_headfoot = m.addMenu(tr("Header and Footer"))
+        self.m_headfoot.aboutToShow.connect(self._fill_headfoot_menu)
+        self.m_headfoot.setToolTipsVisible(True)
+        self._fill_headfoot_menu()
         m = self.menuBar().addMenu(tr("&Settings"))
         lang = m.addMenu(tr("Language"))
         group = QActionGroup(self)
@@ -255,8 +268,8 @@ class MainWindow(QMainWindow):
     def export_state(self) -> dict:
         """What a new window needs to carry on with the same document."""
         return {"path": self.path, "ranges": self.ranges, "saved": self.saved, "opening": self.opening,
-                "saved_opening": self.saved_opening, "undo": self.undo_stack, "redo": self.redo_stack,
-                "page": self.current_page(), "password": self.password}
+                "saved_opening": self.saved_opening, "hf_changes": self.hf_changes, "undo": self.undo_stack,
+                "redo": self.redo_stack, "page": self.current_page(), "password": self.password}
 
     def adopt_state(self, state: dict):
         if state["path"] is None:
@@ -265,6 +278,7 @@ class MainWindow(QMainWindow):
         self._load(state["path"], state["saved"], state["saved_opening"])
         self.undo_stack, self.redo_stack = list(state["undo"]), list(state["redo"])
         self.ranges, self.opening = state["ranges"], state["opening"]
+        self.hf_changes = state.get("hf_changes", ())
         self.refresh()
         self.show_page(state["page"])
 
@@ -336,7 +350,7 @@ class MainWindow(QMainWindow):
         self.add_recent(path)
         self._load(path, saved, saved_opening)
         self.undo_stack, self.redo_stack = [], []
-        self.ranges, self.opening = list(saved), saved_opening
+        self.ranges, self.opening, self.hf_changes = list(saved), saved_opening, ()
         self.refresh()
         self.show_page(1)
         self.status(tr("Opened {path}", path=path))
@@ -373,8 +387,10 @@ class MainWindow(QMainWindow):
         self.saved = list(saved)
         self.saved_opening = saved_opening
         self._thumbs = {}
+        self._previewed = None
         with pikepdf.open(path, password=self.password) as pdf:
             self.count = len(pdf.pages)
+            self.stamped = headfoot.pages_with(pdf)
 
     def save(self) -> bool:
         if self.path is None:
@@ -392,32 +408,38 @@ class MainWindow(QMainWindow):
         self.settings.setValue("last_dir", str(target.parent))
         if not self._write(target):
             return False
-        self.doc.close()
-        self.doc.load(str(target))
         self.path = target
+        self._previewed = None
         self.add_recent(target)
-        self._update_title()
+        self.refresh()
         return True
 
     def _write(self, target: Path) -> bool:
-        try:
-            write_copy(self.path, self.ranges, target, self.password, self.opening)
-        except (OSError, pikepdf.PdfError) as e:
-            self.status(tr("{path} cannot be written: {error}", path=target, error=e), error=True)
-            return False
-        if target == self.path:  # (the view keeps the file open: read it again)
-            page = self.current_page()
+        if target == self.path:  # (the preview keeps the file open: let it go)
             self.doc.close()
-            self.doc.load(str(target))
-            self.show_page(page)
-        self.saved, self.saved_opening = list(self.ranges), self.opening
-        self._update_title()
+            self._previewed = None
+        try:
+            write_copy(self.path, self.ranges, target, self.password, self.opening, self.hf_changes)
+        except (OSError, pikepdf.PdfError, LabelError) as e:
+            self.status(tr("{path} cannot be written: {error}", path=target, error=e), error=True)
+            self.refresh()
+            return False
+        if self.hf_changes:
+            # (the changes waiting are now in the file: those of the history would be applied to it again)
+            self.undo_stack.clear()
+            self.redo_stack.clear()
+        with pikepdf.open(target, password=self.password) as pdf:
+            self.stamped = headfoot.pages_with(pdf)
+        self.saved, self.saved_opening, self.hf_changes = list(self.ranges), self.opening, ()
+        self._previewed = None
+        if target == self.path:
+            self.refresh()
         self.status(tr("Saved {path}", path=target))
         return True
 
     def revert(self):
         if self.is_modified():
-            self.change(list(self.saved), view=self.saved_opening)
+            self.change(list(self.saved), view=self.saved_opening, hf_changes=())
 
     def copy_from_dialog(self):
         if self.path is None:
@@ -505,16 +527,120 @@ class MainWindow(QMainWindow):
 
     # ----------------------------------------------------------------- changing the ranges
 
-    def change(self, ranges: list[Range], select: int | None = None, view: View | None = None):
-        """Make RANGES the labels, and VIEW (if given) the view of the document, undoably;
-        SELECT: the first page of the range to select."""
+    def change(self, ranges: list[Range], select: int | None = None, view: View | None = None,
+               hf_changes: tuple | None = None):
+        """Make RANGES the labels, VIEW (if given) the view of the document and HF_CHANGES (if
+        given) the headers and footers to add or remove, undoably; SELECT: the first page of the
+        range to select."""
         ranges = labels.normalize(ranges)
         view = self.opening if view is None else view
-        if (ranges, view) != (self.ranges, self.opening):
-            self.undo_stack.append((self.ranges, self.opening))
+        hf_changes = self.hf_changes if hf_changes is None else tuple(hf_changes)
+        if (ranges, view, hf_changes) != (self.ranges, self.opening, self.hf_changes):
+            self.undo_stack.append((self.ranges, self.opening, self.hf_changes))
             self.redo_stack.clear()
-            self.ranges, self.opening = ranges, view
+            self.ranges, self.opening, self.hf_changes = ranges, view, hf_changes
         self.refresh(select)
+
+    # ----------------------------------------------------------------- headers and footers
+
+    def pages_with_header_footer(self) -> set[int]:
+        """The pages that will have a header or footer added by py-foliation once saved."""
+        pages = set(self.stamped)
+        for c in self.hf_changes:
+            chosen = set(headfoot.chosen_pages(c.hf if c.hf is not None else headfoot.HeaderFooter(pages=c.pages),
+                                               self.count))
+            pages = pages | chosen if c.hf is not None else pages - chosen
+        return pages
+
+    def last_header_footer(self) -> headfoot.HeaderFooter:
+        """The settings to start the dialog with: those of the last header and footer added."""
+        for c in reversed(self.hf_changes):
+            if c.hf is not None:
+                return c.hf
+        return headfoot.HeaderFooter()
+
+    def header_footer_dialog(self, pages: list[int] | None = None) -> bool:
+        """Ask for a header and footer (on PAGES, if given) and add it."""
+        if self.path is None:
+            return False
+        hf = self.last_header_footer()
+        if pages is not None:
+            hf = dataclasses.replace(hf, pages=headfoot.compact_pages(pages), parity="all")
+        hf = self.ask_header_footer(hf, pages[0] if pages else self.current_page())
+        if hf is None:
+            return False
+        return self.add_header_footer(hf)
+
+    def ask_header_footer(self, hf: headfoot.HeaderFooter, page: int) -> headfoot.HeaderFooter | None:
+        return ask_header_footer(self, hf, self.path, self.password, labels.page_labels(self.ranges, self.count),
+                                 page)
+
+    def add_header_footer(self, hf: headfoot.HeaderFooter) -> bool:
+        if self.path is None:
+            return False
+        try:
+            hf = headfoot.check(hf)
+            headfoot.chosen_pages(hf, self.count)
+        except LabelError as e:
+            self.status(str(e), error=True)
+            return False
+        self.change(self.ranges, hf_changes=self.hf_changes + (headfoot.Change(hf),))
+        self.status(tr("Header and footer added (they are written when the file is saved)"))
+        return True
+
+    def remove_header_footer(self, pages: list[int] | None = None) -> bool:
+        """Take away the headers and footers py-foliation added (on PAGES, or all)."""
+        if self.path is None or not self.pages_with_header_footer():
+            return False
+        spec = headfoot.compact_pages(pages) if pages else ""
+        self.change(self.ranges, hf_changes=self.hf_changes + (headfoot.Change(None, spec),))
+        self.status(tr("Headers and footers taken away (when the file is saved)"))
+        return True
+
+    def apply_profile(self, name: str) -> bool:
+        profile = headfoot.read_profiles().get(name)
+        return profile is not None and self.add_header_footer(profile)
+
+    def _fill_headfoot_menu(self):
+        m = self.m_headfoot
+        m.clear()
+        has = self.path is not None
+        m.addAction(tr("Add…"), lambda *_: self.header_footer_dialog()).setEnabled(has)
+        a = m.addAction(tr("Remove all"), lambda *_: self.remove_header_footer())
+        a.setToolTip(tr("Take away the headers and footers py-foliation added to this file"))
+        a.setEnabled(has and bool(self.pages_with_header_footer()))
+        shown = [hf for hf in headfoot.read_profiles().values() if hf.show_on_menu]
+        if shown:
+            m.addSection(tr("Profiles"))
+            for hf in shown:
+                a = m.addAction(hf.name, lambda *_, n=hf.name: self.apply_profile(n))
+                a.setEnabled(has)
+
+    def _update_preview(self):
+        """Show in the preview the file, or a copy of it with the headers and footers waiting."""
+        if self.path is None:
+            return
+        key = (self.path, self.hf_changes, tuple(self.ranges) if self.hf_changes else None)
+        if key == self._previewed:
+            return
+        source = self.path
+        if self.hf_changes:
+            if self._tmpdir is None:
+                self._tmpdir = tempfile.TemporaryDirectory(prefix="py-foliation-")
+            source = Path(self._tmpdir.name) / "preview.pdf"
+            self.doc.close()
+            try:
+                write_copy(self.path, self.ranges, source, self.password, None, self.hf_changes)
+            except (OSError, pikepdf.PdfError, LabelError) as e:
+                self.status(str(e), error=True)
+                source = self.path
+        page = self.current_page()
+        self.doc.close()
+        self.doc.load(str(source))
+        self._thumbs = {}
+        self._previewed = key
+        if self.count:
+            self._page_chosen(min(page, self.count) - 1)
 
     def set_view(self, new: View) -> None:
         """Make NEW the view of the document when it is opened (undoably)."""
@@ -618,6 +744,12 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction(tr("Start a range at page {page}", page=pages[0]), lambda: self.start_range_at(pages[0]))
         menu.addAction(tr("Copy their labels") if count > 1 else tr("Copy its label"), lambda: self.copy_labels())
+        menu.addSection(tr("Header and footer"))
+        menu.addAction(tr("Header and footer on these pages…") if count > 1 else tr("Header and footer on this page…"),
+                       lambda *_: self.header_footer_dialog(pages))
+        a = menu.addAction(tr("Remove their header and footer") if count > 1 else tr("Remove its header and footer"),
+                           lambda *_: self.remove_header_footer(pages))
+        a.setEnabled(bool(self.pages_with_header_footer() & set(pages)))
         self.add_view_menus(menu, pages[0])
         return menu
 
@@ -704,14 +836,14 @@ class MainWindow(QMainWindow):
 
     def undo(self):
         if self.undo_stack:
-            self.redo_stack.append((self.ranges, self.opening))
-            self.ranges, self.opening = self.undo_stack.pop()
+            self.redo_stack.append((self.ranges, self.opening, self.hf_changes))
+            self.ranges, self.opening, self.hf_changes = self.undo_stack.pop()
             self.refresh()
 
     def redo(self):
         if self.redo_stack:
-            self.undo_stack.append((self.ranges, self.opening))
-            self.ranges, self.opening = self.redo_stack.pop()
+            self.undo_stack.append((self.ranges, self.opening, self.hf_changes))
+            self.ranges, self.opening, self.hf_changes = self.redo_stack.pop()
             self.refresh()
 
     # ----------------------------------------------------------------- showing
@@ -722,6 +854,7 @@ class MainWindow(QMainWindow):
             row = self.table.currentRow()
             select = self.ranges[row].page if 0 <= row < len(self.ranges) else None
         self._fill_table(select)
+        self._update_preview()
         self._fill_pages()
         self.cmd_line.setText(labels.set_command(self.path, self.ranges) if self.path else "")
         self._show_page_info()
@@ -874,7 +1007,8 @@ class MainWindow(QMainWindow):
     # ----------------------------------------------------------------- unsaved changes
 
     def is_modified(self) -> bool:
-        return self.path is not None and (self.ranges, self.opening) != (self.saved, self.saved_opening)
+        return self.path is not None and ((self.ranges, self.opening) != (self.saved, self.saved_opening)
+                                          or bool(self.hf_changes))
 
     def _update_title(self):
         name = f"{self.path.name}[*] — py-foliation" if self.path else "py-foliation"

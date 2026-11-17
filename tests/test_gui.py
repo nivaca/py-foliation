@@ -335,3 +335,85 @@ def test_preview_settles_at_any_size(app, window, book):
             assert toggles[0] <= 4, f"the scroll bars of the preview keep toggling at {width}x460"
     finally:
         app.removeEventFilter(counter)
+
+
+def test_header_and_footer(app, window, book, monkeypatch):
+    from py_foliation import headfoot
+    from py_foliation.headfoot import HeaderFooter
+    monkeypatch.setenv("PY_FOLIATION_CONFIG", str(book.parent / "cfg"))
+    window.open_path(book)
+    asked = []
+
+    def ask(hf, page):
+        asked.append((hf.pages, page))
+        return HeaderFooter(footer_center="p. $pagelabel", pages=hf.pages)
+
+    window.ask_header_footer = ask
+    window.pages.setCurrentRow(8)
+    window.pages.item(9).setSelected(True)
+    menu = window.build_pages_menu()
+    entry = next(a for a in menu.actions() if a.text() == "Header and footer on these pages…")
+    entry.trigger()
+    assert asked == [("9-10", 9)] and window.is_modified()
+    assert window.pages_with_header_footer() == {9, 10}
+    settle(app)
+    assert window._previewed[1] == window.hf_changes  # (the preview shows a copy with them)
+    window.undo()
+    assert window.hf_changes == () and not window.is_modified()
+    window.redo()
+    assert window.save() and not window.is_modified() and window.stamped == [9, 10]
+    with pikepdf.open(book) as pdf:
+        assert headfoot.pages_with(pdf) == [9, 10]
+        assert b"(p. 1)" in pdf.pages[8].obj.Contents[-1].read_bytes()
+    assert window.undo_stack == []  # (the changes are in the file: the history would apply them again)
+    assert window.remove_header_footer([10]) and window.pages_with_header_footer() == {9}
+    window.revert()
+    assert window.pages_with_header_footer() == {9, 10}
+    headfoot.save_profile(HeaderFooter(header_right="$date", name="Dated", show_on_menu=True))
+    window._fill_headfoot_menu()
+    names = [a.text() for a in window.m_headfoot.actions()]
+    assert names[:2] == ["Add…", "Remove all"] and "Dated" in names
+    next(a for a in window.m_headfoot.actions() if a.text() == "Dated").trigger()
+    assert window.pages_with_header_footer() == set(range(1, 101))
+    next(a for a in window.m_headfoot.actions() if a.text() == "Remove all").trigger()
+    assert window.save()
+    with pikepdf.open(book) as pdf:
+        assert headfoot.pages_with(pdf) == []
+
+
+def test_header_footer_dialog(app, window, book, monkeypatch):
+    from py_foliation import headfoot
+    from py_foliation.gui.headfoot_dialog import HeaderFooterDialog
+    from py_foliation.headfoot import HeaderFooter
+    monkeypatch.setenv("PY_FOLIATION_CONFIG", str(book.parent / "cfg"))
+    labels_ = [str(i) for i in range(1, 101)]
+    dlg = HeaderFooterDialog(window, HeaderFooter(footer_center="x", units="cm", top=2.54), book, "", labels_, 5)
+    dlg.update_preview()
+    assert dlg.problem.text() == "" and dlg.preview.pixmap() is not None and not dlg.preview.pixmap().isNull()
+    dlg.slots["header_left"].setFocus()
+    dlg.target = dlg.slots["header_left"]
+    dlg.insert("pagelabel")
+    assert dlg.slots["header_left"].text() == "$pagelabel"
+    dlg.units.setCurrentIndex(dlg.units.findData("in"))  # (the margins keep their place)
+    assert dlg.margins["top"].value() == pytest.approx(1.0)
+    dlg.some_pages.setChecked(True)
+    dlg.pages.setText("10-20")
+    dlg.parity.setCurrentIndex(dlg.parity.findData("odd"))
+    hf, pages, problem = dlg.check()
+    assert problem == "" and [p for p, _ in pages] == [11, 13, 15, 17, 19] and hf.units == "in"
+    dlg.update_preview()
+    assert dlg.note.text() == "The header and footer don't go on this page."  # (page 5)
+    dlg.slots["footer_right"].setText("Ελλάς")
+    dlg.update_preview()
+    assert "cannot write" in dlg.problem.text()
+    assert not dlg.buttons.button(QtWidgets.QDialogButtonBox.StandardButton.Ok).isEnabled()
+    dlg.slots["footer_right"].setText("")
+    monkeypatch.setattr(HeaderFooterDialog, "ask_profile_name", lambda self, current: "Mine")
+    assert dlg.save_profile() and dlg.profile.currentData() == "Mine"
+    assert headfoot.read_profiles()["Mine"].pages == "10-20"
+    dlg.profile.setCurrentIndex(0)
+    dlg.load(HeaderFooter(footer_left="y"))
+    dlg.profile.setCurrentIndex(dlg.profile.findData("Mine"))  # (choosing a profile shows its settings)
+    assert dlg.slots["header_left"].text() == "$pagelabel" and dlg.slots["footer_left"].text() == ""
+    assert dlg.delete_profile() and headfoot.read_profiles() == {}
+    dlg.reject()
