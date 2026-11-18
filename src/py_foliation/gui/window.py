@@ -14,16 +14,16 @@ from PySide6.QtGui import QAction, QActionGroup, QIcon, QKeySequence
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtWidgets import (
-    QAbstractItemView, QApplication, QDialog, QFileDialog, QHBoxLayout, QHeaderView, QInputDialog, QLabel,
-    QLineEdit, QListView, QListWidget, QListWidgetItem, QMainWindow, QMenu, QMessageBox, QPushButton, QSplitter,
+    QAbstractItemView, QApplication, QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QHeaderView, QInputDialog,
+    QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMainWindow, QMenu, QMessageBox, QPushButton, QSplitter,
     QTableWidget, QVBoxLayout, QWidget,
 )
 
-from .. import __version__, config, headfoot, interface, labels, stamps, view, watermark
+from .. import __version__, conform, config, headfoot, interface, labels, stamps, view, watermark
 from ..changes import Change
 from ..view import View, read_view
 from ..files import read_list, write_copy
-from ..interface import tr
+from ..interface import N_, tr
 from ..labels import LabelError, Range
 from . import thumbnails
 from .headfoot_dialog import ask_header_footer
@@ -194,8 +194,18 @@ class MainWindow(QMainWindow):
         self._recent_menu()
         self.a_save = self._action(m, tr("Save"), self.save, QKeySequence.StandardKey.Save,
                                    tr("Give the file open these page labels"))
-        self.a_save_as = self._action(m, tr("Save as…"), self.save_as, "Ctrl+Shift+S",
-                                      tr("Save a copy of the file with these page labels"))
+        # Save as: a copy as a plain PDF (which then stays open), or, as an export, PDF/A or PDF/X
+        self.m_output = m.addMenu(tr("Save as"))
+        self.m_output.setToolTipsVisible(True)
+        self.output_actions = {}
+        for value, name in [("", N_("PDF"))] + conform.STANDARDS:
+            if value:
+                act = self._action(self.m_output, tr(name) + "…", lambda _=False, v=value: self.export_dialog_as(v))
+            else:
+                act = self._action(self.m_output, tr(name) + "…", self.save_as, "Ctrl+Shift+S",
+                                   tr("Save a copy of the file with these page labels"))
+            self.output_actions[value] = act
+        self.a_save_as = self.output_actions[""]
         self.a_revert = self._action(m, tr("Revert to the labels of the file"), self.revert)
         m.addSeparator()
         self.a_copy_from = self._action(m, tr("Copy the labels of another PDF…"), self.copy_from_dialog,
@@ -245,6 +255,9 @@ class MainWindow(QMainWindow):
             act.triggered.connect(lambda _=False, c=code: self.change_language(c))
             group.addAction(act)
             lang.addAction(act)
+        self._action(m, tr("pdf2iso…"), self.pdfconform_dialog,
+                     tip=tr("Where pdf2iso is, which makes PDF/A and PDF/X"))
+        m.setToolTipsVisible(True)
         m = self.menuBar().addMenu(tr("&Help"))
         self._action(m, tr("About"), self.about)
         self._enable()
@@ -446,6 +459,82 @@ class MainWindow(QMainWindow):
             self.refresh()
         self.status(tr("Saved {path}", path=target))
         return True
+
+    def export_dialog_as(self, standard: str) -> bool:
+        """Save a copy with these page labels as STANDARD ('a-2b', 'x-4'...): an export, which
+        leaves the file open as it was, with its changes still to save."""
+        if self.path is None:
+            return False
+        title = tr("Save a copy as {standard}", standard=conform.label(standard))
+        target = self._ask_save(title, f"{self.path.stem}-labelled.pdf")
+        if target is None:
+            return False
+        if target.suffix.lower() != ".pdf":
+            target = target.with_suffix(".pdf")
+        self.settings.setValue("last_dir", str(target.parent))
+        return self.export_as(target, standard)
+
+    def export_as(self, target: Path, standard: str) -> bool:
+        """Write the file with these page labels as TARGET, made STANDARD by pdf2iso."""
+        if target.resolve() == self.path.resolve():
+            self.status(tr("A copy as {standard} can't take the place of the file open; choose another name",
+                           standard=conform.label(standard)), error=True)
+            return False
+        if not conform.available():
+            self.warn(conform.label(standard), tr("{standard} can't be made: {command} is not installed (or "
+                                                  "not where Settings say)", standard=conform.label(standard),
+                                                  command=conform.COMMAND))
+            return False
+        try:
+            write_copy(self.path, self.ranges, target, self.password, self.opening, self.hf_changes)
+        except (OSError, pikepdf.PdfError, LabelError) as e:
+            self.status(tr("{path} cannot be written: {error}", path=target, error=e), error=True)
+            return False
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        self.status(tr("Making {standard} with {command}…", standard=conform.label(standard),
+                       command=conform.COMMAND))
+        QApplication.processEvents()
+        try:
+            check = conform.convert(target, target, standard, self.password)
+        except conform.ConformError as e:
+            QApplication.restoreOverrideCursor()
+            self.warn(conform.label(standard), tr("The copy was saved as a plain PDF, but it could not be made "
+                                                  "{standard}:\n\n{error}", standard=conform.label(standard),
+                                                  error=e))
+            self.status(tr("Saved {path}", path=target))
+            return False
+        QApplication.restoreOverrideCursor()
+        self.add_recent(target)
+        message = tr("Saved {path}", path=target) + " — " + conform.label(standard) + (f" ({check})" if check else "")
+        if self.password:
+            message += " — " + tr("PDF/A and PDF/X can't be protected: the copy has no password")
+        self.status(message)
+        return True
+
+    def pdfconform_dialog(self) -> bool:
+        """Settings ▸ pdf2iso: where it is."""
+        dlg = PdfconformDialog(config.get("pdfconform") or "", self)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return False
+        return self.set_pdfconform(dlg.path())
+
+    def set_pdfconform(self, path: str) -> bool:
+        try:
+            config.set("pdfconform", path)
+        except OSError as e:
+            self.status(tr("Could not keep the setting: {error}", error=e), error=True)
+            return False
+        self._show_output()
+        return True
+
+    def _show_output(self):
+        """The Save as menu: PDF/A and PDF/X greyed out if pdf2iso isn't there."""
+        have = conform.available()
+        for value, act in self.output_actions.items():
+            if value:
+                act.setEnabled(self.path is not None and have)
+                act.setToolTip("" if have else tr("Needs {command}: install it, or say where it is in Settings",
+                                                  command=conform.COMMAND))
 
     def revert(self):
         if self.is_modified():
@@ -1085,6 +1174,7 @@ class MainWindow(QMainWindow):
         for w in (self.b_add, self.b_remove, self.b_clear, self.a_save, self.a_save_as, self.a_revert,
                   self.a_copy_from, self.a_import, self.a_export, self.go_to):
             w.setEnabled(has)
+        self._show_output()
         self.a_undo.setEnabled(bool(self.undo_stack))
         self.a_redo.setEnabled(bool(self.redo_stack))
 
@@ -1130,6 +1220,10 @@ class MainWindow(QMainWindow):
 
     # ----------------------------------------------------------------- messages
 
+    def warn(self, title: str, text: str):
+        """A warning the user must see (a modal message box)."""
+        QMessageBox.warning(self, title, text)
+
     def status(self, text: str, error: bool = False):
         self.statusBar().setStyleSheet("color: #c0392b;" if error else "")
         self.statusBar().showMessage(text, 0 if error else 8000)
@@ -1144,3 +1238,55 @@ class MainWindow(QMainWindow):
                              "numbering a PDF viewer shows for their pages.</p><p>By {author}.</p><p>Licensed "
                              "under the GNU General Public License, version 3 or later.</p>",
                              version=__version__, author=AUTHOR))
+
+
+class PdfconformDialog(QDialog):
+    """Where pdf2iso is: a file, or nothing to look for it (see conform.find)."""
+
+    def __init__(self, path: str, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(tr("pdf2iso"))
+        self.edit = QLineEdit(path)
+        self.edit.setPlaceholderText(tr("Look for it on the PATH, in ~/bin and in ~/.local/bin"))
+        self.edit.setToolTip(tr("The script pdf2iso, which makes PDF/A and PDF/X (with or without "
+                                "the .py extension); empty to look for it"))
+        self.edit.setMinimumWidth(420)
+        self.edit.textChanged.connect(self._show_found)
+        choose = QPushButton(tr("Choose…"))
+        choose.clicked.connect(self._choose)
+        self.found = QLabel()
+        self.found.setWordWrap(True)
+        self.found.setStyleSheet("color: palette(placeholder-text);")
+        row = QHBoxLayout()
+        row.addWidget(QLabel(tr("pdf2iso:")))
+        row.addWidget(self.edit, 1)
+        row.addWidget(choose)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        lay = QVBoxLayout(self)
+        lay.addLayout(row)
+        lay.addWidget(self.found)
+        lay.addWidget(buttons)
+        self._show_found()
+
+    def path(self) -> str:
+        return self.edit.text().strip()
+
+    def _show_found(self, *_):
+        """Which pdf2iso will be used (File ▸ Save as ▸ PDF/A, PDF/X)."""
+        path = self.path()
+        found = conform.find(path)
+        if found is not None:
+            self.found.setText(tr("It will be {path}", path=found))
+        elif path:
+            self.found.setText(tr("There is no such file"))
+        else:
+            self.found.setText(tr("Not found: PDF/A and PDF/X can't be made until it is given here"))
+
+    def _choose(self):
+        start = self.path() or str(Path.home() / "bin")
+        name, _ = QFileDialog.getOpenFileName(self, tr("Where is pdf2iso?"), start,
+                                              tr("pdf2iso (pdf2iso pdf2iso.py);;All files (*)"))
+        if name:
+            self.edit.setText(name)

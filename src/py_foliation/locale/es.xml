@@ -202,10 +202,6 @@ siguiente.</tr>
     <tr>Dar estas etiquetas de página al archivo abierto</tr>
   </text>
   <text>
-    <en>Save as…</en>
-    <tr>Guardar como…</tr>
-  </text>
-  <text>
     <en>Save a copy of the file with these page labels</en>
     <tr>Guardar una copia del archivo con estas etiquetas de página</tr>
   </text>
@@ -2591,5 +2587,133 @@ los visores que siguen esas indicaciones.</tr>
   <text>
     <en>{what}, on {count} pages: {pages}</en>
     <tr>{what}, en {count} páginas: {pages}</tr>
+  </text>
+  <text>
+    <en>A copy as {standard} can't take the place of the file open; choose another name</en>
+    <tr>Una copia en {standard} no puede reemplazar el archivo abierto; elija otro nombre</tr>
+  </text>
+  <text>
+    <en>It will be {path}</en>
+    <tr>Será {path}</tr>
+  </text>
+  <text>
+    <en>Look for it on the PATH, in ~/bin and in ~/.local/bin</en>
+    <tr>Buscarlo en el PATH, en ~/bin y en ~/.local/bin</tr>
+  </text>
+  <text>
+    <en>Making {standard} with {command}…</en>
+    <tr>Haciendo {standard} con {command}…</tr>
+  </text>
+  <text>
+    <en>Needs {command}: install it, or say where it is in Settings</en>
+    <tr>Necesita {command}: instálelo, o diga dónde está en Ajustes</tr>
+  </text>
+  <text>
+    <en>Not found: PDF/A and PDF/X can't be made until it is given here</en>
+    <tr>No se encontró: no se pueden hacer PDF/A ni PDF/X hasta que se indique aquí</tr>
+  </text>
+  <text>
+    <en>PDF/A and PDF/X are made by pdf2iso</en>
+    <tr>Los PDF/A y PDF/X los hace pdf2iso</tr>
+  </text>
+  <text>
+    <en>PDF/A and PDF/X can't be protected: the copy has no password</en>
+    <tr>PDF/A y PDF/X no admiten protección: la copia no tiene contraseña</tr>
+  </text>
+  <text>
+    <en>PDF/A-1b (archiving, the oldest)</en>
+    <tr>PDF/A-1b (archivo, la más antigua)</tr>
+  </text>
+  <text>
+    <en>PDF/A-2b (archiving)</en>
+    <tr>PDF/A-2b (archivo)</tr>
+  </text>
+  <text>
+    <en>PDF/A-3b (archiving, with attachments)</en>
+    <tr>PDF/A-3b (archivo, con adjuntos)</tr>
+  </text>
+  <text>
+    <en>PDF/X-4 (printing)</en>
+    <tr>PDF/X-4 (imprenta)</tr>
+  </text>
+  <text>
+    <en>STANDARD</en>
+    <tr>NORMA</tr>
+  </text>
+  <text>
+    <en>Save a copy as {standard}</en>
+    <tr>Guardar una copia en {standard}</tr>
+  </text>
+  <text>
+    <en>The copy was saved as a plain PDF, but it could not be made {standard}:
+
+{error}</en>
+    <tr>La copia se guardó como PDF corriente, pero no se pudo convertir en {standard}:
+
+{error}</tr>
+  </text>
+  <text>
+    <en>The script pdf2iso, which makes PDF/A and PDF/X (with or without the .py extension); empty to look for it</en>
+    <tr>El script pdf2iso, que hace los PDF/A y PDF/X (con la extensión .py o sin ella); vacío para buscarlo</tr>
+  </text>
+  <text>
+    <en>There is no such file</en>
+    <tr>No existe ese archivo</tr>
+  </text>
+  <text>
+    <en>Where is pdf2iso?</en>
+    <tr>¿Dónde está pdf2iso?</tr>
+  </text>
+  <text>
+    <en>Where pdf2iso is, which makes PDF/A and PDF/X</en>
+    <tr>Dónde está pdf2iso, que hace los PDF/A y PDF/X</tr>
+  </text>
+  <text>
+    <en>pdf2iso</en>
+    <tr>pdf2iso</tr>
+  </text>
+  <text>
+    <en>pdf2iso (pdf2iso pdf2iso.py);;All files (*)</en>
+    <tr>pdf2iso (pdf2iso pdf2iso.py);;Todos los archivos (*)</tr>
+  </text>
+  <text>
+    <en>pdf2iso:</en>
+    <tr>pdf2iso:</tr>
+  </text>
+  <text>
+    <en>pdf2iso…</en>
+    <tr>pdf2iso…</tr>
+  </text>
+  <text>
+    <en>save the PDFs as PDF/A or PDF/X: a-1b, a-2b, a-3b (archiving) or x-4 (printing), made by pdf2iso, which must be installed</en>
+    <tr>guardar los PDF como PDF/A o PDF/X: a-1b, a-2b, a-3b (archivo) o x-4 (imprenta); los hace pdf2iso, que debe estar instalado</tr>
+  </text>
+  <text>
+    <en>{command} could not make {standard}: {error}</en>
+    <tr>{command} no pudo hacer {standard}: {error}</tr>
+  </text>
+  <text>
+    <en>{command} is not installed (or not on the PATH)</en>
+    <tr>{command} no está instalado (o no está en el PATH)</tr>
+  </text>
+  <text>
+    <en>{command} took too long</en>
+    <tr>{command} tardó demasiado</tr>
+  </text>
+  <text>
+    <en>{path} was saved as a plain PDF, but it could not be made {standard}: {error}</en>
+    <tr>{path} se guardó como PDF corriente, pero no se pudo convertir en {standard}: {error}</tr>
+  </text>
+  <text>
+    <en>{path}: saved as a plain PDF, but it could not be made {standard}: {error}</en>
+    <tr>{path}: se guardó como PDF corriente, pero no se pudo convertir en {standard}: {error}</tr>
+  </text>
+  <text>
+    <en>{standard} can't be made: {command} is not installed (or not on the PATH, in ~/bin or in ~/.local/bin, or where the setting pdfconform says)</en>
+    <tr>no se puede hacer {standard}: {command} no está instalado (o no está en el PATH, en ~/bin ni en ~/.local/bin, ni donde dice el ajuste pdfconform)</tr>
+  </text>
+  <text>
+    <en>{standard} can't be made: {command} is not installed (or not where Settings say)</en>
+    <tr>No se puede hacer {standard}: {command} no está instalado (o no está donde dicen los Ajustes)</tr>
   </text>
 </interface>

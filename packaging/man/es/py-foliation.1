@@ -65,7 +65,8 @@ uso: py-foliation set [-h] [--interface {en,es}]
                       [-r PÁGINAS [CLAVE=VALOR] [PÁGINAS [CLAVE=VALOR] ...]]
                       [-f LISTA] [-k] [--remove PÁGINA] [-o OUTPUT | -i |
                       --output-dir CARPETA] [--name-prefix TEXTO]
-                      [--name-suffix TEXTO] [-n] [--password CONTRASEÑA]
+                      [--name-suffix TEXTO] [-n] [--conform NORMA]
+                      [--password CONTRASEÑA]
                       ARCHIVO|INTERVALO [ARCHIVO|INTERVALO ...]
 
 Da a varios PDF nuevas etiquetas de página, intervalo por intervalo. Las que tenían se reemplazan, salvo que se indique --keep.
@@ -101,6 +102,9 @@ opciones:
                         --output-dir)
   -n, --dry-run         mostrar las etiquetas que recibirían los archivos,
                         sin escribir nada
+  --conform NORMA       guardar los PDF como PDF/A o PDF/X: a-1b, a-2b, a-3b
+                        (archivo) o x-4 (imprenta); los hace pdf2iso, que
+                        debe estar instalado
   --password CONTRASEÑA
                         la contraseña para abrir los PDF (su protección se
                         conserva al guardarlos)
@@ -140,7 +144,8 @@ entrada estándar), y encuentra el menor número de intervalos que las da.
 .nf
 uso: py-foliation clear [-h] [--interface {en,es}] [-o OUTPUT | -i |
                         --output-dir CARPETA] [--name-prefix TEXTO]
-                        [--name-suffix TEXTO] [-n] [--password CONTRASEÑA]
+                        [--name-suffix TEXTO] [-n] [--conform NORMA]
+                        [--password CONTRASEÑA]
                         ARCHIVO [ARCHIVO ...]
 
 Quita las etiquetas de página de varios PDF: los visores numeran entonces
@@ -166,6 +171,9 @@ opciones:
                         --output-dir)
   -n, --dry-run         mostrar las etiquetas que recibirían los archivos,
                         sin escribir nada
+  --conform NORMA       guardar los PDF como PDF/A o PDF/X: a-1b, a-2b, a-3b
+                        (archivo) o x-4 (imprenta); los hace pdf2iso, que
+                        debe estar instalado
   --password CONTRASEÑA
                         la contraseña para abrir los PDF (su protección se
                         conserva al guardarlos)
@@ -174,7 +182,8 @@ opciones:
 .nf
 uso: py-foliation copy [-h] [--interface {en,es}] [-o OUTPUT | -i |
                        --output-dir CARPETA] [--name-prefix TEXTO]
-                       [--name-suffix TEXTO] [-n] [--password CONTRASEÑA]
+                       [--name-suffix TEXTO] [-n] [--conform NORMA]
+                       [--password CONTRASEÑA]
                        ORIGEN ARCHIVO [ARCHIVO ...]
 
 Da a varios PDF las etiquetas de página de otro PDF, por ejemplo de una
@@ -203,6 +212,9 @@ opciones:
                         --output-dir)
   -n, --dry-run         mostrar las etiquetas que recibirían los archivos,
                         sin escribir nada
+  --conform NORMA       guardar los PDF como PDF/A o PDF/X: a-1b, a-2b, a-3b
+                        (archivo) o x-4 (imprenta); los hace pdf2iso, que
+                        debe estar instalado
   --password CONTRASEÑA
                         la contraseña para abrir los PDF (su protección se
                         conserva al guardarlos)
@@ -212,7 +224,8 @@ opciones:
 uso: py-foliation view [-h] [--interface {en,es}] [--layout DISPOSICIÓN]
                        [--page-view VISTA] [--open-at PÁGINA] [-o OUTPUT |
                        -i | --output-dir CARPETA] [--name-prefix TEXTO]
-                       [--name-suffix TEXTO] [-n] [--password CONTRASEÑA]
+                       [--name-suffix TEXTO] [-n] [--conform NORMA]
+                       [--password CONTRASEÑA]
                        ARCHIVO [ARCHIVO ...]
 
 Muestra o establece la vista de los PDF al abrirse: la disposición de página, la vista de página y la página en que se abren. Un PDF tiene una sola vista para todo el documento. Sin opciones, se muestra la vista; las opciones que no se dan se conservan; 'default' deja esa parte al visor.
@@ -243,6 +256,9 @@ opciones:
                         --output-dir)
   -n, --dry-run         mostrar la vista que recibirían los archivos, sin
                         escribir nada
+  --conform NORMA       guardar los PDF como PDF/A o PDF/X: a-1b, a-2b, a-3b
+                        (archivo) o x-4 (imprenta); los hace pdf2iso, que
+                        debe estar instalado
   --password CONTRASEÑA
                         la contraseña para abrir los PDF (su protección se
                         conserva al guardarlos)
@@ -288,7 +304,7 @@ uso: py-foliation header-footer [-h] [--interface {en,es}]
                                 [--list-profiles] [--delete-profile NOMBRE]
                                 [--remove-bates] [-o OUTPUT | -i |
                                 --output-dir CARPETA] [--name-prefix TEXTO]
-                                [--name-suffix TEXTO] [-n]
+                                [--name-suffix TEXTO] [-n] [--conform NORMA]
                                 [--password CONTRASEÑA]
                                 [ARCHIVO ...]
 
@@ -316,6 +332,9 @@ opciones:
                         --output-dir)
   -n, --dry-run         mostrar el encabezado y el pie de la primera y la
                         última página, sin escribir nada
+  --conform NORMA       guardar los PDF como PDF/A o PDF/X: a-1b, a-2b, a-3b
+                        (archivo) o x-4 (imprenta); los hace pdf2iso, que
+                        debe estar instalado
   --password CONTRASEÑA
                         la contraseña para abrir los PDF (su protección se
                         conserva al guardarlos)
@@ -444,7 +463,7 @@ uso: py-foliation watermark [-h] [--interface {en,es}] [--text TEXTO]
                             [--list-profiles] [--delete-profile NOMBRE]
                             [-o OUTPUT | -i | --output-dir CARPETA]
                             [--name-prefix TEXTO] [--name-suffix TEXTO] [-n]
-                            [--password CONTRASEÑA]
+                            [--conform NORMA] [--password CONTRASEÑA]
                             [ARCHIVO ...]
 
 Pone una marca de agua en las páginas de los PDF: un texto, como Borrador o Copia, o una página de otro PDF, delante o detrás de su contenido, girada, a escala y con algo de transparencia. Como los encabezados y pies, cambia las páginas mismas.
@@ -469,6 +488,9 @@ opciones:
                         --output-dir)
   -n, --dry-run         mostrar la marca de agua de la primera y la última
                         página, sin escribir nada
+  --conform NORMA       guardar los PDF como PDF/A o PDF/X: a-1b, a-2b, a-3b
+                        (archivo) o x-4 (imprenta); los hace pdf2iso, que
+                        debe estar instalado
   --password CONTRASEÑA
                         la contraseña para abrir los PDF (su protección se
                         conserva al guardarlos)

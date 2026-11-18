@@ -60,7 +60,8 @@ usage: py-foliation set [-h] [--interface {en,es}]
                         [-r PAGES [KEY=VALUE] [PAGES [KEY=VALUE] ...]]
                         [-f LIST] [-k] [--remove PAGE] [-o OUTPUT | -i |
                         --output-dir FOLDER] [--name-prefix TEXT]
-                        [--name-suffix TEXT] [-n] [--password PASSWORD]
+                        [--name-suffix TEXT] [-n] [--conform STANDARD]
+                        [--password PASSWORD]
                         FILE|RANGE [FILE|RANGE ...]
 
 Give PDFs new page labels, range by range. The labels they had are replaced, unless --keep is given.
@@ -92,6 +93,9 @@ options:
                         -labelled, or nothing with --output-dir)
   -n, --dry-run         show the labels the files would get, without writing
                         anything
+  --conform STANDARD    save the PDFs as PDF/A or PDF/X: a-1b, a-2b, a-3b
+                        (archiving) or x-4 (printing), made by pdf2iso,
+                        which must be installed
   --password PASSWORD   the password to open the PDFs (their protection is
                         kept when they are saved)
 
@@ -129,7 +133,8 @@ standard input), and finds the fewest ranges that give them.
 .nf
 usage: py-foliation clear [-h] [--interface {en,es}] [-o OUTPUT | -i |
                           --output-dir FOLDER] [--name-prefix TEXT]
-                          [--name-suffix TEXT] [-n] [--password PASSWORD]
+                          [--name-suffix TEXT] [-n] [--conform STANDARD]
+                          [--password PASSWORD]
                           FILE [FILE ...]
 
 Remove the page labels of PDFs: viewers then number their pages 1, 2, 3 ...
@@ -151,6 +156,9 @@ options:
                        -labelled, or nothing with --output-dir)
   -n, --dry-run        show the labels the files would get, without writing
                        anything
+  --conform STANDARD   save the PDFs as PDF/A or PDF/X: a-1b, a-2b, a-3b
+                       (archiving) or x-4 (printing), made by pdf2iso, which
+                       must be installed
   --password PASSWORD  the password to open the PDFs (their protection is
                        kept when they are saved)
 .fi
@@ -158,7 +166,8 @@ options:
 .nf
 usage: py-foliation copy [-h] [--interface {en,es}] [-o OUTPUT | -i |
                          --output-dir FOLDER] [--name-prefix TEXT]
-                         [--name-suffix TEXT] [-n] [--password PASSWORD]
+                         [--name-suffix TEXT] [-n] [--conform STANDARD]
+                         [--password PASSWORD]
                          FROM FILE [FILE ...]
 
 Give PDFs the page labels of another PDF, for instance a new export of the
@@ -183,6 +192,9 @@ options:
                        -labelled, or nothing with --output-dir)
   -n, --dry-run        show the labels the files would get, without writing
                        anything
+  --conform STANDARD   save the PDFs as PDF/A or PDF/X: a-1b, a-2b, a-3b
+                       (archiving) or x-4 (printing), made by pdf2iso, which
+                       must be installed
   --password PASSWORD  the password to open the PDFs (their protection is
                        kept when they are saved)
 .fi
@@ -191,7 +203,8 @@ options:
 usage: py-foliation view [-h] [--interface {en,es}] [--layout LAYOUT]
                          [--page-view VIEW] [--open-at PAGE] [-o OUTPUT |
                          -i | --output-dir FOLDER] [--name-prefix TEXT]
-                         [--name-suffix TEXT] [-n] [--password PASSWORD]
+                         [--name-suffix TEXT] [-n] [--conform STANDARD]
+                         [--password PASSWORD]
                          FILE [FILE ...]
 
 Show or set the view of PDFs when they are opened: the page layout, the page view and the page they open at. A PDF has one view for the whole document. Without options, the view is shown; the options not given are kept; 'default' leaves that part to the viewer.
@@ -218,6 +231,9 @@ options:
                         -labelled, or nothing with --output-dir)
   -n, --dry-run         show the view the files would get, without writing
                         anything
+  --conform STANDARD    save the PDFs as PDF/A or PDF/X: a-1b, a-2b, a-3b
+                        (archiving) or x-4 (printing), made by pdf2iso,
+                        which must be installed
   --password PASSWORD   the password to open the PDFs (their protection is
                         kept when they are saved)
 
@@ -261,7 +277,7 @@ usage: py-foliation header-footer [-h] [--interface {en,es}]
                                   [--remove-bates] [-o OUTPUT | -i |
                                   --output-dir FOLDER] [--name-prefix TEXT]
                                   [--name-suffix TEXT] [-n]
-                                  [--password PASSWORD]
+                                  [--conform STANDARD] [--password PASSWORD]
                                   [FILE ...]
 
 Draw text at the top and bottom of the pages of PDFs: a header and a footer, each with a left, center and right place, with variables such as the page label or the date. Unlike the labels, they change the pages themselves.
@@ -285,6 +301,9 @@ options:
                         -labelled, or nothing with --output-dir)
   -n, --dry-run         show the header and footer of the first and last
                         pages, without writing anything
+  --conform STANDARD    save the PDFs as PDF/A or PDF/X: a-1b, a-2b, a-3b
+                        (archiving) or x-4 (printing), made by pdf2iso,
+                        which must be installed
   --password PASSWORD   the password to open the PDFs (their protection is
                         kept when they are saved)
 
@@ -408,7 +427,7 @@ usage: py-foliation watermark [-h] [--interface {en,es}] [--text TEXT]
                               [--list-profiles] [--delete-profile NAME]
                               [-o OUTPUT | -i | --output-dir FOLDER]
                               [--name-prefix TEXT] [--name-suffix TEXT] [-n]
-                              [--password PASSWORD]
+                              [--conform STANDARD] [--password PASSWORD]
                               [FILE ...]
 
 Draw a watermark on the pages of PDFs: a text, such as Draft or Copy, or a page of another PDF, in front of their content or behind it, turned, scaled and with some transparency. Like headers and footers, it changes the pages themselves.
@@ -430,6 +449,9 @@ options:
                         -labelled, or nothing with --output-dir)
   -n, --dry-run         show the watermark of the first and last pages,
                         without writing anything
+  --conform STANDARD    save the PDFs as PDF/A or PDF/X: a-1b, a-2b, a-3b
+                        (archiving) or x-4 (printing), made by pdf2iso,
+                        which must be installed
   --password PASSWORD   the password to open the PDFs (their protection is
                         kept when they are saved)
 

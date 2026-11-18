@@ -74,6 +74,25 @@ py-foliation-install     # optional: adds the window to the applications menu
 `py-foliation-install` works on Linux, Windows and macOS, in your own
 folders; `--uninstall` removes what it added.
 
+### PDF/A and PDF/X
+
+To save a copy as PDF/A or PDF/X, py-foliation uses another program of
+mine, [pdf2iso](https://github.com/nivaca/pdf2iso) (it needs
+Ghostscript). py-foliation looks for it, as `pdf2iso` or
+`pdf2iso.py`, on the PATH and in `~/bin` and `~/.local/bin` (or, if it is older than its version 2.0, as `py-pdfconform` or `py-pdfconform.py`); a program
+started from the menu of the desktop often doesn't have those two folders on
+its PATH. If it is elsewhere, give its path in *Settings ▸ pdf2iso…*,
+which says which one will be used (it is kept as `pdfconform` in the
+configuration file, which the command line reads too). A script that can't
+be run by itself is run with `python3`. Without it, those choices are greyed
+out and everything else works.
+
+The conversion keeps the page labels and the view when the file is opened.
+Ghostscript writes the pages anew, though: in the copy, the headers, footers
+and watermarks py-foliation added are part of the pages, and can no longer
+be updated or removed. PDF/A and PDF/X can't be protected by a password, so
+the copy of a protected file has none.
+
 ## The window
 
     py-foliation-gui [file.pdf]
@@ -108,8 +127,14 @@ on the right, the chosen page.
 - **Go to the page labelled…** (Ctrl+L) finds a page by its label: `xii`,
   `12v`, `A-3`.
 - **Edit ▸ Undo / Redo** go back and forth over the changes.
-- **File ▸ Save** gives the open file the new labels; **Save as…** saves a
-  copy with them; **Revert to the labels of the file** drops the changes.
+- **File ▸ Save** gives the open file the new labels; **Save as ▸ PDF…**
+  saves a copy with them, which stays open; **Revert to the labels of the
+  file** drops the changes.
+- **File ▸ Save as ▸ PDF/A-1b, PDF/A-2b, PDF/A-3b** (for archiving) or
+  **PDF/X-4** (for printing) saves a copy with the labels and the rest of the
+  changes in that standard, made by pdf2iso (see
+  [PDF/A and PDF/X](#pdfa-and-pdfx)). It is an export: the open file stays
+  as it was, with its changes still to save.
 - **File ▸ Copy the labels of another PDF…** takes them from another file,
   for instance an earlier export of the same book.
 - **File ▸ Labels from a list…** reads the label of every page from a text
@@ -131,7 +156,7 @@ on the right, the chosen page.
   numbers or watermarks on a list of PDFs at once, in the order of the list
   (the Bates numbers go on from one file to the next), saving them next to
   each file, in another folder, or over the files themselves, with a text
-  before or after their names.
+  before or after their names, and as a plain PDF, PDF/A or PDF/X.
 
 Files protected by a password ask for it, and keep their protection when
 they are saved.
@@ -152,6 +177,7 @@ they are saved.
     py-foliation view book.pdf                     # how it opens in a viewer
     py-foliation header-footer book.pdf --footer-center '$pagelabel' -i   # a footer
     py-foliation watermark book.pdf --text DRAFT --opacity 30% -i         # a watermark
+    py-foliation set book.pdf 1:r 9:D --conform a-2b   # book-labelled.pdf, as PDF/A-2b
 
 A range is written `PAGES:STYLE[:START[:PREFIX]]`:
 
@@ -183,6 +209,9 @@ leaf and its side, such as `12v`), and `-` or `none` (the prefix only).
 pages given, and `--remove PAGE` drops the range that starts at PAGE.
 `show` prints the command that gives the labels of one file to another.
 `--password` opens protected files, which keep their protection.
+`--conform` saves the files as PDF/A or PDF/X (`a-1b`, `a-2b`, `a-3b` or
+`x-4`), with pdf2iso (see [PDF/A and PDF/X](#pdfa-and-pdfx)); it goes
+with every command that writes files.
 
 ### Folios, suffixes and any other labels
 

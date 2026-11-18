@@ -417,3 +417,64 @@ def test_header_footer_dialog(app, window, book, monkeypatch):
     assert dlg.slots["header_left"].text() == "$pagelabel" and dlg.slots["footer_left"].text() == ""
     assert dlg.delete_profile() and headfoot.read_profiles() == {}
     dlg.reject()
+
+
+def test_save_as_items(window, book, monkeypatch):
+    from py_foliation import conform
+    assert not window.output_actions[""].isEnabled() and not window.output_actions["a-2b"].isEnabled()
+    window.open_path(book)
+    assert window.output_actions[""].isEnabled() and window.a_save_as is window.output_actions[""]
+    monkeypatch.setattr(conform, "command", lambda path=None: None)
+    window._show_output()
+    assert not window.output_actions["a-2b"].isEnabled() and "Needs pdf2iso" in \
+        window.output_actions["x-4"].toolTip()
+    asked = []
+    window.export_dialog_as = lambda standard: asked.append(standard)
+    monkeypatch.setattr(conform, "command", lambda path=None: ["pdf2iso"])
+    window._show_output()
+    window.output_actions["a-3b"].trigger()
+    assert asked == ["a-3b"]
+
+
+def test_export_refuses_the_open_file(window, book, monkeypatch):
+    window.open_path(book)
+    window.clear_labels()
+    assert not window.export_as(book, "a-2b")
+    assert ranges_of(book) == [Range(1, "r"), Range(9, "D")] and window.is_modified()
+
+
+@pytest.mark.skipif(not shutil.which("pdf2iso"), reason="pdf2iso not installed")
+def test_export_as_pdfx(window, book, tmp_path, monkeypatch):
+    from PySide6.QtWidgets import QFileDialog
+    window.warn = lambda title, text: pytest.fail(text)
+    window.open_path(book)
+    window.show_page(20)
+    window.add_range()
+    out = tmp_path / "print.pdf"
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(out), ""))
+    window.output_actions["x-4"].trigger()
+    assert b"GTS_PDFX" in out.read_bytes() and ranges_of(out) == window.ranges
+    assert "PDF/X-4" in window.statusBar().currentMessage()
+    # (an export: the window stays on the file, with its changes still to save)
+    assert window.path == book and window.is_modified() and ranges_of(book) == [Range(1, "r"), Range(9, "D")]
+
+
+def test_pdfconform_setting(window, book, tmp_path, monkeypatch):
+    from py_foliation import config
+    from py_foliation.gui.window import PdfconformDialog
+    monkeypatch.setenv("PATH", "/usr/bin:/bin")
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    window.open_path(book)
+    assert not window.output_actions["a-2b"].isEnabled()
+    d = PdfconformDialog("", window)
+    assert "Not found" in d.found.text()
+    d.edit.setText(str(tmp_path / "nothing"))
+    assert "no such file" in d.found.text()
+    script = tmp_path / "my-pdfconform"
+    script.write_text("#!/bin/sh\n")
+    d.edit.setText(str(script))
+    assert str(script) in d.found.text()
+    monkeypatch.setattr(PdfconformDialog, "exec", lambda self: QtWidgets.QDialog.DialogCode.Accepted)
+    monkeypatch.setattr(PdfconformDialog, "path", lambda self: str(script))
+    assert window.pdfconform_dialog()
+    assert config.get("pdfconform") == str(script) and window.output_actions["a-2b"].isEnabled()

@@ -10,7 +10,7 @@ pages of the file.  Only the labels change; the pages themselves are left
 as they are.  Nicolas Vaughan made it in 2026.  It has a window, for
 seeing and editing the labels page by page, and a command line, for doing
 the same in scripts, in English or in Spanish.  Here I explain how it was
-made, in nine stages.
+made, in ten stages.
 
 py-foliation is free software, under the GNU General Public License,
 version 3 or later.  It is written in Python and relies on pikepdf (based
@@ -258,10 +258,39 @@ them in another folder and add a text before or after their names.  The
 date that `$date` writes has a choice of formats, and the dialog inserts
 page numbers in the usual forms (1 of n, Page 1 of n …).
 
+10. PDF/A and PDF/X
+-------------------
+
+A book with its labels is often a book for a repository or for a printer,
+and they ask for PDF/A or PDF/X.  pdf2iso, another program of mine,
+converts a PDF to either with Ghostscript and pikepdf, and checks the
+result.  py-foliation doesn't do the conversion itself (`conform.py`): it
+writes the file with its labels and gives it to pdf2iso, if it is
+installed; if not, those choices are greyed out.  In the window it is an
+export, *File ▸ Save as ▸ PDF/A-2b…* and the rest, which leaves the open
+file as it was, with its changes still to save; on the command line, every
+command that writes files takes `--conform`, and *On several files…* has the
+same choice.
+
+Before it was wired in I checked what survives.  Ghostscript keeps the page
+labels, the page layout and mode and the page the file opens at, which is
+all py-foliation writes; it drops the viewer preferences, which py-foliation
+only keeps.  But it writes the pages anew, so the records of the headers,
+footers and watermarks py-foliation added are lost: in the copy they are
+part of the pages.  That is why the window never puts a PDF/A in place of
+the file open.
+
+pdf2iso is a script, usually in `~/bin`, which a program started from
+the menu of the desktop often doesn't have on its PATH; so it is looked for
+there and in `~/.local/bin` as well, and *Settings ▸ pdf2iso…* says
+where it is (`pdfconform` in the configuration file).  It is always run
+without py-foliation's own Python, the AppImage or the virtual environment,
+which hasn't pikepdf for it; this is the lesson py-redact learnt first.
+
 Testing
 -------
 
-The program has 130 automated tests (`tests/`), run with pytest.  They
+The program has 141 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, the reading and
 writing of the number tree, including odd trees, the ranges found in
@@ -272,12 +301,15 @@ pdftotext reads it, on rotated pages too, and their removal, which must
 give the pages back byte for byte; several layers on a page, taking one
 from between others, updating, the files of 0.7, watermarks of text and
 of a page, behind and only for printing, the date formats, and Bates
-numbers going on through several files.
+numbers going on through several files; finding pdf2iso, and,
+when it is installed, conversions to PDF/A and PDF/X that keep the page
+labels.
 The command line is run from start to finish on the example document,
 docs/example/numbers-100.pdf, whose pages each show their number, and on
 broken input.  The window is tested without a screen, with Qt's
 offscreen platform: opening, editing, undoing, saving, saving as,
-unsaved changes, the view when the file is opened, the language, and a
+unsaved changes, the view when the file is opened, the language, saving a
+copy as PDF/X and its setting, and a
 preview that settles at every size of the window.  Other tests check
 that every text has its translation and that none is left over, the menu
 installer on each system, and the packaging files and the signing key.  The tests run on every push, on GitHub Actions.

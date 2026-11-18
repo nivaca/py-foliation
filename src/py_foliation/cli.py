@@ -8,7 +8,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from . import config, headfoot, interface, labels, stamps, view, watermark
+from . import conform, config, headfoot, interface, labels, stamps, view, watermark
 from .changes import Change
 from .files import open_pdf, read_list, save_pdf
 from .interface import N_, ntr, tr
@@ -155,6 +155,9 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
                                 "with --output-dir)"))
         sp.add_argument("-n", "--dry-run", action="store_true",
                         help=dry_run_help or tr("show the labels the files would get, without writing anything"))
+        sp.add_argument("--conform", choices=[v for v, _ in conform.STANDARDS], metavar=tr("STANDARD"),
+                        help=tr("save the PDFs as PDF/A or PDF/X: a-1b, a-2b, a-3b (archiving) or x-4 "
+                                "(printing), made by pdf2iso, which must be installed"))
         password(sp)
 
     def stamp_options(sp, what: str):
@@ -468,6 +471,11 @@ def change(a, inputs: list[Path], make, write=labels.write_labels, describe=prin
                             "<input>-labelled.pdf, or changed with --in-place"))
     if (a.in_place or a.output) and (getattr(a, "name_prefix", "") or getattr(a, "name_suffix", None) is not None):
         raise LabelError(tr("--name-prefix and --name-suffix go with --output-dir, or alone"))
+    standard = getattr(a, "conform", None)
+    if standard and not a.dry_run and not conform.available():
+        raise LabelError(tr("{standard} can't be made: {command} is not installed (or not on the PATH, in ~/bin "
+                            "or in ~/.local/bin, or where the setting pdfconform says)",
+                            standard=conform.label(standard), command=conform.COMMAND))
     if getattr(a, "output_dir", None) is not None and not a.dry_run:
         try:
             a.output_dir.mkdir(parents=True, exist_ok=True)
@@ -488,7 +496,16 @@ def change(a, inputs: list[Path], make, write=labels.write_labels, describe=prin
                         raise LabelError(tr("the output is the input file; use --in-place to change it"))
                     write(pdf, made)
                     save_pdf(pdf, out)
-                    print(ntr("Wrote {path} ({count} page)", "Wrote {path} ({count} pages)", n, path=out))
+                    wrote = ntr("Wrote {path} ({count} page)", "Wrote {path} ({count} pages)", n, path=out)
+                    if not standard:
+                        print(wrote)
+            if standard and not a.dry_run:  # (once the file is closed: an input changed in place is replaced)
+                try:
+                    check = conform.convert(out, out, standard, a.password)
+                except conform.ConformError as e:
+                    raise LabelError(tr("{path} was saved as a plain PDF, but it could not be made {standard}: "
+                                        "{error}", path=out, standard=conform.label(standard), error=e)) from None
+                print(wrote + " — " + conform.label(standard) + (f" ({check})" if check else ""))
         except LabelError as e:
             report(e)
             failed = True

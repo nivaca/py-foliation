@@ -7,10 +7,11 @@ It is a small TOML file, ``config.toml``, in the user's configuration folder:
 * Windows: ``%APPDATA%\\py-foliation``.
 
 ``$PY_FOLIATION_CONFIG`` names another folder. It holds the language of
-the interface:
+the interface and, if given, where pdf2iso is (see conform.py):
 
     [parameters]
     interface = "es"
+    pdfconform = "/home/me/bin/pdf2iso.py"
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ import tomllib
 from pathlib import Path
 
 ENV = "PY_FOLIATION_CONFIG"
-SETTINGS = {"interface": "en"}  # name: default
+SETTINGS = {"interface": "en", "pdfconform": ""}  # name: default
 
 
 class ConfigError(Exception):

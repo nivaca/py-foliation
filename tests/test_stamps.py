@@ -287,3 +287,29 @@ def test_window_dialogs(book, tmp_path, monkeypatch):
         assert b"(Z000003)" in pdf.pages[0].obj.Contents[-1].read_bytes()
     batch.reject()
     app.processEvents()
+
+
+def test_batch_dialog_greys_out_pdfa_without_pdfconform(book, tmp_path, monkeypatch):
+    pytest.importorskip("PySide6.QtWidgets")
+    import os
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+    from py_foliation import conform
+    from py_foliation.gui.batch_dialog import BatchDialog
+    QApplication.instance() or QApplication([])
+    monkeypatch.setattr(conform, "command", lambda path=None: None)
+    batch = BatchDialog(None, [book], tmp_path)
+    model = batch.standard.model()
+    assert model.item(0).isEnabled() and not model.item(2).isEnabled() and batch.standard.currentData() == ""
+    batch.reject()
+    monkeypatch.setattr(conform, "command", lambda path=None: ["pdf2iso"])
+    made = []
+    monkeypatch.setattr(conform, "convert", lambda source, target, standard, password="": (
+        made.append((source, target, standard)) or "veraPDF: PASS"))
+    batch = BatchDialog(None, [book], tmp_path)
+    batch.action.setCurrentIndex(batch.action.findData("remove-watermark"))
+    batch.standard.setCurrentIndex(batch.standard.findData("a-2b"))
+    out = book.with_name("book-labelled.pdf")
+    assert batch.run() and made == [(out, out, "a-2b")]
+    assert "PDF/A-2b (veraPDF: PASS)" in batch.report.toPlainText()
+    batch.reject()

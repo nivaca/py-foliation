@@ -5,12 +5,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QLabel,
-    QLineEdit, QListWidget, QPlainTextEdit, QPushButton, QRadioButton, QVBoxLayout,
+    QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QGroupBox, QHBoxLayout,
+    QLabel, QLineEdit, QListWidget, QPlainTextEdit, QPushButton, QRadioButton, QVBoxLayout,
 )
 
-from .. import files, headfoot, stamps, watermark
+from .. import conform, files, headfoot, stamps, watermark
 from ..changes import Change
 from ..interface import N_, tr
 from .headfoot_dialog import ask_header_footer
@@ -86,6 +87,15 @@ class BatchDialog(QDialog):
         self.prefix = QLineEdit()
         self.suffix = QLineEdit("-labelled")
         self.overwrite.toggled.connect(self._overwrite_toggled)
+        self.standard = QComboBox()
+        have = conform.available()
+        for value, name in [("", N_("PDF"))] + conform.STANDARDS:
+            self.standard.addItem(tr(name), value)
+            if value and not have:  # (greyed out without pdf2iso)
+                self.standard.model().item(self.standard.count() - 1).setEnabled(False)
+        self.standard.setToolTip(tr("PDF/A and PDF/X are made by pdf2iso") if have else
+                                 tr("Needs {command}: install it, or say where it is in Settings",
+                                    command=conform.COMMAND))
         form = QFormLayout()
         row = QHBoxLayout()
         row.addWidget(self.other)
@@ -96,6 +106,7 @@ class BatchDialog(QDialog):
         form.addRow(self.overwrite)
         form.addRow(tr("Before the names"), self.prefix)
         form.addRow(tr("After the names"), self.suffix)
+        form.addRow(tr("Save as"), self.standard)
         where_box = QGroupBox(tr("Saving"))
         where_box.setLayout(form)
 
@@ -220,8 +231,23 @@ class BatchDialog(QDialog):
         change = self.change()
         results, used = files.batch(self.paths(), change, folder=folder, prefix=self.prefix.text(),
                                     suffix=self.suffix.text(), overwrite=self.overwrite.isChecked())
+        standard = self.standard.currentData()
         lines = []
         for source, target, error in results:
+            if target and standard:
+                QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+                try:
+                    check = conform.convert(target, target, standard)
+                except conform.ConformError as e:
+                    lines.append(tr("{path}: saved as a plain PDF, but it could not be made {standard}: {error}",
+                                    path=target.name, standard=conform.label(standard), error=e))
+                else:
+                    lines.append(tr("Wrote {path}", path=target) + " — " + conform.label(standard)
+                                 + (f" ({check})" if check else ""))
+                finally:
+                    QApplication.restoreOverrideCursor()
+                self.written.append(target)
+                continue
             lines.append(tr("Wrote {path}", path=target) if target else tr("{path}: {error}", path=source.name,
                                                                             error=error))
             if target:

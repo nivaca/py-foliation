@@ -77,6 +77,25 @@ py-foliation-install     # opcional: añade la ventana al menú de aplicaciones
 `py-foliation-install` funciona en Linux, Windows y macOS, en sus propias
 carpetas; `--uninstall` quita lo que añadió.
 
+### PDF/A y PDF/X
+
+Para guardar una copia como PDF/A o PDF/X, py-foliation usa otro programa
+mío, [pdf2iso](https://github.com/nivaca/pdf2iso) (necesita
+Ghostscript). py-foliation lo busca, como `pdf2iso` o
+`pdf2iso.py`, en el PATH y en `~/bin` y `~/.local/bin` (o, si es anterior a su versión 2.0, como `py-pdfconform` o `py-pdfconform.py`); un programa
+abierto desde el menú del escritorio a menudo no tiene esas dos carpetas en
+su PATH. Si está en otra parte, se indica su ruta en *Ajustes ▸
+pdf2iso…*, que dice cuál se usará (queda como `pdfconform` en el
+archivo de configuración, que también lee la línea de órdenes). Un script
+que no puede ejecutarse por sí mismo se ejecuta con `python3`. Sin él, esas
+opciones aparecen desactivadas y todo lo demás funciona.
+
+La conversión conserva las etiquetas de página y la vista al abrir el
+archivo. Ghostscript, eso sí, escribe las páginas de nuevo: en la copia, los
+encabezados, pies y marcas de agua que añadió py-foliation pasan a ser parte
+de las páginas, y ya no pueden actualizarse ni quitarse. PDF/A y PDF/X no
+admiten contraseña, así que la copia de un archivo protegido sale sin ella.
+
 ## La ventana
 
     py-foliation-gui [archivo.pdf]
@@ -114,8 +133,13 @@ la derecha, la página elegida.
   etiqueta: `xii`, `12v`, `A-3`.
 - **Editar ▸ Deshacer / Rehacer** van y vienen por los cambios.
 - **Archivo ▸ Guardar** da las nuevas etiquetas al archivo abierto;
-  **Guardar como…** guarda una copia con ellas; **Volver a las etiquetas del
-  archivo** descarta los cambios.
+  **Guardar como ▸ PDF…** guarda una copia con ellas, que queda abierta;
+  **Volver a las etiquetas del archivo** descarta los cambios.
+- **Archivo ▸ Guardar como ▸ PDF/A-1b, PDF/A-2b, PDF/A-3b** (para archivo) o
+  **PDF/X-4** (para imprenta) guarda una copia con las etiquetas y los demás
+  cambios en esa norma, hecha por pdf2iso (véase
+  [PDF/A y PDF/X](#pdfa-y-pdfx)). Es una exportación: el archivo abierto se
+  queda como estaba, con sus cambios por guardar.
 - **Archivo ▸ Copiar las etiquetas de otro PDF…** las toma de otro archivo,
   por ejemplo de una exportación anterior del mismo libro.
 - **Archivo ▸ Etiquetas de una lista…** lee la etiqueta de cada página de un
@@ -138,7 +162,7 @@ la derecha, la página elegida.
   Bates o marcas de agua en una lista de PDF a la vez, en el orden de la lista
   (los números Bates siguen de un archivo al siguiente), y los guarda junto a
   cada archivo, en otra carpeta o sobre los propios archivos, con un texto
-  antes o después de sus nombres.
+  antes o después de sus nombres, y como PDF corriente, PDF/A o PDF/X.
 
 Los archivos protegidos con contraseña la piden, y conservan su protección al
 guardarlos.
@@ -159,6 +183,7 @@ guardarlos.
     py-foliation view libro.pdf                     # cómo se abre en un visor
     py-foliation header-footer libro.pdf --footer-center '$pagelabel' -i   # un pie de página
     py-foliation watermark libro.pdf --text BORRADOR --opacity 30% -i     # una marca de agua
+    py-foliation set libro.pdf 1:r 9:D --conform a-2b   # libro-labelled.pdf, en PDF/A-2b
 
 Un intervalo se escribe `PÁGINAS:ESTILO[:INICIO[:PREFIJO]]`:
 
@@ -190,6 +215,9 @@ y su lado, como `12v`), y `-` o `none` (solo el prefijo).
 las páginas indicadas, y `--remove PÁGINA` quita el intervalo que empieza en
 PÁGINA. `show` imprime la orden que da las etiquetas de un archivo a otro.
 `--password` abre archivos protegidos, que conservan su protección.
+`--conform` guarda los archivos como PDF/A o PDF/X (`a-1b`, `a-2b`, `a-3b` o
+`x-4`) con pdf2iso (véase [PDF/A y PDF/X](#pdfa-y-pdfx)); sirve en
+todas las órdenes que escriben archivos.
 
 ### Folios, sufijos y cualquier otra etiqueta
 
