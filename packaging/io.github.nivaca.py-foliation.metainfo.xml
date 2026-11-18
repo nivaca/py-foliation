@@ -83,6 +83,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.9" date="2026-11-17">
+      <description>
+        <p>PDF/A, for archiving, and PDF/X-4, for printing: File ▸ Save as writes a copy in either standard, and so do --conform on the command line and On several files. The conversion is made by pdf2iso, which must be installed; without it those choices are greyed out.</p>
+      </description>
+    </release>
     <release version="0.8" date="2026-11-17">
       <description>
         <p>Watermarks: a text or a page of another PDF, turned, scaled and transparent, in front of the pages or behind them, shown only when printing or only on the screen.</p>

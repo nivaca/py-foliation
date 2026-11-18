@@ -10,7 +10,7 @@
 # Build with packaging/build-rpm.sh, which makes the source tarball.
 
 Name:           py-foliation
-Version:        0.8
+Version:        0.9
 Release:        1%{?dist}
 Summary:        Change the page labels (the numbering a viewer shows) of PDF documents
 
@@ -96,6 +96,10 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
 %{zsh_completions_dir}/_py-foliation
 
 %changelog
+* Tue Nov 17 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.9-1
+- PDF/A and PDF/X output, made by pdf2iso if it is installed: File > Save
+  as, --conform, and On several files
+
 * Tue Nov 17 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.8-1
 - Watermarks; several headers and footers per page, Update and Remove the
   Bates numbers; Bates numbers through several files; date formats
