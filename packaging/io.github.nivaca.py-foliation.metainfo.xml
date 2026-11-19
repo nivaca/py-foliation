@@ -85,6 +85,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="1.0.1" date="2026-11-19">
+      <description>
+        <p>Dragging thumbnails puts the pages after the thumbnail under the pointer, or the nearest one, and no longer sends them to the end of the book when dropped between thumbnails; a line under that thumbnail shows where, and the pointer shows how many pages it carries. New installers set py-foliation up to run with Python on Linux, Windows and macOS.</p>
+      </description>
+    </release>
     <release version="1.0" date="2026-11-19">
       <description>
         <p>A lighter window. The thumbnails are drawn in the background, the pages in view first, so the window no longer stops while a scanned book is drawn, and each thumbnail is kept while its page looks the same: moving, deleting, duplicating or relabelling pages, and undoing, draw none again. Choosing many pages and rearranging the pages of long books are much faster.</p>
