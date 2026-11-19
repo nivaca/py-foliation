@@ -430,13 +430,24 @@ def rebuild(pdf: Pdf, items: list[Item]) -> None:
         else:
             used.add(item)
             new.append(old[item - 1])
-    while len(pdf.pages):
-        del pdf.pages[-1]
-    for item in new:
+    # Only the pages that change are taken out and put in (one by one, each a slow step in a long
+    # book): those at the start and at the end that stay as they were are left alone.
+    def same(i: int, j: int) -> bool:
+        return not isinstance(new[j], Inserted) and new[j].objgen == old[i].objgen
+
+    start = 0
+    while start < min(len(old), len(new)) and same(start, start):
+        start += 1
+    end = 0
+    while end < min(len(old), len(new)) - start and same(len(old) - 1 - end, len(new) - 1 - end):
+        end += 1
+    for _ in range(len(old) - start - end):
+        del pdf.pages[start]
+    for k, item in enumerate(new[start:len(new) - end]):
         if isinstance(item, Inserted):
-            pdf.pages.append(_open_source(item.source, item.password).pages[item.page - 1])
+            pdf.pages.insert(start + k, _open_source(item.source, item.password).pages[item.page - 1])
         else:
-            pdf.pages.append(Page(item))
+            pdf.pages.insert(start + k, Page(item))
     # the destinations that went to pages deleted: to the next page left (or the last before it)
     gone = {}
     survivors = [p for p in range(1, len(old) + 1) if p in kept_positions]

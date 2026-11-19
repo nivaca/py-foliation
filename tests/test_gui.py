@@ -207,12 +207,30 @@ def test_pages_list(app, window, book):
     assert window.go_to_label("1") and window.current_page() == 30  # (Enter again: the next one)
     assert not window.go_to_label("xcix")
     window.a_thumbs.setChecked(True)
-    for _ in range(40):
-        app.processEvents()
+    wait_for_thumbnails(app, window)
     thumbs = window.thumbs.list
-    assert len(window._thumbs) == 100 and not thumbs.item(0).icon().isNull()
+    assert drawn(window) == 100 and not thumbs.item(0).icon().isNull()
     assert thumbs.item(3).text() == "4\niv" and window.pages.item(3).text().split() == ["4", "iv"]
     window.a_thumbs.setChecked(False)
+
+
+def wait_for_thumbnails(app, window, seconds: float = 30):
+    """Until the thread has drawn the thumbnails asked for."""
+    import time
+    end = time.monotonic() + seconds
+    app.processEvents()
+    while window.thumbnails_pending() and time.monotonic() < end:
+        time.sleep(0.005)
+        app.processEvents()
+    app.processEvents()
+    assert not window.thumbnails_pending()
+
+
+def drawn(window) -> int:
+    """The pages of the panel whose thumbnail is drawn."""
+    blank = window._blank_thumb().cacheKey()
+    thumbs = window.thumbs.list
+    return sum(thumbs.item(i).icon().cacheKey() != blank for i in range(thumbs.count()))
 
 
 def select(window, pages):
@@ -504,9 +522,8 @@ def test_thumbnails_panel(app, window, book):
     thumbs.wheelEvent(wheel)
     assert panel.height_of_thumbnails() == before + 16 and thumbs.iconSize().height() == before + 16
     panel.slider.setValue(300)
-    for _ in range(60):
-        app.processEvents()
-    assert len(window._thumbs) == 100 and thumbs.iconSize().height() == 300
+    wait_for_thumbnails(app, window)
+    assert drawn(window) == 100 and thumbs.iconSize().height() == 300
     moved = []
     thumbs.moved.disconnect()
     thumbs.moved.connect(lambda pages, where, copied: moved.append((pages, where, copied)))
@@ -584,3 +601,29 @@ def test_thumbnails_are_dragged(app, window, book, monkeypatch):
                        Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
     thumbs.dropEvent(event)
     assert window.hf_changes[-1] == arrange.Move((3,), 8, labels=arrange.FOLLOW)
+
+
+def test_thumbnails_kept_across_changes(app, window, book, monkeypatch):
+    """Changes that leave a page as it looks keep its thumbnail; the preview isn't written again
+    for labels alone; choosing many pages is one step."""
+    window.open_path(book)
+    monkeypatch.setattr(window, "labels_choice", lambda: arrange.FOLLOW)
+    window.a_thumbs.setChecked(True)
+    wait_for_thumbnails(app, window)
+    thumbs = window.thumbs.list
+    icon_of = {i + 1: thumbs.item(i).icon().cacheKey() for i in range(thumbs.count())}
+    window.arrange_pages(arrange.Rotate((5,), 90))
+    preview = window._preview_source
+    window.change(window.ranges + [Range(70, "r")])  # (labels only: no new preview)
+    assert window._preview_source == preview
+    window.arrange_pages(arrange.Move((2,), 10))
+    assert window._keys[0] == (1, 0) and window._keys[8] == (2, 0) and window._keys[3] == (5, 90)
+    assert window.thumbnails_pending() <= 2  # (only the rotated page is drawn again)
+    assert thumbs.item(8).icon().cacheKey() == icon_of[2] and thumbs.item(0).icon().cacheKey() == icon_of[1]
+    wait_for_thumbnails(app, window)
+    assert thumbs.item(3).icon().cacheKey() != icon_of[5]  # (page 5 turned)
+    assert drawn(window) == 100
+    window.thumbs.list.selectAll()
+    assert window.selected_pages() == list(range(1, 101))
+    window.pages.clearSelection()
+    assert len(window.thumbs.list.selectedItems()) == 0

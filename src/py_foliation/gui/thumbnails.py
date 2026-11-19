@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QRect, QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPainter, QPalette, QPixmap
+from PySide6.QtGui import QColor, QIcon, QImage, QPainter, QPalette, QPixmap
 from PySide6.QtWidgets import QApplication
 from PySide6.QtPdf import QPdfDocument
 
@@ -48,22 +48,58 @@ def blank(height: int = DEFAULT, ratio: float = 1.0) -> QIcon:
     return QIcon(_transparent(box(height), ratio))
 
 
-def render(doc: QPdfDocument, page: int, height: int = DEFAULT, ratio: float = 1.0) -> QIcon:
-    """The thumbnail of PAGE (1-based), framed, at the bottom of its box of HEIGHT (drawn at RATIO
-    device pixels to a pixel, so that it is sharp on screens that have more)."""
+def page_sizes(pdf) -> list[tuple[float, float]]:
+    """The sizes (width, height, in points) of the pages of PDF (a pikepdf.Pdf) as they are shown:
+    their crop box, turned by their rotation. Read from the file's structure, without drawing
+    anything (PDFium would load each page)."""
+    sizes = []
+    for page in pdf.pages:
+        try:
+            box_ = [float(v) for v in page.cropbox]
+            width, height = abs(box_[2] - box_[0]), abs(box_[3] - box_[1])
+            node, angle = page.obj, 0
+            while node is not None:  # (/Rotate may be on a parent of the page)
+                if "/Rotate" in node:
+                    angle = int(node.Rotate)
+                    break
+                node = node.get("/Parent")
+            sizes.append((height, width) if angle % 180 else (width, height))
+        except (ValueError, TypeError, AttributeError, IndexError):
+            sizes.append((612.0, 792.0))
+    return sizes
+
+
+def frame(image: QImage, height: int, ratio: float = 1.0) -> QIcon:
+    """The thumbnail of a page drawn as IMAGE (at RATIO device pixels to a pixel): framed, on white,
+    at the bottom of its box of HEIGHT."""
     room = box(height)
-    inner = room - QSize(2, 2)
+    size = (QSize(round(image.width() / ratio), round(image.height() / ratio)) if not image.isNull()
+            else room - QSize(2, 2))
+    pixmap = _transparent(room, ratio)
+    p = QPainter(pixmap)
+    x, y = (room.width() - size.width()) // 2, room.height() - size.height() - 1
+    p.fillRect(x, y, size.width(), size.height(), QColor("white"))
+    if not image.isNull():
+        p.drawImage(QRect(x, y, size.width(), size.height()), image)
+    p.setPen(QColor(128, 128, 128))
+    p.drawRect(x - 1, y - 1, size.width() + 1, size.height() + 1)
+    p.end()
+    return QIcon(pixmap)
+
+
+def nbytes(height: int, ratio: float = 1.0) -> int:
+    """The memory a thumbnail of HEIGHT takes (about)."""
+    room = box(height)
+    return int(room.width() * room.height() * 4 * ratio * ratio)
+
+
+def render(doc: QPdfDocument, page: int, height: int = DEFAULT, ratio: float = 1.0) -> QIcon:
+    """The thumbnail of PAGE (1-based) of DOC, drawn here and now (see thumb_renderer for drawing
+    them in a thread)."""
+    inner = box(height) - QSize(2, 2)
     size = doc.pagePointSize(page - 1).toSize().scaled(inner, Qt.AspectRatioMode.KeepAspectRatio)
     if size.isEmpty():
         size = inner
     image = doc.render(page - 1, size * ratio)
     image.setDevicePixelRatio(ratio)
-    pixmap = _transparent(room, ratio)
-    p = QPainter(pixmap)
-    x, y = (room.width() - size.width()) // 2, room.height() - size.height() - 1
-    p.fillRect(x, y, size.width(), size.height(), QColor("white"))
-    p.drawImage(x, y, image)
-    p.setPen(QColor(128, 128, 128))
-    p.drawRect(x - 1, y - 1, size.width() + 1, size.height() + 1)
-    p.end()
-    return QIcon(pixmap)
+    return frame(image, height, ratio)

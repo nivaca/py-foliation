@@ -178,9 +178,11 @@ def gui_child(kind: str, doc: str, out: str, size: str, dark: bool):
     settle(0.3)
     if shot.get("thumbnails"):
         w.a_thumbs.setChecked(True)
-        settle(2)  # (the thumbnails are drawn a few at a time)
     w.refresh(select=shot["range"])
     w.show_page(shot["page"])
+    end = time.time() + 30
+    while w.thumbnails_pending() and time.time() < end:  # (drawn in the background)
+        settle(0.05)
     w.pages.scrollToItem(w.pages.currentItem(), w.pages.ScrollHint.PositionAtCenter)
     w.pages.setFocus()
     settle(1.5)  # (the PDF view renders in the background)

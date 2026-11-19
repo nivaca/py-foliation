@@ -141,7 +141,9 @@ the window's *Go to the page labelled…* find a page by its label.  The
 window can show the pages as thumbnails with their labels, in a panel
 of its own whose thumbnails can be made bigger or smaller (since 0.11), with
 a bar of the operations on the pages chosen and keys for them (since 0.12;
-the list can then be hidden), and a
+the list can then be hidden).  Since 1.0 the thumbnails are drawn in Qt's
+own thread, those in view first, and each is kept as long as its page looks
+the same, so that moving, deleting or relabelling pages draws none again; a
 double-click on a page starts a range there.  Pages chosen in the list
 (with Shift and Ctrl) can be numbered at once, in any style, numbered to
 continue from the page before them, given one label, or relabelled one

@@ -232,3 +232,33 @@ def test_blank_pages(book, tmp_path, capsys):
     assert main(["pages", str(book), "--insert-blank", "9", "2", "-o", str(tmp_path / "out.pdf")]) == 0
     assert labels_of(tmp_path / "out.pdf")[7:11] == ["viii", "", "", "1"]
     assert main(["pages", str(book), "--insert-blank", "9", "two", "-n"]) == 1
+
+
+def test_rebuild_keeps_and_changes_the_right_pages(book, tmp_path):
+    """Each page of the result is the page it should be (only the pages that change are taken out
+    and put in, the others are left where they are)."""
+    def contents(path):
+        with pikepdf.open(path) as pdf:
+            return [page.obj.Contents.read_bytes() if "/Contents" in page.obj else b"" for page in pdf.pages]
+
+    original = contents(book)
+    n = len(original)
+    other = tmp_path / "other.pdf"
+    shutil.copy(book, other)
+    for op in (arrange.Delete((7,)), arrange.Delete((1, 2, n)), arrange.Move((2,), 10), arrange.Move((n,), 1),
+               arrange.Move((3, 4), n + 1), arrange.Duplicate((5, 6)), arrange.Duplicate((1,), n + 1),
+               arrange.Reverse((10, 11, 12, 13)), arrange.Reverse(tuple(range(1, n + 1))),
+               arrange.Insert(str(other), (2, 3), 50), arrange.InsertBlank(1), arrange.InsertBlank(n + 1),
+               arrange.Order(tuple([2, 1] + list(range(3, n + 1))))):
+        out = tmp_path / "out.pdf"
+        files.write_copy(book, [], out, "", None, (op,))
+        got = contents(out)
+        items = op.items(n)
+        assert len(got) == len(items), op
+        for i, item in enumerate(items):
+            if isinstance(item, int):
+                assert got[i] == original[item - 1], (op, i)
+            elif isinstance(item, arrange.Inserted):
+                assert got[i] == original[item.page - 1], (op, i)
+            else:
+                assert got[i] == b"", (op, i)

@@ -4,12 +4,15 @@ labels, and a preview of the chosen page."""
 from __future__ import annotations
 
 import dataclasses
+from collections import OrderedDict
 import json
 import tempfile
 from pathlib import Path
 
 import pikepdf
-from PySide6.QtCore import QByteArray, QItemSelectionModel, QPointF, QSettings, Qt, QTimer
+from PySide6.QtCore import (
+    QByteArray, QEvent, QItemSelection, QItemSelectionModel, QPoint, QPointF, QSettings, Qt, QTimer,
+)
 from PySide6.QtGui import QAction, QActionGroup, QIcon, QKeySequence
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtPdfWidgets import QPdfView
@@ -28,6 +31,7 @@ from ..labels import LabelError, Range
 from . import thumbnails
 from .arrange_dialog import PageList, ask_arrange, ask_labels
 from .headfoot_dialog import ask_header_footer
+from .thumb_renderer import Job, ThumbRenderer
 from .thumbs_panel import ThumbsPanel
 from .watermark_dialog import ask_watermark
 from .widgets import FIELDS, LABELS, NumberDialog, edited_signal, fit_columns, range_row
@@ -91,9 +95,15 @@ class MainWindow(QMainWindow):
         self._previewed = None  # what the preview shows: the file, or a copy with the changes
         self._tmpdir: tempfile.TemporaryDirectory | None = None
         self.password = ""  # (of the open document)
-        self._thumbs: dict[int, QIcon] = {}  # page (1-based) -> its thumbnail
+        # The thumbnails drawn, by what each shows (see _page_keys), the latest seen last; they
+        # outlive the changes that leave their pages as they are (labels, moves, deletions...).
+        self._thumb_cache: OrderedDict = OrderedDict()
+        self._keys: list = []  # what each page of the preview shows (its key in _thumb_cache)
         self._blank: QIcon | None = None
         self._syncing = False  # (while the list and the panel of thumbnails are made to agree)
+        self._preview_source: Path | None = None  # (the file the preview shows)
+        self._page_sizes: list[tuple[float, float]] = []  # (of its pages, for the thumbnails)
+        self._previews = 0  # (copies made for the preview: each has a name of its own)
         self._building = False
         self._build()
         self._build_menus()
@@ -142,8 +152,11 @@ class MainWindow(QMainWindow):
         self.pages.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.pages.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.pages.customContextMenuRequested.connect(self.pages_menu)
-        self.thumb_timer = QTimer(self)
-        self.thumb_timer.setInterval(0)
+        self.renderer = ThumbRenderer(self)
+        self.renderer.drawn.connect(self._thumb_drawn)
+        self.thumb_timer = QTimer(self)  # (the thumbnails to draw, chosen once scrolling stops a moment)
+        self.thumb_timer.setSingleShot(True)
+        self.thumb_timer.setInterval(30)
         self.thumb_timer.timeout.connect(self._draw_thumbnails)
 
         self.cmd_line = QLineEdit()
@@ -210,6 +223,9 @@ class MainWindow(QMainWindow):
         thumbs.moved.connect(self.move_pages)
         thumbs.files_dropped.connect(self.files_dropped)
         self.thumbs.resized.connect(self._thumbs_resized)
+        thumbs.verticalScrollBar().valueChanged.connect(lambda *_: self.thumb_timer.start())
+        thumbs.horizontalScrollBar().valueChanged.connect(lambda *_: self.thumb_timer.start())
+        thumbs.viewport().installEventFilter(self)
         self.thumbs.visibilityChanged.connect(self._thumbs_shown)
 
     def _build_page_actions(self):
@@ -420,7 +436,13 @@ class MainWindow(QMainWindow):
             event.ignore()
             return
         self.save_settings()
+        self.renderer.stop()
         super().closeEvent(event)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Type.Resize and obj is self.thumbs.list.viewport():
+            self.thumb_timer.start()  # (other pages come into view)
+        return super().eventFilter(obj, event)
 
     def export_state(self) -> dict:
         """What a new window needs to carry on with the same document."""
@@ -482,6 +504,7 @@ class MainWindow(QMainWindow):
         _WINDOWS.append(new)
         self.path = None  # (nothing to ask about: the new window has it)
         self.hide()
+        self.renderer.stop()
         self.deleteLater()
         if self in _WINDOWS:
             _WINDOWS.remove(self)
@@ -543,7 +566,7 @@ class MainWindow(QMainWindow):
         self.path = path
         self.saved = list(saved)
         self.saved_opening = saved_opening
-        self._thumbs = {}
+        self._thumb_cache.clear()
         self._previewed = None
         with pikepdf.open(path, password=self.password) as pdf:
             self.count = self.file_count = len(pdf.pages)
@@ -590,6 +613,8 @@ class MainWindow(QMainWindow):
             self.file_count = len(pdf.pages)
         self.saved, self.saved_opening, self.hf_changes = list(self.ranges), self.opening, ()
         self._previewed = None
+        if target == self.path:
+            self._thumb_cache.clear()  # (the pages of the file are now others)
         if target == self.path:
             self.refresh()
         self.status(tr("Saved {path}", path=target))
@@ -1037,14 +1062,16 @@ class MainWindow(QMainWindow):
         """Show in the preview the file, or a copy of it with the headers and footers waiting."""
         if self.path is None:
             return
-        key = (self.path, self.hf_changes, tuple(self.ranges) if self.hf_changes else None)
+        key = (self.path, self.hf_changes, tuple(self.ranges) if self._labels_shown() else None)
         if key == self._previewed:
             return
         source = self.path
         if self.hf_changes:
             if self._tmpdir is None:
                 self._tmpdir = tempfile.TemporaryDirectory(prefix="py-foliation-")
-            source = Path(self._tmpdir.name) / "preview.pdf"
+            # (a new name each time: the thumbnails may still be drawn from the one before)
+            self._previews += 1
+            source = Path(self._tmpdir.name) / f"preview-{self._previews}.pdf"
             self.doc.close()
             try:
                 write_copy(self.path, self.ranges, source, self.password, None, self.hf_changes)
@@ -1057,12 +1084,49 @@ class MainWindow(QMainWindow):
         try:
             with pikepdf.open(source, password=self.password) as pdf:
                 self.added = stamps.additions(pdf)
+                self._page_sizes = thumbnails.page_sizes(pdf)
         except (OSError, pikepdf.PdfError):
-            pass
-        self._thumbs = {}
+            self._page_sizes = []
+        old = self._preview_source
+        self._preview_source = source
         self._previewed = key
+        if old is not None and old != source and old.parent == Path(self._tmpdir.name if self._tmpdir else "/-"):
+            old.unlink(missing_ok=True)
         if self.count:
             self._page_chosen(min(page, self.count) - 1)
+
+    def _labels_shown(self) -> bool:
+        """Whether a header, footer or watermark waiting shows page labels (so that the preview
+        changes with them)."""
+        return any("pagelabel" in repr(c) for c in self.hf_changes if not isinstance(c, arrange.Operation))
+
+    def _page_keys(self) -> list:
+        """What each page of the preview shows, as a key that stays the same as long as the page
+        looks the same: the page of the file it comes from and its rotation, or the page inserted,
+        stamped by the headers, footers and watermarks waiting (these with its place and, if they
+        show them, the labels)."""
+        keys = [(page, 0) for page in range(1, self.file_count + 1)]
+        labels_now = tuple(self.ranges) if self._labels_shown() else None
+        for change in self.hf_changes:
+            if isinstance(change, arrange.Rotate):
+                for page in change.pages:
+                    if 0 < page <= len(keys):
+                        shown, angle = keys[page - 1]
+                        keys[page - 1] = (shown, (angle + change.angle) % 360)
+            elif isinstance(change, arrange.Operation) and change.moves_pages():
+                try:
+                    items = change.items(len(keys))
+                except LabelError:
+                    break
+                keys = [keys[item - 1] if isinstance(item, int) else ((repr(change), k), 0)
+                        for k, item in enumerate(items)]
+            elif isinstance(change, arrange.Operation):  # (a page replaced...)
+                for page in getattr(change, "pages", ()):
+                    if 0 < page <= len(keys):
+                        keys[page - 1] = ((repr(change), page), 0)
+            else:  # (a header, footer or watermark, which may differ from page to page)
+                keys = [((repr(change), place, key, labels_now), 0) for place, key in enumerate(keys, 1)]
+        return keys
 
     def set_view(self, new: View) -> None:
         """Make NEW the view of the document when it is opened (undoably)."""
@@ -1373,22 +1437,29 @@ class MainWindow(QMainWindow):
         thumbs = self.thumbs.list
         if not self.a_thumbs.isChecked():
             self.thumb_timer.stop()
+            self.renderer.set_jobs([])
             return
+        self._keys = self._page_keys()
+        height = self.thumbs.height_of_thumbnails()
         self._syncing = True
+        thumbs.setUpdatesEnabled(False)
         thumbs.clear()
         for i, label in enumerate(labels.page_labels(self.ranges, self.count), 1):
             item = QListWidgetItem(str(i) if label == str(i) else f"{i}\n{label or '—'}")
             item.setToolTip(tr("page {page} of the file: {label}", page=i, label=label or tr("(no label)")))
             item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)
-            item.setIcon(self._thumbs.get(i) or self._blank_thumb())
+            icon = self._thumb_cache.get((self._key(i), height))
+            item.setIcon(icon or self._blank_thumb())
             thumbs.addItem(item)
         if self.count:
-            thumbs.setCurrentRow(self.current_page() - 1)
-            for p in self.selected_pages():
-                thumbs.item(p - 1).setSelected(True)
+            thumbs.setCurrentRow(self.current_page() - 1, QItemSelectionModel.SelectionFlag.NoUpdate)
+            self._select_rows(thumbs, [p - 1 for p in self.selected_pages()])
+        thumbs.setUpdatesEnabled(True)
         self._syncing = False
-        if len(self._thumbs) < self.count:
-            self.thumb_timer.start()
+        self.thumb_timer.start()
+
+    def _key(self, page: int):
+        return self._keys[page - 1] if 0 < page <= len(self._keys) else None
 
     def show_page_list(self, on: bool):
         """Show or hide the list of pages and their labels (the ranges take its room)."""
@@ -1409,8 +1480,8 @@ class MainWindow(QMainWindow):
             self.a_thumbs.setChecked(shown)
 
     def _thumbs_resized(self, height: int):
-        """New size of the thumbnails: drawn again (a few at a time)."""
-        self._thumbs = {}
+        """New size of the thumbnails: drawn again (in the background)."""
+        self._thumb_cache.clear()
         self._blank = None
         blank = self._blank_thumb()
         thumbs = self.thumbs.list
@@ -1428,39 +1499,92 @@ class MainWindow(QMainWindow):
         if self._syncing or target.count() != source.count():
             return
         self._syncing = True
-        chosen = {source.row(i) for i in source.selectedItems()}
         target.blockSignals(True)
-        for row in range(target.count()):
-            target.item(row).setSelected(row in chosen)
+        self._select_rows(target, sorted(source.row(i) for i in source.selectedItems()))
         if source.currentRow() >= 0:  # (the current page too, leaving the choice as it is)
             target.setCurrentRow(source.currentRow(), QItemSelectionModel.SelectionFlag.NoUpdate)
         target.blockSignals(False)
         self._syncing = False
+
+    @staticmethod
+    def _select_rows(view, rows: list[int]):
+        """Choose ROWS (in order) of VIEW, and no others, at once (one by one is slow in a long book)."""
+        model = view.model()
+        selection = QItemSelection()
+        start = prev = None
+        for row in rows + [None]:
+            if row is not None and prev is not None and row == prev + 1:
+                prev = row
+                continue
+            if start is not None:
+                selection.select(model.index(start, 0), model.index(prev, 0))
+            start = prev = row
+        view.selectionModel().select(selection, QItemSelectionModel.SelectionFlag.ClearAndSelect)
 
     def _blank_thumb(self) -> QIcon:
         if self._blank is None:
             self._blank = thumbnails.blank(self.thumbs.height_of_thumbnails(), self.devicePixelRatioF())
         return self._blank
 
+    def _cache_size(self) -> int:
+        """How many thumbnails are kept (about 256 MB of them)."""
+        each = thumbnails.nbytes(self.thumbs.height_of_thumbnails(), self.devicePixelRatioF())
+        return max(64, (256 << 20) // max(each, 1))
+
     def _draw_thumbnails(self):
-        """Draw a few more thumbnails (in the background, so the window keeps answering)."""
-        if not self.a_thumbs.isChecked() or self.doc.pageCount() == 0:
-            self.thumb_timer.stop()
+        """Ask for the thumbnails missing: those in view first, then those nearest to them, as many
+        as are kept."""
+        thumbs = self.thumbs.list
+        if not self.a_thumbs.isChecked() or self.path is None or not self.count or self._preview_source is None:
+            self.renderer.set_jobs([])
             return
         height, ratio = self.thumbs.height_of_thumbnails(), self.devicePixelRatioF()
-        thumbs = self.thumbs.list
-        drawn = 0
-        for page in range(1, min(self.count, self.doc.pageCount()) + 1):
-            if page in self._thumbs:
+        n = thumbs.count()
+        first = thumbs.indexAt(thumbs.viewport().rect().topLeft() + QPoint(4, 4)).row()
+        last = thumbs.indexAt(thumbs.viewport().rect().bottomRight() - QPoint(4, 4)).row()
+        first = 0 if first < 0 else first
+        if last < 0:  # (the end of the list is in view, or nothing is)
+            last = n - 1
+        while last + 1 < n and thumbs.visualItemRect(thumbs.item(last + 1)).intersects(thumbs.viewport().rect()):
+            last += 1
+        order = list(range(first, last + 1))
+        before, after = first - 1, last + 1
+        while before >= 0 or after < n:  # (then outwards from them, after before before)
+            if after < n:
+                order.append(after)
+                after += 1
+            if before >= 0:
+                order.append(before)
+                before -= 1
+        jobs, asked = [], set()
+        for row in order[:self._cache_size()]:
+            key = (self._key(row + 1), height)
+            if key[0] is None:
                 continue
-            self._thumbs[page] = thumbnails.render(self.doc, page, height, ratio)
-            item = thumbs.item(page - 1)
-            if item is not None:
-                item.setIcon(self._thumbs[page])
-            drawn += 1
-            if drawn >= thumbnails.AT_ONCE:
-                return
-        self.thumb_timer.stop()
+            if key in self._thumb_cache:
+                self._thumb_cache.move_to_end(key)
+            elif key not in asked:
+                asked.add(key)
+                size = self._page_sizes[row] if row < len(self._page_sizes) else None
+                jobs.append(Job(str(self._preview_source), self.password or "", row + 1, height, ratio, key, size))
+        self.renderer.set_jobs(jobs)
+
+    def _thumb_drawn(self, key, height: int, image):
+        """A thumbnail drawn: kept, and shown on the pages that show it."""
+        if height != self.thumbs.height_of_thumbnails():
+            return
+        icon = thumbnails.frame(image, height, self.devicePixelRatioF())
+        self._thumb_cache[key] = icon
+        while len(self._thumb_cache) > self._cache_size():
+            self._thumb_cache.popitem(last=False)
+        thumbs = self.thumbs.list
+        for row, shown in enumerate(self._keys):
+            if (shown, height) == key and row < thumbs.count():
+                thumbs.item(row).setIcon(icon)
+
+    def thumbnails_pending(self) -> int:
+        """The thumbnails still to be drawn (for the tests)."""
+        return self.renderer.pending() + self.thumb_timer.isActive()
 
     def go_to_label(self, label: str) -> bool:
         """Show the page labelled LABEL (the next one after the page shown, if there are several)."""
