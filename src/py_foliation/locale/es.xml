@@ -847,10 +847,6 @@ hoja y su lado, como 12v), - o none (solo el prefijo).</tr>
     <tr>La hoja y el lado de la primera página del intervalo (12r, 12v)</tr>
   </text>
   <text>
-    <en>Thumbnails of the pages</en>
-    <tr>Miniaturas de las páginas</tr>
-  </text>
-  <text>
     <en>Type a label (xii, 12v, A-3) and press Enter; Enter again goes to the next page with that label</en>
     <tr>Escriba una etiqueta (xii, 12v, A-3) y pulse Intro; otro Intro va a la siguiente página con esa etiqueta</tr>
   </text>
@@ -3222,5 +3218,21 @@ repetirse u omitirse; 10-1 va hacia atrás).</tr>
   <text>
     <en>insert COUNT blank pages (default: 1) before page WHERE, as big as the page before them (at the start, as the first page)</en>
     <tr>insertar CUÁNTAS páginas en blanco (por defecto: 1) antes de la página DÓNDE, del tamaño de la página anterior (al principio, de la primera página)</tr>
+  </text>
+  <text>
+    <en>Thumbnails</en>
+    <tr>Miniaturas</tr>
+  </text>
+  <text>
+    <en>A panel with the pages as thumbnails, of the size you choose</en>
+    <tr>Un panel con las páginas en miniatura, del tamaño que elija</tr>
+  </text>
+  <text>
+    <en>Click a page to show it; select pages (Shift, Ctrl) and right-click them for more; drag them to move them (with Ctrl, to copy them); Ctrl and the mouse wheel change the size</en>
+    <tr>Haga clic en una página para mostrarla; seleccione páginas (Mayús, Ctrl) y haga clic derecho en ellas para más; arrástrelas para moverlas (con Ctrl, para copiarlas); Ctrl y la rueda del ratón cambian el tamaño</tr>
+  </text>
+  <text>
+    <en>The size of the thumbnails (Ctrl and the mouse wheel, too)</en>
+    <tr>El tamaño de las miniaturas (también con Ctrl y la rueda del ratón)</tr>
   </text>
 </interface>

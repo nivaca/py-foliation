@@ -209,8 +209,9 @@ def test_pages_list(app, window, book):
     window.a_thumbs.setChecked(True)
     for _ in range(40):
         app.processEvents()
-    assert len(window._thumbs) == 100 and not window.pages.item(0).icon().isNull()
-    assert window.pages.item(3).text() == "4\niv"
+    thumbs = window.thumbs.list
+    assert len(window._thumbs) == 100 and not thumbs.item(0).icon().isNull()
+    assert thumbs.item(3).text() == "4\niv" and window.pages.item(3).text().split() == ["4", "iv"]
     window.a_thumbs.setChecked(False)
 
 
@@ -478,3 +479,40 @@ def test_pdfconform_setting(window, book, tmp_path, monkeypatch):
     monkeypatch.setattr(PdfconformDialog, "path", lambda self: str(script))
     assert window.pdfconform_dialog()
     assert config.get("pdfconform") == str(script) and window.output_actions["a-2b"].isEnabled()
+
+
+def test_thumbnails_panel(app, window, book):
+    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtGui import QWheelEvent
+    window.open_path(book)
+    window.a_thumbs.setChecked(True)
+    for _ in range(40):
+        app.processEvents()
+    panel, thumbs = window.thumbs, window.thumbs.list
+    assert thumbs.count() == 100 and window.pages.viewMode() != thumbs.viewMode()  # (the list stays a list)
+    thumbs.setCurrentRow(19)
+    assert window.current_page() == 20  # (a thumbnail clicked: its page shown)
+    window.show_page(50)
+    assert thumbs.currentRow() == 49  # (and the other way round)
+    thumbs.clearSelection()
+    for row in (4, 6):
+        thumbs.item(row).setSelected(True)
+    assert window.selected_pages() == [5, 7]  # (one choice of pages, in both)
+    before = panel.height_of_thumbnails()
+    wheel = QWheelEvent(QPointF(5, 5), QPointF(5, 5), QPoint(0, 0), QPoint(0, 120), Qt.MouseButton.NoButton,
+                        Qt.KeyboardModifier.ControlModifier, Qt.ScrollPhase.NoScrollPhase, False)
+    thumbs.wheelEvent(wheel)
+    assert panel.height_of_thumbnails() == before + 16 and thumbs.iconSize().height() == before + 16
+    panel.slider.setValue(300)
+    for _ in range(60):
+        app.processEvents()
+    assert len(window._thumbs) == 100 and thumbs.iconSize().height() == 300
+    moved = []
+    thumbs.moved.disconnect()
+    thumbs.moved.connect(lambda pages, where, copied: moved.append((pages, where, copied)))
+    thumbs.moved.emit([5, 7], 1, False)
+    assert moved == [([5, 7], 1, False)]
+    panel.close()  # (its own close button)
+    assert not window.a_thumbs.isChecked()
+    window.save_settings()
+    assert int(window.settings.value("thumbnail_size")) == 300 and window.settings.value("thumbnails") == "false"

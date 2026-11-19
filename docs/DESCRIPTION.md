@@ -138,7 +138,8 @@ The rest came from use.  `copy` gives files the labels of another, as when
 a book is exported again; `set`, `clear` and `copy` take several files at
 once, and `--dry-run` only shows what they would do; `show --label` and
 the window's *Go to the page labelled…* find a page by its label.  The
-window can show the pages as thumbnails with their labels, and a
+window can show the pages as thumbnails with their labels, in a panel
+of its own whose thumbnails can be made bigger or smaller (since 0.11), and a
 double-click on a page starts a range there.  Pages chosen in the list
 (with Shift and Ctrl) can be numbered at once, in any style, numbered to
 continue from the page before them, given one label, or relabelled one

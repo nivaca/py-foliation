@@ -108,7 +108,7 @@ I, II, III; a, b, c; A, B, C; folios 1r, 1v, 2r; o sin número), el número en
 que empieza, un prefijo y un sufijo; debajo, cada página con su etiqueta; y a
 la derecha, la página elegida.
 
-![Folios, con miniaturas de las páginas](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/gui_folios_es.png)
+![Folios, con el panel de miniaturas](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/gui_folios_es.png)
 
 - **Añadir un intervalo** empieza un nuevo intervalo en la página mostrada, y
   también un doble clic en una página; **Quitar el intervalo** deja que el
@@ -127,8 +127,12 @@ la derecha, la página elegida.
   Ajustar al ancho o Ajustar a la página; y **Abrir el documento en la
   página N**. También están en el menú **Ver**, y se guardan con las
   etiquetas.
-- **Ver ▸ Miniaturas de las páginas** muestra las páginas en miniatura con sus
-  etiquetas, para revisar todo un libro de un vistazo.
+- **Ver ▸ Miniaturas** (F4) muestra un panel con las páginas en miniatura y sus
+  etiquetas, para revisar todo un libro de un vistazo. Su control deslizante,
+  o Ctrl y la rueda del ratón, las agrandan o achican; el panel puede ponerse
+  a otro lado de la ventana o flotar aparte. Un clic en una miniatura muestra
+  su página, y allí las páginas pueden elegirse, abrir su menú con el botón
+  derecho y arrastrarse como en la lista.
 - **Ir a la página con la etiqueta…** (Ctrl+L) busca una página por su
   etiqueta: `xii`, `12v`, `A-3`.
 - **Editar ▸ Deshacer / Rehacer** van y vienen por los cambios.

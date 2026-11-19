@@ -9,13 +9,13 @@ import tempfile
 from pathlib import Path
 
 import pikepdf
-from PySide6.QtCore import QByteArray, QPointF, QSettings, QSize, Qt, QTimer
+from PySide6.QtCore import QByteArray, QItemSelectionModel, QPointF, QSettings, Qt, QTimer
 from PySide6.QtGui import QAction, QActionGroup, QIcon, QKeySequence
 from PySide6.QtPdf import QPdfDocument
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtWidgets import (
     QAbstractItemView, QApplication, QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QHeaderView, QInputDialog,
-    QLabel, QLineEdit, QListView, QListWidgetItem, QMainWindow, QMenu, QMessageBox, QPushButton, QSplitter,
+    QLabel, QLineEdit, QListWidgetItem, QMainWindow, QMenu, QMessageBox, QPushButton, QSplitter,
     QTableWidget, QVBoxLayout, QWidget,
 )
 
@@ -28,6 +28,7 @@ from ..labels import LabelError, Range
 from . import thumbnails
 from .arrange_dialog import PageList, ask_arrange, ask_labels
 from .headfoot_dialog import ask_header_footer
+from .thumbs_panel import ThumbsPanel
 from .watermark_dialog import ask_watermark
 from .widgets import FIELDS, LABELS, NumberDialog, edited_signal, fit_columns, range_row
 
@@ -83,6 +84,7 @@ class MainWindow(QMainWindow):
         self.password = ""  # (of the open document)
         self._thumbs: dict[int, QIcon] = {}  # page (1-based) -> its thumbnail
         self._blank: QIcon | None = None
+        self._syncing = False  # (while the list and the panel of thumbnails are made to agree)
         self._building = False
         self._build()
         self._build_menus()
@@ -182,6 +184,23 @@ class MainWindow(QMainWindow):
         self.splitter.setStretchFactor(1, 2)
         self.setCentralWidget(self.splitter)
 
+        height = int(self.settings.value("thumbnail_size", thumbnails.DEFAULT) or thumbnails.DEFAULT)
+        self.thumbs = ThumbsPanel(self, max(thumbnails.SMALLEST, min(height, thumbnails.LARGEST)))
+        self.thumbs.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
+                                    | Qt.DockWidgetArea.BottomDockWidgetArea)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.thumbs)
+        self.thumbs.hide()
+        thumbs = self.thumbs.list
+        thumbs.currentRowChanged.connect(self._thumb_chosen)
+        thumbs.itemSelectionChanged.connect(lambda: self._mirror_selection(thumbs, self.pages))
+        self.pages.itemSelectionChanged.connect(lambda: self._mirror_selection(self.pages, thumbs))
+        thumbs.itemDoubleClicked.connect(lambda item: self.start_range_at(thumbs.row(item) + 1))
+        thumbs.customContextMenuRequested.connect(lambda pos: self.pages_menu(pos, thumbs))
+        thumbs.moved.connect(self.move_pages)
+        thumbs.files_dropped.connect(self.files_dropped)
+        self.thumbs.resized.connect(self._thumbs_resized)
+        self.thumbs.visibilityChanged.connect(self._thumbs_shown)
+
     def _action(self, menu: QMenu, text: str, triggered, shortcut=None, tip: str = "") -> QAction:
         """A new action in MENU."""
         act = QAction(text, self, triggered=triggered)
@@ -232,7 +251,8 @@ class MainWindow(QMainWindow):
         self._action(m, tr("Go to the page labelled…"), lambda: (self.go_to.setFocus(), self.go_to.selectAll()),
                      "Ctrl+L")
         m = self.menuBar().addMenu(tr("&View"))
-        self.a_thumbs = QAction(tr("Thumbnails of the pages"), self, checkable=True)
+        self.a_thumbs = QAction(tr("Thumbnails"), self, checkable=True, shortcut="F4")
+        self.a_thumbs.setToolTip(tr("A panel with the pages as thumbnails, of the size you choose"))
         self.a_thumbs.toggled.connect(self.show_thumbnails)
         m.addAction(self.a_thumbs)
         self.m_view = m
@@ -302,12 +322,21 @@ class MainWindow(QMainWindow):
         split = self.settings.value("splitter")
         if isinstance(split, QByteArray):
             self.splitter.restoreState(split)
+        state = self.settings.value("window_state")
+        if isinstance(state, QByteArray):
+            self.restoreState(state)  # (where the panel of thumbnails was)
+        else:  # (room for two columns of thumbnails, at first)
+            self.resizeDocks([self.thumbs], [2 * thumbnails.grid(self.thumbs.height_of_thumbnails()).width() + 30],
+                             Qt.Orientation.Horizontal)
         self.a_thumbs.setChecked(self.settings.value("thumbnails", "false") == "true")
+        self.thumbs.setVisible(self.a_thumbs.isChecked())
 
     def save_settings(self):
         self.settings.setValue("geometry", self.saveGeometry())
         self.settings.setValue("splitter", self.splitter.saveState())
         self.settings.setValue("thumbnails", "true" if self.a_thumbs.isChecked() else "false")
+        self.settings.setValue("thumbnail_size", self.thumbs.height_of_thumbnails())
+        self.settings.setValue("window_state", self.saveState())
         self.settings.sync()
 
     def closeEvent(self, event):
@@ -1025,15 +1054,19 @@ class MainWindow(QMainWindow):
             return [r + 1 for r in rows]
         return [self.current_page()] if self.count else []
 
-    def pages_menu(self, pos):
+    def pages_menu(self, pos, where=None):
+        """The menu of the pages chosen, at POS in WHERE (the list of pages, or the thumbnails)."""
         if self.path is None:
             return
-        item = self.pages.itemAt(pos)
+        where = where or self.pages
+        item = where.itemAt(pos)
         if item is not None and not item.isSelected():
-            self.pages.setCurrentItem(item)
+            where.setCurrentItem(item)
+            if where is not self.pages:
+                self.pages.setCurrentRow(where.row(item))
         menu = self.build_pages_menu()
         if menu is not None:
-            menu.exec(self.pages.viewport().mapToGlobal(pos))
+            menu.exec(where.viewport().mapToGlobal(pos))
 
     def build_pages_menu(self) -> QMenu | None:
         """The menu of actions on the chosen pages."""
@@ -1231,47 +1264,92 @@ class MainWindow(QMainWindow):
         self._building = False
 
     def _fill_pages(self):
-        """The list of pages with their labels (and their thumbnails, if they are shown), keeping the
-        page shown and the pages chosen."""
+        """The list of pages with their labels (and the panel of thumbnails, if it is shown), keeping
+        the page shown and the pages chosen."""
         page = self.current_page()
         chosen = self.selected_pages()
-        thumbs = self.a_thumbs.isChecked()
         self.pages.blockSignals(True)
         self.pages.clear()
         for i, label in enumerate(labels.page_labels(self.ranges, self.count), 1):
-            item = QListWidgetItem(f"{i}\n{label}" if thumbs else f"{i:>5}   {label}")
+            item = QListWidgetItem(f"{i:>5}   {label}")
             item.setToolTip(tr("page {page} of the file: {label}", page=i, label=label or tr("(no label)")))
-            if thumbs:
-                item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)
-                item.setIcon(self._thumbs.get(i) or self._blank_thumb())
             self.pages.addItem(item)
         self.pages.blockSignals(False)
-        if thumbs and len(self._thumbs) < self.count:
-            self.thumb_timer.start()
         if self.count:
             self.pages.setCurrentRow(min(page, self.count) - 1)
             if len(chosen) > 1:  # (the pages chosen stay chosen, for another action on them)
                 for p in chosen:
                     if p <= self.count:
                         self.pages.item(p - 1).setSelected(True)
+        self._fill_thumbs()
+
+    def _fill_thumbs(self):
+        """The panel of thumbnails, as the list of pages is (if it is shown)."""
+        thumbs = self.thumbs.list
+        if not self.a_thumbs.isChecked():
+            self.thumb_timer.stop()
+            return
+        self._syncing = True
+        thumbs.clear()
+        for i, label in enumerate(labels.page_labels(self.ranges, self.count), 1):
+            item = QListWidgetItem(str(i) if label == str(i) else f"{i}\n{label or '—'}")
+            item.setToolTip(tr("page {page} of the file: {label}", page=i, label=label or tr("(no label)")))
+            item.setTextAlignment(Qt.AlignmentFlag.AlignHCenter)
+            item.setIcon(self._thumbs.get(i) or self._blank_thumb())
+            thumbs.addItem(item)
+        if self.count:
+            thumbs.setCurrentRow(self.current_page() - 1)
+            for p in self.selected_pages():
+                thumbs.item(p - 1).setSelected(True)
+        self._syncing = False
+        if len(self._thumbs) < self.count:
+            self.thumb_timer.start()
 
     def show_thumbnails(self, on: bool):
-        """Show the pages as thumbnails with their labels, or as a list."""
-        mode = QListView.ViewMode.IconMode if on else QListView.ViewMode.ListMode
-        self.pages.setViewMode(mode)
-        self.pages.setIconSize(thumbnails.THUMB if on else QSize())
-        self.pages.setGridSize(thumbnails.GRID if on else QSize())
-        self.pages.setResizeMode(QListView.ResizeMode.Adjust)
-        self.pages.setMovement(QListView.Movement.Static)
-        self.pages.setWordWrap(on)
-        self.pages.setUniformItemSizes(True)
+        """Show or hide the panel of thumbnails."""
+        if self.thumbs.isVisible() != on:
+            self.thumbs.setVisible(on)
         if not on:
             self.thumb_timer.stop()
-        self.refresh()
+        self._fill_thumbs()
+
+    def _thumbs_shown(self, shown: bool):
+        """The panel was shown or hidden (also by its own close button)."""
+        if self.a_thumbs.isChecked() != shown and not self.isMinimized():
+            self.a_thumbs.setChecked(shown)
+
+    def _thumbs_resized(self, height: int):
+        """New size of the thumbnails: drawn again (a few at a time)."""
+        self._thumbs = {}
+        self._blank = None
+        blank = self._blank_thumb()
+        thumbs = self.thumbs.list
+        for i in range(thumbs.count()):
+            thumbs.item(i).setIcon(blank)
+        if self.a_thumbs.isChecked():
+            self.thumb_timer.start()
+
+    def _thumb_chosen(self, row: int):
+        if not self._syncing and row >= 0:
+            self.pages.setCurrentRow(row)
+
+    def _mirror_selection(self, source, target):
+        """Make TARGET (the list or the thumbnails) choose the pages SOURCE has chosen."""
+        if self._syncing or target.count() != source.count():
+            return
+        self._syncing = True
+        chosen = {source.row(i) for i in source.selectedItems()}
+        target.blockSignals(True)
+        for row in range(target.count()):
+            target.item(row).setSelected(row in chosen)
+        if source.currentRow() >= 0:  # (the current page too, leaving the choice as it is)
+            target.setCurrentRow(source.currentRow(), QItemSelectionModel.SelectionFlag.NoUpdate)
+        target.blockSignals(False)
+        self._syncing = False
 
     def _blank_thumb(self) -> QIcon:
         if self._blank is None:
-            self._blank = thumbnails.blank()
+            self._blank = thumbnails.blank(self.thumbs.height_of_thumbnails(), self.devicePixelRatioF())
         return self._blank
 
     def _draw_thumbnails(self):
@@ -1279,12 +1357,14 @@ class MainWindow(QMainWindow):
         if not self.a_thumbs.isChecked() or self.doc.pageCount() == 0:
             self.thumb_timer.stop()
             return
+        height, ratio = self.thumbs.height_of_thumbnails(), self.devicePixelRatioF()
+        thumbs = self.thumbs.list
         drawn = 0
-        for page in range(1, self.count + 1):
+        for page in range(1, min(self.count, self.doc.pageCount()) + 1):
             if page in self._thumbs:
                 continue
-            self._thumbs[page] = thumbnails.render(self.doc, page)
-            item = self.pages.item(page - 1)
+            self._thumbs[page] = thumbnails.render(self.doc, page, height, ratio)
+            item = thumbs.item(page - 1)
             if item is not None:
                 item.setIcon(self._thumbs[page])
             drawn += 1
@@ -1327,6 +1407,11 @@ class MainWindow(QMainWindow):
     def _page_chosen(self, row: int):
         if row < 0 or not self.count:
             return
+        if self.a_thumbs.isChecked() and not self._syncing and 0 <= row < self.thumbs.list.count():
+            self._syncing = True
+            self.thumbs.list.setCurrentRow(row)
+            self.thumbs.list.scrollToItem(self.thumbs.list.item(row))
+            self._syncing = False
         nav = self.view.pageNavigator()
         if row < self.doc.pageCount():
             nav.jump(row, QPointF(), nav.currentZoom())

@@ -105,7 +105,7 @@ III; a, b, c; A, B, C; folios 1r, 1v, 2r; or no number), the number it
 starts at, a prefix and a suffix; below them, every page with its label; and
 on the right, the chosen page.
 
-![Folios, with thumbnails of the pages](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/gui_folios_en.png)
+![Folios, with the panel of thumbnails](https://raw.githubusercontent.com/nivaca/py-foliation/main/docs/img/gui_folios_en.png)
 
 - **Add a range** starts a new range at the page shown, and so does a
   double-click on a page; **Remove the range** lets the previous range go
@@ -122,8 +122,12 @@ on the right, the chosen page.
   as the cover of a book) or Cover Continuous; **Page view**: Actual Size,
   Fit to Width or Fit to Page; and **Open the document at page N**. They
   are also in the **View** menu, and are saved with the labels.
-- **View ▸ Thumbnails of the pages** shows the pages as thumbnails with
-  their labels, to look over a whole book at once.
+- **View ▸ Thumbnails** (F4) shows a panel with the pages as thumbnails and
+  their labels, to look over a whole book at once. Its slider, or Ctrl and
+  the mouse wheel, make them bigger or smaller; it can be moved to another
+  side of the window, or float on its own. Clicking a thumbnail shows its
+  page, and pages can be chosen, right-clicked and dragged there as in the
+  list.
 - **Go to the page labelled…** (Ctrl+L) finds a page by its label: `xii`,
   `12v`, `A-3`.
 - **Edit ▸ Undo / Redo** go back and forth over the changes.
