@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
+from PySide6.QtCore import QRect, QSize, Qt
+from PySide6.QtGui import QColor, QIcon, QPainter, QPalette, QPixmap
+from PySide6.QtWidgets import QApplication
 from PySide6.QtPdf import QPdfDocument
 
 SMALLEST, LARGEST, DEFAULT = 48, 400, 128  # the heights of the thumbnails (pixels)
@@ -19,6 +20,20 @@ def grid(height: int) -> QSize:
     """The room each page has in the panel, with its number and label below."""
     room = box(height)
     return QSize(max(room.width() + 24, 80), room.height() + 44)
+
+
+def symbol(text: str, size: int = 32) -> QIcon:
+    """An icon drawn from TEXT (one sign), for when the desktop's theme has none."""
+    pixmap = _transparent(QSize(size, size), 2.0)
+    p = QPainter(pixmap)
+    font = p.font()
+    font.setPixelSize(round(size * 0.8))
+    p.setFont(font)
+    p.setPen(QApplication.palette().color(QPalette.ColorRole.WindowText))
+    p.drawText(QRect(0, 0, size, size),
+               Qt.AlignmentFlag.AlignCenter, text)
+    p.end()
+    return QIcon(pixmap)
 
 
 def _transparent(size: QSize, ratio: float) -> QPixmap:

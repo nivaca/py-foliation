@@ -132,7 +132,14 @@ la derecha, la página elegida.
   o Ctrl y la rueda del ratón, las agrandan o achican; el panel puede ponerse
   a otro lado de la ventana o flotar aparte. Un clic en una miniatura muestra
   su página, y allí las páginas pueden elegirse, abrir su menú con el botón
-  derecho y arrastrarse como en la lista.
+  derecho y arrastrarse como en la lista. Una barra arriba gira, mueve,
+  duplica y borra las páginas elegidas, inserta una página en blanco o las
+  páginas de un PDF, y su menú **Más** tiene todas las demás operaciones del
+  menú **Páginas** (el menú del botón derecho también lo tiene). Teclas, en
+  las miniaturas y en la lista: Ctrl+R y Ctrl+Mayús+R giran, Alt+← y Alt+→
+  (o Alt+↑ y Alt+↓) mueven las páginas un lugar, Ctrl+D duplica, Supr borra.
+- **Ver ▸ Lista de páginas** oculta la lista de las páginas y sus etiquetas
+  (o la muestra de nuevo), y deja su espacio a los intervalos.
 - **Ir a la página con la etiqueta…** (Ctrl+L) busca una página por su
   etiqueta: `xii`, `12v`, `A-3`.
 - **Editar ▸ Deshacer / Rehacer** van y vienen por los cambios.

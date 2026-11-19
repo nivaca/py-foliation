@@ -3235,4 +3235,32 @@ repetirse u omitirse; 10-1 va hacia atrás).</tr>
     <en>The size of the thumbnails (Ctrl and the mouse wheel, too)</en>
     <tr>El tamaño de las miniaturas (también con Ctrl y la rueda del ratón)</tr>
   </text>
+  <text>
+    <en>List of pages</en>
+    <tr>Lista de páginas</tr>
+  </text>
+  <text>
+    <en>The list of the pages and their labels, under the ranges</en>
+    <tr>La lista de las páginas y sus etiquetas, debajo de los intervalos</tr>
+  </text>
+  <text>
+    <en>Rotate 90° counterclockwise</en>
+    <tr>Girar 90° en sentido antihorario</tr>
+  </text>
+  <text>
+    <en>Rotate 90° clockwise</en>
+    <tr>Girar 90° en sentido horario</tr>
+  </text>
+  <text>
+    <en>Move one page earlier</en>
+    <tr>Mover una página antes</tr>
+  </text>
+  <text>
+    <en>Move one page later</en>
+    <tr>Mover una página después</tr>
+  </text>
+  <text>
+    <en>More</en>
+    <tr>Más</tr>
+  </text>
 </interface>

@@ -127,7 +127,14 @@ on the right, the chosen page.
   the mouse wheel, make them bigger or smaller; it can be moved to another
   side of the window, or float on its own. Clicking a thumbnail shows its
   page, and pages can be chosen, right-clicked and dragged there as in the
-  list.
+  list. A bar at its top rotates, moves, duplicates and deletes the pages
+  chosen, inserts a blank page or the pages of a PDF, and its **More** menu
+  has every other operation of the **Pages** menu (the right-click menu has
+  it too). Keys, in the thumbnails and in the list: Ctrl+R and Ctrl+Shift+R
+  rotate, Alt+← and Alt+→ (or Alt+↑ and Alt+↓) move the pages one place,
+  Ctrl+D duplicates, Delete deletes.
+- **View ▸ List of pages** hides the list of pages and their labels (or
+  shows it again), leaving its room to the ranges.
 - **Go to the page labelled…** (Ctrl+L) finds a page by its label: `xii`,
   `12v`, `A-3`.
 - **Edit ▸ Undo / Redo** go back and forth over the changes.

@@ -59,6 +59,15 @@ def install_qt_translations():
             break
 
 
+# The operations on the pages, each with its dialog (the Pages menu, and "More" in the others).
+ARRANGE_MENU = (("rotate", N_("Rotate…")), ("delete", N_("Delete…")), ("move", N_("Move…")),
+                ("duplicate", N_("Duplicate…")), ("reverse", N_("Reverse the order…")),
+                ("order", N_("New order…")), (None, None),
+                ("blank", N_("Insert blank pages…")), ("insert", N_("Insert from a PDF…")),
+                ("replace", N_("Replace by pages of a PDF…")),
+                (None, None), ("extract", N_("Extract to a new PDF…")), ("split", N_("Split…")))
+
+
 class MainWindow(QMainWindow):
     def __init__(self, state: dict | None = None):
         """STATE (from export_state) carries the document over when the window is
@@ -88,6 +97,7 @@ class MainWindow(QMainWindow):
         self._building = False
         self._build()
         self._build_menus()
+        self._build_page_actions()
         self._restore()
         self._update_title()
         if state:
@@ -146,7 +156,8 @@ class MainWindow(QMainWindow):
         lay.addWidget(QLabel("<b>" + tr("Ranges of page labels") + "</b>"))
         lay.addWidget(self.table, 2)
         lay.addLayout(buttons)
-        lay.addWidget(QLabel("<b>" + tr("Pages and their labels") + "</b>"))
+        self.pages_title = QLabel("<b>" + tr("Pages and their labels") + "</b>")
+        lay.addWidget(self.pages_title)
         lay.addWidget(self.pages, 3)
         lay.addWidget(QLabel(tr("Command line:")))
         lay.addWidget(self.cmd_line)
@@ -200,6 +211,70 @@ class MainWindow(QMainWindow):
         thumbs.files_dropped.connect(self.files_dropped)
         self.thumbs.resized.connect(self._thumbs_resized)
         self.thumbs.visibilityChanged.connect(self._thumbs_shown)
+
+    def _build_page_actions(self):
+        """The actions on the pages chosen that are always at hand: in the bar of the panel of
+        thumbnails, and with their keys in it and in the list of pages."""
+        def act(text, icon, symbol, keys, triggered):
+            a = QAction(tr(text), self)
+            themed = QIcon.fromTheme(icon)
+            a.setIcon(themed if not themed.isNull() else thumbnails.symbol(symbol))
+            if keys:
+                a.setShortcuts([QKeySequence(k) for k in keys])
+                a.setShortcutContext(Qt.ShortcutContext.WidgetShortcut)
+                a.setToolTip(f"{tr(text)} ({QKeySequence(keys[0]).toString(QKeySequence.SequenceFormat.NativeText)})")
+            a.triggered.connect(lambda *_: triggered(self.selected_pages()) if self.path and self.count else None)
+            for where in (self.pages, self.thumbs.list):
+                where.addAction(a)
+            return a
+
+        self.a_rotate_left = act(N_("Rotate 90° counterclockwise"), "object-rotate-left", "↺", ["Ctrl+Shift+R"],
+                                 lambda pages: self.arrange_pages(arrange.Rotate(tuple(pages), 270)))
+        self.a_rotate_right = act(N_("Rotate 90° clockwise"), "object-rotate-right", "↻", ["Ctrl+R"],
+                                  lambda pages: self.arrange_pages(arrange.Rotate(tuple(pages), 90)))
+        self.a_earlier = act(N_("Move one page earlier"), "go-previous", "◀", ["Alt+Left", "Alt+Up"],
+                             lambda pages: pages[0] > 1 and self.move_pages(pages, pages[0] - 1))
+        self.a_later = act(N_("Move one page later"), "go-next", "▶", ["Alt+Right", "Alt+Down"],
+                           lambda pages: pages[-1] < self.count and self.move_pages(pages, pages[-1] + 2))
+        self.a_duplicate = act(N_("Duplicate"), "edit-copy", "⧉", ["Ctrl+D"],
+                               lambda pages: self.arrange_pages(arrange.Duplicate(tuple(pages))))
+        self.a_delete = act(N_("Delete"), "edit-delete", "✕", ["Delete"],
+                            lambda pages: len(pages) < self.count
+                            and self.arrange_pages(arrange.Delete(tuple(pages))))
+        self.a_blank = act(N_("Insert a blank page after these"), "document-new", "+", [],
+                           lambda pages: self.arrange_pages(arrange.InsertBlank(pages[-1] + 1)))
+        self.a_insert = act(N_("Insert pages of a PDF before these…"), "document-import", "⤓", [],
+                            lambda pages: self.arrange_dialog("insert", pages))
+        self.page_actions = [self.a_rotate_left, self.a_rotate_right, self.a_earlier, self.a_later,
+                             self.a_duplicate, self.a_delete, self.a_blank, self.a_insert]
+        self.m_more = QMenu(tr("More"), self)
+        self.m_more.aboutToShow.connect(lambda: self._fill_more(self.m_more))
+        self.thumbs.set_actions([self.a_rotate_left, self.a_rotate_right, None, self.a_earlier, self.a_later, None,
+                                 self.a_duplicate, self.a_delete, None, self.a_blank, self.a_insert], self.m_more)
+        for where in (self.pages, self.thumbs.list):
+            where.itemSelectionChanged.connect(self._update_page_actions)
+        self._update_page_actions()
+
+    def _fill_more(self, menu: QMenu):
+        """MENU: all the operations on the pages chosen, with their dialogs."""
+        menu.clear()
+        pages = self.selected_pages()
+        for mode, text in ARRANGE_MENU:
+            if mode is None:
+                menu.addSeparator()
+            else:
+                menu.addAction(tr(text), lambda *_, md=mode: self.arrange_dialog(md, pages)).setEnabled(
+                    self.path is not None)
+
+    def _update_page_actions(self):
+        """Which of the actions on the pages chosen can be done now."""
+        pages = self.selected_pages() if self.path is not None else []
+        for a in self.page_actions:
+            a.setEnabled(bool(pages))
+        if pages:
+            self.a_earlier.setEnabled(pages[0] > 1)
+            self.a_later.setEnabled(pages[-1] < self.count)
+            self.a_delete.setEnabled(len(pages) < self.count)
 
     def _action(self, menu: QMenu, text: str, triggered, shortcut=None, tip: str = "") -> QAction:
         """A new action in MENU."""
@@ -255,17 +330,16 @@ class MainWindow(QMainWindow):
         self.a_thumbs.setToolTip(tr("A panel with the pages as thumbnails, of the size you choose"))
         self.a_thumbs.toggled.connect(self.show_thumbnails)
         m.addAction(self.a_thumbs)
+        self.a_page_list = QAction(tr("List of pages"), self, checkable=True, checked=True)
+        self.a_page_list.setToolTip(tr("The list of the pages and their labels, under the ranges"))
+        self.a_page_list.toggled.connect(self.show_page_list)
+        m.addAction(self.a_page_list)
         self.m_view = m
         m.aboutToShow.connect(self._fill_view_menu)
         self._fill_view_menu()
         m = self.menuBar().addMenu(tr("&Pages"))
         self.arrange_actions = []
-        for mode, text in (("rotate", N_("Rotate…")), ("delete", N_("Delete…")), ("move", N_("Move…")),
-                           ("duplicate", N_("Duplicate…")), ("reverse", N_("Reverse the order…")),
-                           ("order", N_("New order…")), (None, None),
-                           ("blank", N_("Insert blank pages…")), ("insert", N_("Insert from a PDF…")),
-                           ("replace", N_("Replace by pages of a PDF…")),
-                           (None, None), ("extract", N_("Extract to a new PDF…")), ("split", N_("Split…"))):
+        for mode, text in ARRANGE_MENU:
             if mode is None:
                 m.addSeparator()
                 continue
@@ -329,6 +403,7 @@ class MainWindow(QMainWindow):
             self.resizeDocks([self.thumbs], [2 * thumbnails.grid(self.thumbs.height_of_thumbnails()).width() + 30],
                              Qt.Orientation.Horizontal)
         self.a_thumbs.setChecked(self.settings.value("thumbnails", "false") == "true")
+        self.a_page_list.setChecked(self.settings.value("page_list", "true") == "true")
         self.thumbs.setVisible(self.a_thumbs.isChecked())
 
     def save_settings(self):
@@ -336,6 +411,7 @@ class MainWindow(QMainWindow):
         self.settings.setValue("splitter", self.splitter.saveState())
         self.settings.setValue("thumbnails", "true" if self.a_thumbs.isChecked() else "false")
         self.settings.setValue("thumbnail_size", self.thumbs.height_of_thumbnails())
+        self.settings.setValue("page_list", "true" if self.a_page_list.isChecked() else "false")
         self.settings.setValue("window_state", self.saveState())
         self.settings.sync()
 
@@ -893,6 +969,12 @@ class MainWindow(QMainWindow):
         items = op.items(n)
         first = next(i for i, item in enumerate(items) if item == pages[0] and (not copied or i + 1 != pages[0]))
         self.show_page(first + 1)
+        if not copied and len(pages) > 1:  # (they stay chosen, to be moved again)
+            moved = set(pages)
+            self.pages.clearSelection()
+            for i, item in enumerate(items):
+                if isinstance(item, int) and item in moved:
+                    self.pages.item(i).setSelected(True)
         return True
 
     def files_dropped(self, paths: list[Path], before: int) -> bool:
@@ -1025,6 +1107,7 @@ class MainWindow(QMainWindow):
         """The View menu, with the view of the document when it is opened as it is now."""
         self.m_view.clear()
         self.m_view.addAction(self.a_thumbs)
+        self.m_view.addAction(self.a_page_list)
         self.add_view_menus(self.m_view)
 
     def _edit(self, row: int, **changes):
@@ -1113,6 +1196,7 @@ class MainWindow(QMainWindow):
                        lambda *_: self.arrange_dialog("insert", pages))
         menu.addAction(tr("Replace by pages of a PDF…"), lambda *_: self.arrange_dialog("replace", pages))
         menu.addAction(tr("Extract to a new PDF…"), lambda *_: self.arrange_dialog("extract", pages))
+        self._fill_more(menu.addMenu(tr("More")))
         menu.addSection(tr("Header, footer and watermark"))
         menu.addAction(tr("Header and footer on these pages…") if count > 1 else tr("Header and footer on this page…"),
                        lambda *_: self.stamp_dialog(stamps.HEADER_FOOTER, pages))
@@ -1281,6 +1365,7 @@ class MainWindow(QMainWindow):
                 for p in chosen:
                     if p <= self.count:
                         self.pages.item(p - 1).setSelected(True)
+        self._update_page_actions()
         self._fill_thumbs()
 
     def _fill_thumbs(self):
@@ -1304,6 +1389,11 @@ class MainWindow(QMainWindow):
         self._syncing = False
         if len(self._thumbs) < self.count:
             self.thumb_timer.start()
+
+    def show_page_list(self, on: bool):
+        """Show or hide the list of pages and their labels (the ranges take its room)."""
+        self.pages_title.setVisible(on)
+        self.pages.setVisible(on)
 
     def show_thumbnails(self, on: bool):
         """Show or hide the panel of thumbnails."""
@@ -1330,8 +1420,8 @@ class MainWindow(QMainWindow):
             self.thumb_timer.start()
 
     def _thumb_chosen(self, row: int):
-        if not self._syncing and row >= 0:
-            self.pages.setCurrentRow(row)
+        if not self._syncing and row >= 0:  # (the pages chosen are already the same in both)
+            self.pages.setCurrentRow(row, QItemSelectionModel.SelectionFlag.NoUpdate)
 
     def _mirror_selection(self, source, target):
         """Make TARGET (the list or the thumbnails) choose the pages SOURCE has chosen."""
@@ -1409,9 +1499,10 @@ class MainWindow(QMainWindow):
             return
         if self.a_thumbs.isChecked() and not self._syncing and 0 <= row < self.thumbs.list.count():
             self._syncing = True
-            self.thumbs.list.setCurrentRow(row)
+            self.thumbs.list.setCurrentRow(row, QItemSelectionModel.SelectionFlag.NoUpdate)
             self.thumbs.list.scrollToItem(self.thumbs.list.item(row))
             self._syncing = False
+            self._mirror_selection(self.pages, self.thumbs.list)
         nav = self.view.pageNavigator()
         if row < self.doc.pageCount():
             nav.jump(row, QPointF(), nav.currentZoom())

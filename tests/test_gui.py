@@ -13,7 +13,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 QtWidgets = pytest.importorskip("PySide6.QtWidgets")
 pytest.importorskip("PySide6.QtPdfWidgets")
 
-from py_foliation import interface, labels  # noqa: E402
+from py_foliation import arrange, interface, labels  # noqa: E402
 from py_foliation.labels import Range  # noqa: E402
 
 EXAMPLE = Path(__file__).resolve().parent.parent / "docs" / "example" / "numbers-100.pdf"
@@ -482,7 +482,7 @@ def test_pdfconform_setting(window, book, tmp_path, monkeypatch):
 
 
 def test_thumbnails_panel(app, window, book):
-    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtCore import QItemSelectionModel, QPoint, QPointF, Qt
     from PySide6.QtGui import QWheelEvent
     window.open_path(book)
     window.a_thumbs.setChecked(True)
@@ -490,7 +490,7 @@ def test_thumbnails_panel(app, window, book):
         app.processEvents()
     panel, thumbs = window.thumbs, window.thumbs.list
     assert thumbs.count() == 100 and window.pages.viewMode() != thumbs.viewMode()  # (the list stays a list)
-    thumbs.setCurrentRow(19)
+    thumbs.setCurrentRow(19, QItemSelectionModel.SelectionFlag.ClearAndSelect)
     assert window.current_page() == 20  # (a thumbnail clicked: its page shown)
     window.show_page(50)
     assert thumbs.currentRow() == 49  # (and the other way round)
@@ -516,3 +516,45 @@ def test_thumbnails_panel(app, window, book):
     assert not window.a_thumbs.isChecked()
     window.save_settings()
     assert int(window.settings.value("thumbnail_size")) == 300 and window.settings.value("thumbnails") == "false"
+
+
+def test_thumbnails_bar_and_keys(app, window, book, monkeypatch):
+    from PySide6.QtCore import QItemSelectionModel, Qt
+    from PySide6.QtTest import QTest
+    window.open_path(book)
+    monkeypatch.setattr(window, "labels_choice", lambda: arrange.FOLLOW)
+    window.show()  # (for the keys to reach the thumbnails)
+    window.a_thumbs.setChecked(True)
+    window.a_page_list.setChecked(False)
+    assert window.pages.isHidden() and not window.thumbs.isHidden()
+    thumbs = window.thumbs.list
+    window.activateWindow()
+    assert QTest.qWaitForWindowActive(window)
+    thumbs.setFocus()
+    thumbs.setCurrentRow(4, QItemSelectionModel.SelectionFlag.ClearAndSelect)
+    assert window.selected_pages() == [5] and window.current_page() == 5
+    QTest.keyClick(thumbs, Qt.Key.Key_Down, Qt.KeyboardModifier.AltModifier)
+    assert window.hf_changes[-1] == arrange.Move((5,), 7, labels=arrange.FOLLOW) and window.current_page() == 6
+    QTest.keyClick(thumbs, Qt.Key.Key_R, Qt.KeyboardModifier.ControlModifier)
+    assert window.hf_changes[-1] == arrange.Rotate((6,), 90, labels=arrange.FOLLOW)
+    thumbs.clearSelection()
+    for row in (9, 10):
+        thumbs.item(row).setSelected(True)
+    window.a_earlier.trigger()  # (the button of the bar)
+    assert window.hf_changes[-1] == arrange.Move((10, 11), 9, labels=arrange.FOLLOW)
+    assert window.selected_pages() == [9, 10]  # (still chosen, to be moved again)
+    QTest.keyClick(thumbs, Qt.Key.Key_Delete)
+    assert window.hf_changes[-1] == arrange.Delete((9, 10), labels=arrange.FOLLOW) and window.count == 98
+    thumbs.setCurrentRow(0, QItemSelectionModel.SelectionFlag.ClearAndSelect)
+    assert not window.a_earlier.isEnabled() and window.a_later.isEnabled()
+    window._fill_more(window.m_more)
+    asked = []
+    monkeypatch.setattr(window, "ask_arrange", lambda mode, pages=None: asked.append((mode, pages)))
+    texts = {a.text(): a for a in window.m_more.actions() if a.text()}
+    assert len(texts) == 11
+    texts["New order…"].trigger()
+    texts["Split…"].trigger()
+    assert asked == [("order", [1]), ("split", [1])]
+    window.a_page_list.setChecked(True)
+    window.save_settings()
+    assert window.settings.value("page_list") == "true"
