@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import os
 import re
 import sys
@@ -11,7 +12,7 @@ from pathlib import Path
 import pikepdf
 from pikepdf import Pdf
 
-from . import headfoot, labels
+from . import arrange, headfoot, labels
 from .interface import tr
 from .labels import LabelError, Range
 from .view import View, write_view
@@ -42,15 +43,36 @@ def save_pdf(pdf: Pdf, out: Path) -> None:
 
 
 def apply_all(pdf: Pdf, ranges: list[Range], view: View | None = None, changes=(), path: Path | None = None) -> None:
-    """Give PDF these page labels, VIEW (if given: see view.write_view) and the header and footer
-    CHANGES (changes.Change: headers and footers, and watermarks, in order; their variables see these labels and PATH)."""
+    """Make the CHANGES of the pages, in order (changes.Change: headers and footers, and watermarks;
+    arrange.Operation: the pages moved, deleted, inserted...), then give PDF these page labels and
+    VIEW (if given: see view.write_view): the labels and the view are those of the pages at the end.
+    The variables of headers, footers and watermarks see PATH, and the labels the pages have when
+    they are drawn (those at the end, taken back through the operations that come after)."""
+    operations = [c for c in changes if isinstance(c, arrange.Operation)]
+    steps, count = arrange.items_of(operations, len(pdf.pages))
+    # the labels of the pages before each change, from those at the end, back through the operations
+    current = labels.page_labels(ranges, count)
+    before: list[list[str]] = [[]] * len(changes)
+    k = len(steps)
+    for i in range(len(changes) - 1, -1, -1):
+        if isinstance(changes[i], arrange.Operation):
+            k -= 1
+            items = steps[k]
+            n = len(steps[k - 1]) if k else len(pdf.pages)
+            back = [""] * n
+            for place, item in enumerate(items):
+                if isinstance(item, int) and not back[item - 1]:
+                    back[item - 1] = current[place]
+            current = back
+        before[i] = current
+    for change, labels_then in zip(changes, before):
+        if isinstance(change, arrange.Operation):
+            change.apply(pdf)
+        else:
+            change.apply(pdf, headfoot.document_of(pdf, path, labels_then))
     labels.write_labels(pdf, ranges)
     if view is not None:
         write_view(pdf, view)
-    if changes:
-        doc = headfoot.document_of(pdf, path, labels.page_labels(ranges, len(pdf.pages)))
-        for change in changes:
-            change.apply(pdf, doc)
 
 
 def write_copy(source: Path, ranges: list[Range], target: Path, password: str = "",
@@ -124,3 +146,29 @@ def batch(sources: list[Path], change, *, folder: Path | None = None, prefix: st
             continue
         results.append((source, target, ""))
     return results, offset
+
+
+def write_parts(source: Path, ranges: list[Range], parts: list[tuple[Path, list[int]]], password: str = "",
+                view: View | None = None, changes=()) -> None:
+    """Some pages of SOURCE, with these page labels, VIEW and CHANGES made (see apply_all), saved as
+    new files: PARTS, [(target, its pages)]; each page keeps its label."""
+    with pikepdf.open(source, password=password) as pdf:
+        apply_all(pdf, ranges, view, changes, source)
+        data = io.BytesIO()
+        _save(pdf, data)
+        count = len(pdf.pages)
+    for target, pages in parts:
+        with pikepdf.open(io.BytesIO(data.getvalue()), password=password) as part:
+            op = arrange.Order(tuple(pages))
+            part_ranges = arrange.ranges_after(op, ranges, count)
+            op.apply(part)
+            labels.write_labels(part, part_ranges)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            fd, tmp = tempfile.mkstemp(suffix=".pdf", dir=target.parent)
+            os.close(fd)
+            try:
+                _save(part, tmp)
+                os.replace(tmp, target)
+            except BaseException:
+                Path(tmp).unlink(missing_ok=True)
+                raise

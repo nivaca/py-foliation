@@ -10,7 +10,7 @@ pages of the file.  Only the labels change; the pages themselves are left
 as they are.  Nicolas Vaughan made it in 2026.  It has a window, for
 seeing and editing the labels page by page, and a command line, for doing
 the same in scripts, in English or in Spanish.  Here I explain how it was
-made, in ten stages.
+made, in eleven stages.
 
 py-foliation is free software, under the GNU General Public License,
 version 3 or later.  It is written in Python and relies on pikepdf (based
@@ -287,10 +287,46 @@ where it is (`pdfconform` in the configuration file).  It is always run
 without py-foliation's own Python, the AppImage or the virtual environment,
 which hasn't pikepdf for it; this is the lesson py-redact learnt first.
 
+11. Arranging the pages
+-----------------------
+
+Labels follow the order of the pages, and books are often put together
+out of order: a gathering scanned twice, plates in the wrong place, an
+errata page to slip in.  So py-foliation learnt to arrange pages
+(`arrange.py`): to move, delete, duplicate, reverse and rotate them, to
+put them in a new order, to insert blank pages or pages of another PDF, to
+replace pages by them, and to save some of them as a new file, or the whole
+as several.  A blank page takes the boxes and the rotation of the page
+before it (or, at the start, of the first page), so that it shows just as
+big.
+
+Every operation that changes the sequence of pages says, for each page of
+the result, which page it was, or which page of another PDF it is.  From
+that one list come the new page tree, the labels and the page the file
+opens at.  The pages keep their objects, so their bookmarks, their links
+and what py-foliation added to them go with them; a page duplicated is a
+copy, with copies of its annotations; and the destinations that went to a
+page deleted are sent to the page after it.  Replacing a page changes only
+its content: it keeps its links, and the bookmarks that go to it.
+
+PDF keeps labels by position, so when pages move the labels must either
+follow them, each page keeping its own, or stay where they are, and the
+pages be renumbered.  Both are reasonable, and the choice is the user's:
+the command line follows the pages unless told `--labels position`, and the
+window asks each time, unless told once and for all.
+
+In the window, pages can be dragged in the list (with Ctrl, copied), PDFs
+dropped on it insert their pages there, and the menus have the rest.  Like
+every other change, the operations wait for *Save*, can be undone, and are
+shown at once in the list, the thumbnails and the preview.  As they are
+made in the order they were asked for, mixed with headers, footers and
+watermarks, a header added before some pages moved has to see the labels
+the pages had then; they are found going back from the labels at the end.
+
 Testing
 -------
 
-The program has 141 automated tests (`tests/`), run with pytest.  They
+The program has 151 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, the reading and
 writing of the number tree, including odd trees, the ranges found in

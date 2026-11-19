@@ -4,17 +4,21 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import io
 import sys
 from datetime import datetime
 from pathlib import Path
 
-from . import conform, config, headfoot, interface, labels, stamps, view, watermark
+import pikepdf
+
+from . import arrange, conform, config, headfoot, interface, labels, stamps, view, watermark
 from .changes import Change
 from .files import open_pdf, read_list, save_pdf
 from .interface import N_, ntr, tr
 from .labels import LabelError, pages_text, set_command
 
-COMMANDS = ("show", "set", "clear", "copy", "view", "header-footer", "watermark", "completion", "interface")
+COMMANDS = ("show", "set", "clear", "copy", "view", "header-footer", "watermark", "pages", "completion",
+            "interface")
 
 SET_EPILOG = N_("""A range is written PAGES:STYLE[:START[:PREFIX]]:
 
@@ -103,6 +107,25 @@ takes them away, putting the pages back as they were.
 
 For instance: py-foliation watermark book.pdf --text DRAFT --opacity 30%
 --scale 60 -i""")
+
+
+PAGES_EPILOG = N_("""The operations are made in the order they are given, each on the pages as the
+ones before left them. PAGES is a list of pages, as 9-20,31 (LAST counts from
+the end), 'all', 'even', 'odd', or 1-50,odd; WHERE is a page (the pages go
+before it), 'start' or 'end'. --order gives the whole new order: 1-8,20-30,
+9-19,31- (pages may be repeated or left out; 10-1 goes backwards).
+
+By default the page labels follow the pages: each page keeps its label, and
+pages inserted bring the labels they had. With --labels position, the ranges
+of labels stay where they are, and the pages take the labels of their new
+places. Bookmarks and links go with their pages; those that went to a page
+deleted go to the page after it.
+
+--split-every and --split-at save the result as several files, named as the
+input with -1, -2 ... (in --output-dir, if given).
+
+For instance: py-foliation pages book.pdf --move 201-214 9 --delete LAST
+--rotate even 90 -i""")
 
 
 def interface_option(argv: list[str]) -> str | None:
@@ -331,6 +354,44 @@ def build_parser(prog: str = "py-foliation") -> argparse.ArgumentParser:
     stamp_options(sp, tr("watermarks"))
     output_options(sp, tr("show the watermark of the first and last pages, without writing anything"))
 
+    sp = sub.add_parser("pages", parents=[common], help=tr("move, delete, rotate, insert or split pages of PDFs"),
+                        description=tr("Arrange the pages of PDFs: move, delete, duplicate, reverse or rotate "
+                                       "them, put them in a new order, insert pages of another PDF or replace "
+                                       "pages by them, and save some of them as a new file, or the whole as "
+                                       "several."),
+                        epilog=translate_paragraphs(PAGES_EPILOG), formatter_class=argparse.RawDescriptionHelpFormatter)
+    sp.add_argument("inputs", nargs="+", type=Path, metavar=tr("FILE"), help=tr("source PDF"))
+    g = sp.add_argument_group(tr("operations (in the order given)"))
+    g.add_argument("--order", action=OperationAction, nargs=1, metavar=tr("PAGES"),
+                   help=tr("the pages in this order (repeated: duplicated; left out: deleted)"))
+    g.add_argument("--move", action=OperationAction, nargs=2, metavar=(tr("PAGES"), tr("WHERE")),
+                   help=tr("move PAGES before page WHERE (or to the start or end)"))
+    g.add_argument("--delete", action=OperationAction, nargs=1, metavar=tr("PAGES"), help=tr("delete PAGES"))
+    g.add_argument("--duplicate", action=OperationAction, nargs="+", metavar=tr("PAGES [WHERE]"),
+                   help=tr("copy PAGES, right after them or before page WHERE"))
+    g.add_argument("--reverse", action=OperationAction, nargs="?", const="all", metavar=tr("PAGES"),
+                   help=tr("reverse the order of PAGES (default: all)"))
+    g.add_argument("--rotate", action=OperationAction, nargs=2, metavar=(tr("PAGES"), tr("DEGREES")),
+                   help=tr("turn PAGES clockwise by 90, 180 or 270 degrees (-90: counterclockwise)"))
+    g.add_argument("--insert-blank", action=OperationAction, nargs="+", metavar=tr("WHERE [COUNT]"),
+                   help=tr("insert COUNT blank pages (default: 1) before page WHERE, as big as the page before "
+                           "them (at the start, as the first page)"))
+    g.add_argument("--insert", action=OperationAction, nargs="+", metavar=tr("PDF WHERE [PAGES]"),
+                   help=tr("insert the pages of another PDF (or some of them) before page WHERE"))
+    g.add_argument("--replace", action=OperationAction, nargs="+", metavar=tr("PAGES PDF [FIRST]"),
+                   help=tr("replace the content of PAGES by pages of another PDF, from its page FIRST (default: "
+                           "1); links and bookmarks stay"))
+    g.add_argument("--extract", action=OperationAction, nargs=1, metavar=tr("PAGES"),
+                   help=tr("keep only PAGES (with -o, a new file of them)"))
+    g = sp.add_argument_group(tr("the labels and the result"))
+    g.add_argument("--labels", choices=["follow", "position"], default="follow",
+                   help=tr("the page labels follow the pages (default), or stay by position"))
+    g.add_argument("--source-password", default="", metavar=tr("PASSWORD"),
+                   help=tr("the password of the PDFs of --insert and --replace"))
+    g.add_argument("--split-every", type=int, metavar="N", help=tr("save the result as files of N pages each"))
+    g.add_argument("--split-at", metavar=tr("PAGES"), help=tr("save the result as files that start at PAGES"))
+    output_options(sp, tr("show what the pages would be, without writing anything"))
+
     sp = sub.add_parser("completion", parents=[common], help=tr("print the completion script of a shell"),
                         description=tr("Print the script that completes py-foliation's commands, options and "
                                        "files in SHELL. For instance: py-foliation completion fish > "
@@ -496,7 +557,8 @@ def change(a, inputs: list[Path], make, write=labels.write_labels, describe=prin
                         raise LabelError(tr("the output is the input file; use --in-place to change it"))
                     write(pdf, made)
                     save_pdf(pdf, out)
-                    wrote = ntr("Wrote {path} ({count} page)", "Wrote {path} ({count} pages)", n, path=out)
+                    wrote = ntr("Wrote {path} ({count} page)", "Wrote {path} ({count} pages)", len(pdf.pages),
+                                path=out)
                     if not standard:
                         print(wrote)
             if standard and not a.dry_run:  # (once the file is closed: an input changed in place is replaced)
@@ -544,6 +606,145 @@ def copy(a) -> int:
     with open_pdf(a.source, password=a.password) as pdf:
         source = labels.read_labels(pdf)
     return change(a, a.inputs, lambda pdf, n: [r for r in source if r.page <= n])
+
+
+class OperationAction(argparse.Action):
+    """Keeps the operations of 'pages' in the order they are given (in a.operations)."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if not isinstance(values, list):
+            values = [values]
+        ops = list(getattr(namespace, "operations", None) or [])
+        ops.append((self.dest, values))
+        namespace.operations = ops
+
+
+def make_operation(name: str, values: list[str], n: int, labels_choice: str, password: str):
+    """An arrange.Operation from an option of 'pages' (NAME, its VALUES), on a document of N pages."""
+    kw = {"labels": labels_choice}
+
+    def pages(spec):
+        return tuple(arrange.parse_page_list(spec, n))
+
+    if name == "order":
+        return arrange.Order(tuple(arrange.parse_order(values[0], n)), **kw)
+    if name == "extract":
+        return arrange.Order(pages(values[0]), **kw)
+    if name == "move":
+        return arrange.Move(pages(values[0]), arrange.parse_where(values[1], n), **kw)
+    if name == "delete":
+        return arrange.Delete(pages(values[0]), **kw)
+    if name == "duplicate":
+        if len(values) > 2:
+            raise LabelError(tr("--duplicate takes PAGES and, if wished, WHERE"))
+        return arrange.Duplicate(pages(values[0]), arrange.parse_where(values[1], n) if len(values) > 1 else 0, **kw)
+    if name == "reverse":
+        return arrange.Reverse(() if values[0] == "all" else pages(values[0]), **kw)
+    if name == "rotate":
+        try:
+            angle = int(values[1])
+        except ValueError:
+            angle = None
+        if angle is None or angle % 360 not in arrange.ANGLES:
+            raise LabelError(tr("pages turn by 90, 180 or 270 degrees (not {angle})", angle=values[1]))
+        return arrange.Rotate(pages(values[0]), angle, **kw)
+    if name == "insert_blank":
+        if len(values) > 2 or (len(values) == 2 and not values[1].isdigit()):
+            raise LabelError(tr("--insert-blank takes WHERE and, if wished, how many pages"))
+        return arrange.InsertBlank(arrange.parse_where(values[0], n), int(values[1]) if len(values) > 1 else 1, **kw)
+    if name == "insert":
+        if not 2 <= len(values) <= 3:
+            raise LabelError(tr("--insert takes a PDF, WHERE and, if wished, its PAGES"))
+        source = values[0]
+        count = arrange.source_count(source, password)
+        chosen = tuple(arrange.parse_page_list(values[2], count)) if len(values) > 2 else ()
+        return arrange.Insert(source, chosen, arrange.parse_where(values[1], n), password, **kw)
+    if name == "replace":
+        if not 2 <= len(values) <= 3:
+            raise LabelError(tr("--replace takes PAGES, a PDF and, if wished, its FIRST page"))
+        first = int(values[2]) if len(values) > 2 and values[2].isdigit() else 1
+        return arrange.Replace(pages(values[0]), values[1], first, password, **kw)
+    raise LabelError(name)
+
+
+def arranged(pdf, a) -> tuple[list, list]:
+    """(the operations, the label ranges after them) that the options of 'pages' give for PDF."""
+    n = len(pdf.pages)
+    ranges = labels.read_labels(pdf)
+    operations = []
+    for name, values in getattr(a, "operations", None) or []:
+        op = make_operation(name, values, n, a.labels, a.source_password)
+        ranges = arrange.ranges_after(op, ranges, n)
+        n = len(op.items(n)) if op.moves_pages() else n
+        operations.append(op)
+    return operations, ranges
+
+
+def describe_arranged(made, n: int) -> None:
+    operations, ranges, count = made
+    for op in operations:
+        print("  " + op.describe())
+    print("  " + ntr("{count} page at the end", "{count} pages at the end", count))
+    for r, last in labels.spans(ranges, count):
+        print(f"    {pages_text(r, last)}: {labels.describe(r, last)}")
+
+
+def pages_command(a) -> int:
+    if not getattr(a, "operations", None) and not (a.split_every or a.split_at):
+        raise LabelError(tr("nothing to do: give an operation, as --move, --delete or --rotate"))
+
+    def make(pdf, n):
+        operations, ranges = arranged(pdf, a)
+        count = arrange.items_of(operations, n)[1]
+        return operations, ranges, count
+
+    def write(pdf, made):
+        operations, ranges, _ = made
+        for op in operations:
+            op.apply(pdf)
+        labels.write_labels(pdf, ranges)
+
+    if not (a.split_every or a.split_at):
+        return change(a, a.inputs, make, write=write, describe=describe_arranged)
+    return split_command(a, make, write)
+
+
+def split_command(a, make, write) -> int:
+    """pages --split-every / --split-at: the result of the operations, saved as several files."""
+    if a.output is not None or a.in_place:
+        raise LabelError(tr("--split-every and --split-at save several files: use --output-dir, not -o or -i"))
+    failed = False
+    for path in a.inputs:
+        try:
+            with open_pdf(path, password=a.password) as pdf:
+                made = make(pdf, len(pdf.pages))
+                write(pdf, made)
+                n = len(pdf.pages)
+                at = arrange.parse_page_list(a.split_at, n) if a.split_at else None
+                parts = arrange.split_parts(n, a.split_every or 0, at)
+                ranges = made[1]
+                data = io.BytesIO()
+                pdf.save(data)
+            folder = a.output_dir or path.parent
+            suffix = a.name_suffix or ""
+            for k, (first, last) in enumerate(parts, 1):
+                target = folder / f"{a.name_prefix}{path.stem}{suffix}-{k}.pdf"
+                if a.dry_run:
+                    print(tr("{path} would get pages {first}-{last}", path=target, first=first, last=last))
+                    continue
+                folder.mkdir(parents=True, exist_ok=True)
+                with pikepdf.open(io.BytesIO(data.getvalue()), password=a.password) as part:
+                    op = arrange.Order(tuple(range(first, last + 1)))
+                    part_ranges = arrange.ranges_after(op, ranges, n)
+                    op.apply(part)
+                    labels.write_labels(part, part_ranges)
+                    save_pdf(part, target)
+                print(ntr("Wrote {path} ({count} page)", "Wrote {path} ({count} pages)", last - first + 1,
+                          path=target))
+        except LabelError as e:
+            report(e)
+            failed = True
+    return 1 if failed else 0
 
 
 def view_command(a) -> int:
@@ -768,7 +969,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     a, extra = parser.parse_known_args(argv)
     # (argparse takes the positionals of a command in one go: those after an option are left over)
-    if extra and a.command in ("set", "show", "clear", "copy", "view", "header-footer", "watermark") \
+    if extra and a.command in ("set", "show", "clear", "copy", "view", "header-footer", "watermark", "pages") \
             and not any(t.startswith("-") and t != "-" for t in extra):
         if a.command == "set":
             a.items += extra
@@ -780,7 +981,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
     commands = {"show": show, "set": set_labels, "clear": clear, "copy": copy, "view": view_command,
-                "header-footer": header_footer, "watermark": watermark_command,
+                "header-footer": header_footer, "watermark": watermark_command, "pages": pages_command,
                 "completion": completion, "interface": choose_interface}
     try:
         return commands[a.command](a)

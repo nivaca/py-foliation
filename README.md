@@ -152,6 +152,12 @@ on the right, the chosen page.
   the Bates numbers** only the headers and footers with Bates numbers.
   Profiles marked **Show on menu** are listed there too, to apply in one
   click.
+- **Pages ▸ Rotate…, Delete…, Move…, Duplicate…, Reverse the order…, New
+  order…, Insert blank pages…, Insert from a PDF…, Replace by pages of a
+  PDF…, Extract to a new PDF…** and **Split…** arrange the pages (see [Arranging
+  pages](#arranging-pages)). Pages chosen in the list can also be dragged to
+  another place (with Ctrl, copied there), and PDFs dropped on the list put
+  their pages where they fall; the menu of the pages has the same actions.
 - **Pages ▸ On several files…** adds or removes headers and footers, Bates
   numbers or watermarks on a list of PDFs at once, in the order of the list
   (the Bates numbers go on from one file to the next), saving them next to
@@ -177,6 +183,7 @@ they are saved.
     py-foliation view book.pdf                     # how it opens in a viewer
     py-foliation header-footer book.pdf --footer-center '$pagelabel' -i   # a footer
     py-foliation watermark book.pdf --text DRAFT --opacity 30% -i         # a watermark
+    py-foliation pages book.pdf --move 201-214 9 --delete LAST -i          # pages moved, one deleted
     py-foliation set book.pdf 1:r 9:D --conform a-2b   # book-labelled.pdf, as PDF/A-2b
 
 A range is written `PAGES:STYLE[:START[:PREFIX]]`:
@@ -329,6 +336,44 @@ pages or behind it:
   `--voffset` in `--units`.
 - **Pages**, **Bates numbering**, **profiles**, `--add`, `--update` and
   `--remove`, as for headers and footers.
+
+### Arranging pages
+
+`pages` moves, deletes, duplicates, reverses or rotates pages, puts them in
+a new order, inserts pages of another PDF or replaces pages by them, and
+saves some of them as a new file, or the whole as several. The operations
+are made in the order they are given:
+
+    py-foliation pages book.pdf --move 201-214 9 --delete LAST --rotate even 90 -i
+    py-foliation pages scan.pdf --order 1-8,20-30,9-19,31- -i
+    py-foliation pages book.pdf --insert plates.pdf 120 --replace 5 errata.pdf -i
+    py-foliation pages book.pdf --extract 9-40 -o chapter1.pdf
+    py-foliation pages book.pdf --split-at 9,91,215 --output-dir parts
+
+- `--move PAGES WHERE`, `--delete PAGES`, `--duplicate PAGES [WHERE]`,
+  `--reverse [PAGES]` and `--rotate PAGES DEGREES` (90, 180 or 270,
+  clockwise; -90 counterclockwise). PAGES is a list (`9-20,31`, `LAST`),
+  `all`, `even`, `odd`, or `1-50,odd`; WHERE is a page, before which the
+  pages go, `start` or `end`.
+- `--order` gives the whole new order: pages may be repeated or left out,
+  and `10-1` goes backwards.
+- `--insert-blank WHERE [COUNT]` puts in blank pages (one by default),
+  exactly as big as the page before them (at the start, as the first page),
+  turned as it is.
+- `--insert PDF WHERE [PAGES]` puts in the pages of another PDF (or some of
+  them); `--replace PAGES PDF [FIRST]` replaces the content of PAGES by the
+  pages of another PDF from its page FIRST, while the pages keep their
+  links and the bookmarks that go to them.
+- `--extract PAGES` keeps only those; `--split-every N` and `--split-at
+  PAGES` save the result as several files, named as the input with -1, -2
+  and so on.
+
+The page labels follow the pages by default: each page keeps its label,
+and pages inserted bring the labels they had (blank pages have none). With `--labels position`, the
+ranges stay where they are and the pages take the labels of their new
+places. The window asks each time, unless **Pages ▸ The labels, when pages
+move** says what to do. Bookmarks and links go with their pages; those that
+went to a page deleted go to the page after it.
 
 ### Completion and manual
 

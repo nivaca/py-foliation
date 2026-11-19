@@ -275,7 +275,7 @@ def test_view_when_opened(app, window, book):
     window.pages.setCurrentRow(8)
     menu = window.build_pages_menu()
     subs = {a.text(): a.menu() for a in menu.actions() if a.menu()}
-    assert set(subs) == {"Page layout", "Page view"}
+    assert {"Page layout", "Page view"} <= set(subs)
     layouts = {a.text(): a for a in subs["Page layout"].actions()}
     assert list(layouts) == ["The viewer's choice", "Single", "Single Continuous", "Facing", "Facing Continuous",
                              "Cover", "Cover Continuous"] and layouts["The viewer's choice"].isChecked()

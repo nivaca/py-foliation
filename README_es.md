@@ -158,6 +158,14 @@ la derecha, la página elegida.
   números Bates** solo los encabezados y pies con números Bates. Los perfiles
   marcados con **Mostrar en el menú** también aparecen allí, para aplicarlos
   con un clic.
+- **Páginas ▸ Girar…, Borrar…, Mover…, Duplicar…, Invertir el orden…, Nuevo
+  orden…, Insertar páginas en blanco…, Insertar de un PDF…, Reemplazar por
+  páginas de un PDF…, Extraer a un PDF nuevo…** y **Dividir…** ordenan las
+  páginas (véase [Ordenar las
+  páginas](#ordenar-las-páginas)). Las páginas elegidas en la lista también
+  pueden arrastrarse a otro lugar (con Ctrl, se copian allí), y los PDF que
+  se sueltan en la lista ponen sus páginas donde caen; el menú de las páginas
+  tiene las mismas acciones.
 - **Páginas ▸ En varios archivos…** añade o quita encabezados y pies, números
   Bates o marcas de agua en una lista de PDF a la vez, en el orden de la lista
   (los números Bates siguen de un archivo al siguiente), y los guarda junto a
@@ -183,6 +191,7 @@ guardarlos.
     py-foliation view libro.pdf                     # cómo se abre en un visor
     py-foliation header-footer libro.pdf --footer-center '$pagelabel' -i   # un pie de página
     py-foliation watermark libro.pdf --text BORRADOR --opacity 30% -i     # una marca de agua
+    py-foliation pages libro.pdf --move 201-214 9 --delete LAST -i         # páginas movidas, una borrada
     py-foliation set libro.pdf 1:r 9:D --conform a-2b   # libro-labelled.pdf, en PDF/A-2b
 
 Un intervalo se escribe `PÁGINAS:ESTILO[:INICIO[:PREFIJO]]`:
@@ -338,6 +347,45 @@ páginas o detrás:
   `--voffset` en `--units`.
 - **Páginas**, **numeración Bates**, **perfiles**, `--add`, `--update` y
   `--remove`, como para los encabezados y pies.
+
+### Ordenar las páginas
+
+`pages` mueve, borra, duplica, invierte o gira páginas, las pone en un orden
+nuevo, inserta páginas de otro PDF o reemplaza páginas por ellas, y guarda
+algunas como un archivo nuevo, o el todo como varios. Las operaciones se
+hacen en el orden en que se dan:
+
+    py-foliation pages libro.pdf --move 201-214 9 --delete LAST --rotate even 90 -i
+    py-foliation pages escaneo.pdf --order 1-8,20-30,9-19,31- -i
+    py-foliation pages libro.pdf --insert láminas.pdf 120 --replace 5 erratas.pdf -i
+    py-foliation pages libro.pdf --extract 9-40 -o capitulo1.pdf
+    py-foliation pages libro.pdf --split-at 9,91,215 --output-dir partes
+
+- `--move PÁGINAS DÓNDE`, `--delete PÁGINAS`, `--duplicate PÁGINAS
+  [DÓNDE]`, `--reverse [PÁGINAS]` y `--rotate PÁGINAS GRADOS` (90, 180 o 270,
+  en el sentido de las agujas del reloj; -90 en sentido contrario). PÁGINAS
+  es una lista (`9-20,31`, `LAST`), `all`, `even`, `odd`, o `1-50,odd`; DÓNDE
+  es una página, antes de la cual van las páginas, `start` o `end`.
+- `--order` da todo el orden nuevo: las páginas pueden repetirse u omitirse,
+  y `10-1` va hacia atrás.
+- `--insert-blank DÓNDE [CUÁNTAS]` mete páginas en blanco (una por defecto),
+  exactamente del tamaño de la página anterior (al principio, de la primera),
+  giradas como ella.
+- `--insert PDF DÓNDE [PÁGINAS]` mete las páginas de otro PDF (o algunas);
+  `--replace PÁGINAS PDF [PRIMERA]` reemplaza el contenido de PÁGINAS por las
+  páginas de otro PDF desde su página PRIMERA, y las páginas conservan sus
+  enlaces y los marcadores que van a ellas.
+- `--extract PÁGINAS` conserva solo esas; `--split-every N` y `--split-at
+  PÁGINAS` guardan el resultado en varios archivos, con el nombre de la
+  entrada y -1, -2, etc.
+
+Por defecto, las etiquetas siguen a las páginas: cada página conserva su
+etiqueta, y las páginas insertadas traen las que tenían (las páginas en blanco no tienen). Con `--labels
+position`, los intervalos se quedan donde están y las páginas toman las
+etiquetas de sus nuevos lugares. La ventana pregunta cada vez, salvo que
+**Páginas ▸ Las etiquetas, cuando se mueven páginas** diga qué hacer. Los
+marcadores y los enlaces van con sus páginas; los que iban a una página
+borrada van a la siguiente.
 
 ### Completado y manual
 

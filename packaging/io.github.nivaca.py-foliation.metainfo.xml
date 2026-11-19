@@ -41,6 +41,8 @@
       <li xml:lang="es">Marcas de agua: un texto o una página de otro PDF, girados, a escala y transparentes, delante de las páginas o detrás</li>
       <li>Several files at once, with Bates numbers going on from one to the next</li>
       <li xml:lang="es">Varios archivos a la vez, con números Bates que siguen de uno al siguiente</li>
+      <li>Pages moved, deleted, duplicated, rotated, inserted (blank, or from another PDF), extracted or split, the labels following them or staying by position</li>
+      <li xml:lang="es">Páginas movidas, borradas, duplicadas, giradas, insertadas (en blanco, o de otro PDF), extraídas o divididas, con las etiquetas siguiéndolas o quedándose por posición</li>
       <li>A command line with the same features, in English or Spanish</li>
       <li xml:lang="es">Una línea de órdenes con las mismas funciones, en inglés o en español</li>
     </ul>

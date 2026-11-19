@@ -979,10 +979,6 @@ hoja y su lado, como 12v), - o none (solo el prefijo).</tr>
     <tr>Copiar sus etiquetas</tr>
   </text>
   <text>
-    <en>Double-click a page to start a range at it; select pages (Shift, Ctrl) and right-click them for more</en>
-    <tr>Haga doble clic en una página para empezar un intervalo en ella; seleccione páginas (Mayús, Ctrl) y haga clic derecho en ellas para más</tr>
-  </text>
-  <text>
     <en>Edit their labels one by one…</en>
     <tr>Editar sus etiquetas una por una…</tr>
   </text>
@@ -2715,5 +2711,516 @@ los visores que siguen esas indicaciones.</tr>
   <text>
     <en>{standard} can't be made: {command} is not installed (or not where Settings say)</en>
     <tr>No se puede hacer {standard}: {command} no está instalado (o no está donde dicen los Ajustes)</tr>
+  </text>
+  <text>
+    <en>(written when the file is saved)</en>
+    <tr>(se escribe al guardar el archivo)</tr>
+  </text>
+  <text>
+    <en>--duplicate takes PAGES and, if wished, WHERE</en>
+    <tr>--duplicate toma PÁGINAS y, si se quiere, DÓNDE</tr>
+  </text>
+  <text>
+    <en>--insert takes a PDF, WHERE and, if wished, its PAGES</en>
+    <tr>--insert toma un PDF, DÓNDE y, si se quiere, sus PÁGINAS</tr>
+  </text>
+  <text>
+    <en>--replace takes PAGES, a PDF and, if wished, its FIRST page</en>
+    <tr>--replace toma PÁGINAS, un PDF y, si se quiere, su PRIMERA página</tr>
+  </text>
+  <text>
+    <en>--split-every and --split-at save several files: use --output-dir, not -o or -i</en>
+    <tr>--split-every y --split-at guardan varios archivos: use --output-dir, no -o ni -i</tr>
+  </text>
+  <text>
+    <en>--split-every and --split-at save the result as several files, named as the input with -1, -2 ... (in --output-dir, if given).</en>
+    <tr>--split-every y --split-at guardan el resultado en varios archivos, con el
+nombre de la entrada y -1, -2 ... (en --output-dir, si se da).</tr>
+  </text>
+  <text>
+    <en>180°</en>
+    <tr>180°</tr>
+  </text>
+  <text>
+    <en>90° clockwise</en>
+    <tr>90° en el sentido de las agujas del reloj</tr>
+  </text>
+  <text>
+    <en>90° counterclockwise</en>
+    <tr>90° en sentido contrario a las agujas del reloj</tr>
+  </text>
+  <text>
+    <en>A PDF</en>
+    <tr>Un PDF</tr>
+  </text>
+  <text>
+    <en>Arrange the pages of PDFs: move, delete, duplicate, reverse or rotate them, put them in a new order, insert pages of another PDF or replace pages by them, and save some of them as a new file, or the whole as several.</en>
+    <tr>Ordena las páginas de los PDF: las mueve, borra, duplica, invierte o gira, las pone en un orden nuevo, inserta páginas de otro PDF o reemplaza páginas por ellas, y guarda algunas como un archivo nuevo, o el todo como varios.</tr>
+  </text>
+  <text>
+    <en>Ask each time</en>
+    <tr>Preguntar cada vez</tr>
+  </text>
+  <text>
+    <en>Before page (0: right after them):</en>
+    <tr>Antes de la página (0: justo después de ellas):</tr>
+  </text>
+  <text>
+    <en>Before page:</en>
+    <tr>Antes de la página:</tr>
+  </text>
+  <text>
+    <en>By default the page labels follow the pages: each page keeps its label, and pages inserted bring the labels they had. With --labels position, the ranges of labels stay where they are, and the pages take the labels of their new places. Bookmarks and links go with their pages; those that went to a page deleted go to the page after it.</en>
+    <tr>Por defecto, las etiquetas siguen a las páginas: cada página conserva su
+etiqueta, y las páginas insertadas traen las que tenían. Con --labels
+position, los intervalos de etiquetas se quedan donde están, y las páginas
+toman las etiquetas de sus nuevos lugares. Los marcadores y los enlaces van
+con sus páginas; los que iban a una página borrada van a la siguiente.</tr>
+  </text>
+  <text>
+    <en>Delete pages</en>
+    <tr>Borrar páginas</tr>
+  </text>
+  <text>
+    <en>Delete…</en>
+    <tr>Borrar…</tr>
+  </text>
+  <text>
+    <en>Do so from now on (Pages ▸ The labels, to change it)</en>
+    <tr>Hacerlo así de ahora en adelante (Páginas ▸ Las etiquetas, para cambiarlo)</tr>
+  </text>
+  <text>
+    <en>Double-click a page to start a range at it; select pages (Shift, Ctrl) and right-click them for more; drag them to move them (with Ctrl, to copy them), or drop PDFs to insert their pages</en>
+    <tr>Doble clic en una página para empezar un intervalo en ella; seleccione páginas (Mayús, Ctrl) y haga clic derecho en ellas para más; arrástrelas para moverlas (con Ctrl, para copiarlas), o suelte PDF para insertar sus páginas</tr>
+  </text>
+  <text>
+    <en>Duplicate</en>
+    <tr>Duplicar</tr>
+  </text>
+  <text>
+    <en>Duplicate pages</en>
+    <tr>Duplicar páginas</tr>
+  </text>
+  <text>
+    <en>Duplicate…</en>
+    <tr>Duplicar…</tr>
+  </text>
+  <text>
+    <en>Every so many pages:</en>
+    <tr>Cada tantas páginas:</tr>
+  </text>
+  <text>
+    <en>Extract pages to a new PDF</en>
+    <tr>Extraer páginas a un PDF nuevo</tr>
+  </text>
+  <text>
+    <en>Extract to a new PDF</en>
+    <tr>Extraer a un PDF nuevo</tr>
+  </text>
+  <text>
+    <en>Extract to a new PDF…</en>
+    <tr>Extraer a un PDF nuevo…</tr>
+  </text>
+  <text>
+    <en>For instance: py-foliation pages book.pdf --move 201-214 9 --delete LAST --rotate even 90 -i</en>
+    <tr>Por ejemplo: py-foliation pages libro.pdf --move 201-214 9 --delete LAST
+--rotate even 90 -i</tr>
+  </text>
+  <text>
+    <en>From its page:</en>
+    <tr>Desde su página:</tr>
+  </text>
+  <text>
+    <en>From the PDF:</en>
+    <tr>Del PDF:</tr>
+  </text>
+  <text>
+    <en>In the folder:</en>
+    <tr>En la carpeta:</tr>
+  </text>
+  <text>
+    <en>Insert from a PDF…</en>
+    <tr>Insertar de un PDF…</tr>
+  </text>
+  <text>
+    <en>Insert pages from a PDF</en>
+    <tr>Insertar páginas de un PDF</tr>
+  </text>
+  <text>
+    <en>Insert pages of a PDF before these…</en>
+    <tr>Insertar páginas de un PDF antes de estas…</tr>
+  </text>
+  <text>
+    <en>Insert pages of a PDF before this one…</en>
+    <tr>Insertar páginas de un PDF antes de esta…</tr>
+  </text>
+  <text>
+    <en>Its pages:</en>
+    <tr>Sus páginas:</tr>
+  </text>
+  <text>
+    <en>Its password:</en>
+    <tr>Su contraseña:</tr>
+  </text>
+  <text>
+    <en>Labels:</en>
+    <tr>Etiquetas:</tr>
+  </text>
+  <text>
+    <en>Move before page…</en>
+    <tr>Mover antes de la página…</tr>
+  </text>
+  <text>
+    <en>Move pages</en>
+    <tr>Mover páginas</tr>
+  </text>
+  <text>
+    <en>Move to the end</en>
+    <tr>Mover al final</tr>
+  </text>
+  <text>
+    <en>Move to the start</en>
+    <tr>Mover al principio</tr>
+  </text>
+  <text>
+    <en>Move…</en>
+    <tr>Mover…</tr>
+  </text>
+  <text>
+    <en>New order of the pages</en>
+    <tr>Nuevo orden de las páginas</tr>
+  </text>
+  <text>
+    <en>New order…</en>
+    <tr>Nuevo orden…</tr>
+  </text>
+  <text>
+    <en>Or starting at pages:</en>
+    <tr>O empezando en las páginas:</tr>
+  </text>
+  <text>
+    <en>PAGES PDF [FIRST]</en>
+    <tr>PÁGINAS PDF [PRIMERA]</tr>
+  </text>
+  <text>
+    <en>PAGES [WHERE]</en>
+    <tr>PÁGINAS [DÓNDE]</tr>
+  </text>
+  <text>
+    <en>PDF WHERE [PAGES]</en>
+    <tr>PDF DÓNDE [PÁGINAS]</tr>
+  </text>
+  <text>
+    <en>Pages deleted</en>
+    <tr>Páginas borradas</tr>
+  </text>
+  <text>
+    <en>Pages duplicated</en>
+    <tr>Páginas duplicadas</tr>
+  </text>
+  <text>
+    <en>Pages inserted from {path}</en>
+    <tr>Páginas insertadas de {path}</tr>
+  </text>
+  <text>
+    <en>Pages may be repeated or left out; 10-1 goes backwards</en>
+    <tr>Las páginas pueden repetirse u omitirse; 10-1 va hacia atrás</tr>
+  </text>
+  <text>
+    <en>Pages moved</en>
+    <tr>Páginas movidas</tr>
+  </text>
+  <text>
+    <en>Pages replaced from {path}</en>
+    <tr>Páginas reemplazadas con las de {path}</tr>
+  </text>
+  <text>
+    <en>Pages reversed</en>
+    <tr>Páginas invertidas</tr>
+  </text>
+  <text>
+    <en>Pages rotated</en>
+    <tr>Páginas giradas</tr>
+  </text>
+  <text>
+    <en>Replace by pages of a PDF…</en>
+    <tr>Reemplazar por páginas de un PDF…</tr>
+  </text>
+  <text>
+    <en>Replace pages by those of a PDF</en>
+    <tr>Reemplazar páginas por las de un PDF</tr>
+  </text>
+  <text>
+    <en>Reverse the order of pages</en>
+    <tr>Invertir el orden de las páginas</tr>
+  </text>
+  <text>
+    <en>Reverse the order…</en>
+    <tr>Invertir el orden…</tr>
+  </text>
+  <text>
+    <en>Reverse their order</en>
+    <tr>Invertir su orden</tr>
+  </text>
+  <text>
+    <en>Rotate</en>
+    <tr>Girar</tr>
+  </text>
+  <text>
+    <en>Rotate pages</en>
+    <tr>Girar páginas</tr>
+  </text>
+  <text>
+    <en>Rotate…</en>
+    <tr>Girar…</tr>
+  </text>
+  <text>
+    <en>Saved {count} file: {path}</en>
+    <tr>Se guardó {count} archivo: {path}</tr>
+  </text>
+  <text>
+    <en>Saved {count} files: {path}</en>
+    <tr>Se guardaron {count} archivos: {path}</tr>
+  </text>
+  <text>
+    <en>Split into several PDFs</en>
+    <tr>Dividir en varios PDF</tr>
+  </text>
+  <text>
+    <en>Split…</en>
+    <tr>Dividir…</tr>
+  </text>
+  <text>
+    <en>The labels follow the pages</en>
+    <tr>Las etiquetas siguen a las páginas</tr>
+  </text>
+  <text>
+    <en>The labels, when pages move</en>
+    <tr>Las etiquetas, cuando se mueven páginas</tr>
+  </text>
+  <text>
+    <en>The operations are made in the order they are given, each on the pages as the ones before left them. PAGES is a list of pages, as 9-20,31 (LAST counts from the end), 'all', 'even', 'odd', or 1-50,odd; WHERE is a page (the pages go before it), 'start' or 'end'. --order gives the whole new order: 1-8,20-30, 9-19,31- (pages may be repeated or left out; 10-1 goes backwards).</en>
+    <tr>Las operaciones se hacen en el orden en que se dan, cada una sobre las
+páginas tal como las dejaron las anteriores. PÁGINAS es una lista de páginas,
+como 9-20,31 (LAST cuenta desde el final), 'all', 'even', 'odd', o 1-50,odd;
+DÓNDE es una página (las páginas van antes de ella), 'start' o 'end'.
+--order da todo el orden nuevo: 1-8,20-30,9-19,31- (las páginas pueden
+repetirse u omitirse; 10-1 va hacia atrás).</tr>
+  </text>
+  <text>
+    <en>The page labels</en>
+    <tr>Las etiquetas de página</tr>
+  </text>
+  <text>
+    <en>The pages are renumbered by position</en>
+    <tr>Las páginas se renumeran por posición</tr>
+  </text>
+  <text>
+    <en>The pages change places. What should their labels do?</en>
+    <tr>Las páginas cambian de lugar. ¿Qué deben hacer sus etiquetas?</tr>
+  </text>
+  <text>
+    <en>The pages in this order:</en>
+    <tr>Las páginas en este orden:</tr>
+  </text>
+  <text>
+    <en>Turn:</en>
+    <tr>Girar:</tr>
+  </text>
+  <text>
+    <en>WHERE</en>
+    <tr>DÓNDE</tr>
+  </text>
+  <text>
+    <en>a document needs one page at least: not every page can be deleted</en>
+    <tr>un documento necesita al menos una página: no pueden borrarse todas</tr>
+  </text>
+  <text>
+    <en>a part needs one page at least</en>
+    <tr>una parte necesita al menos una página</tr>
+  </text>
+  <text>
+    <en>all</en>
+    <tr>todas</tr>
+  </text>
+  <text>
+    <en>choose the PDF the pages come from</en>
+    <tr>elija el PDF del que vienen las páginas</tr>
+  </text>
+  <text>
+    <en>copy PAGES, right after them or before page WHERE</en>
+    <tr>copiar PÁGINAS, justo después de ellas o antes de la página DÓNDE</tr>
+  </text>
+  <text>
+    <en>delete PAGES</en>
+    <tr>borrar PÁGINAS</tr>
+  </text>
+  <text>
+    <en>e.g. 9,91 (each part starts there)</en>
+    <tr>p. ej. 9,91 (cada parte empieza allí)</tr>
+  </text>
+  <text>
+    <en>e.g. 9-20,31; all; even; 1-50,odd</en>
+    <tr>p. ej. 9-20,31; all; even; 1-50,odd</tr>
+  </text>
+  <text>
+    <en>if it has one</en>
+    <tr>si tiene</tr>
+  </text>
+  <text>
+    <en>insert the pages of another PDF (or some of them) before page WHERE</en>
+    <tr>insertar las páginas de otro PDF (o algunas) antes de la página DÓNDE</tr>
+  </text>
+  <text>
+    <en>keep only PAGES (with -o, a new file of them)</en>
+    <tr>conservar solo PÁGINAS (con -o, un archivo nuevo con ellas)</tr>
+  </text>
+  <text>
+    <en>move PAGES before page WHERE (or to the start or end)</en>
+    <tr>mover PÁGINAS antes de la página DÓNDE (o al principio o al final)</tr>
+  </text>
+  <text>
+    <en>move, delete, rotate, insert or split pages of PDFs</en>
+    <tr>mover, borrar, girar, insertar o dividir páginas de los PDF</tr>
+  </text>
+  <text>
+    <en>no</en>
+    <tr>no</tr>
+  </text>
+  <text>
+    <en>no page is chosen by {spec!r}</en>
+    <tr>{spec!r} no elige ninguna página</tr>
+  </text>
+  <text>
+    <en>nothing to do: give an operation, as --move, --delete or --rotate</en>
+    <tr>nada que hacer: dé una operación, como --move, --delete o --rotate</tr>
+  </text>
+  <text>
+    <en>operations (in the order given)</en>
+    <tr>operaciones (en el orden dado)</tr>
+  </text>
+  <text>
+    <en>pages turn by 90, 180 or 270 degrees (not {angle})</en>
+    <tr>las páginas giran 90, 180 o 270 grados (no {angle})</tr>
+  </text>
+  <text>
+    <en>replace the content of PAGES by pages of another PDF, from its page FIRST (default: 1); links and bookmarks stay</en>
+    <tr>reemplazar el contenido de PÁGINAS por páginas de otro PDF, desde su página PRIMERA (por defecto: 1); los enlaces y marcadores se quedan</tr>
+  </text>
+  <text>
+    <en>reverse the order of PAGES (default: all)</en>
+    <tr>invertir el orden de PÁGINAS (por defecto: todas)</tr>
+  </text>
+  <text>
+    <en>save the result as files of N pages each</en>
+    <tr>guardar el resultado en archivos de N páginas cada uno</tr>
+  </text>
+  <text>
+    <en>save the result as files that start at PAGES</en>
+    <tr>guardar el resultado en archivos que empiezan en PÁGINAS</tr>
+  </text>
+  <text>
+    <en>say every how many pages, or at which pages, to split</en>
+    <tr>diga cada cuántas páginas, o en qué páginas, dividir</tr>
+  </text>
+  <text>
+    <en>show what the pages would be, without writing anything</en>
+    <tr>mostrar cómo quedarían las páginas, sin escribir nada</tr>
+  </text>
+  <text>
+    <en>the labels and the result</en>
+    <tr>las etiquetas y el resultado</tr>
+  </text>
+  <text>
+    <en>the page labels follow the pages (default), or stay by position</en>
+    <tr>las etiquetas siguen a las páginas (por defecto), o se quedan por posición</tr>
+  </text>
+  <text>
+    <en>the pages in this order (repeated: duplicated; left out: deleted)</en>
+    <tr>las páginas en este orden (repetidas: duplicadas; omitidas: borradas)</tr>
+  </text>
+  <text>
+    <en>the pages must be from 1 to {count}</en>
+    <tr>las páginas deben ir de 1 a {count}</tr>
+  </text>
+  <text>
+    <en>the password of the PDFs of --insert and --replace</en>
+    <tr>la contraseña de los PDF de --insert y --replace</tr>
+  </text>
+  <text>
+    <en>turn PAGES clockwise by 90, 180 or 270 degrees (-90: counterclockwise)</en>
+    <tr>girar PÁGINAS 90, 180 o 270 grados en el sentido de las agujas del reloj (-90: en sentido contrario)</tr>
+  </text>
+  <text>
+    <en>{count} + 1: at the end</en>
+    <tr>{count} + 1: al final</tr>
+  </text>
+  <text>
+    <en>{count} page at the end</en>
+    <tr>{count} página al final</tr>
+  </text>
+  <text>
+    <en>{count} pages at the end</en>
+    <tr>{count} páginas al final</tr>
+  </text>
+  <text>
+    <en>{path} would get pages {first}-{last}</en>
+    <tr>{path} tendría las páginas {first}-{last}</tr>
+  </text>
+  <text>
+    <en>--insert-blank takes WHERE and, if wished, how many pages</en>
+    <tr>--insert-blank toma DÓNDE y, si se quiere, cuántas páginas</tr>
+  </text>
+  <text>
+    <en>As big as the page before them (at the start, as the first page)</en>
+    <tr>Del tamaño de la página anterior (al principio, de la primera página)</tr>
+  </text>
+  <text>
+    <en>Blank page inserted</en>
+    <tr>Página en blanco insertada</tr>
+  </text>
+  <text>
+    <en>Blank pages inserted</en>
+    <tr>Páginas en blanco insertadas</tr>
+  </text>
+  <text>
+    <en>Blank pages:</en>
+    <tr>Páginas en blanco:</tr>
+  </text>
+  <text>
+    <en>Insert a blank page after these</en>
+    <tr>Insertar una página en blanco después de estas</tr>
+  </text>
+  <text>
+    <en>Insert a blank page after this one</en>
+    <tr>Insertar una página en blanco después de esta</tr>
+  </text>
+  <text>
+    <en>Insert a blank page before these</en>
+    <tr>Insertar una página en blanco antes de estas</tr>
+  </text>
+  <text>
+    <en>Insert a blank page before this one</en>
+    <tr>Insertar una página en blanco antes de esta</tr>
+  </text>
+  <text>
+    <en>Insert blank pages</en>
+    <tr>Insertar páginas en blanco</tr>
+  </text>
+  <text>
+    <en>Insert blank pages…</en>
+    <tr>Insertar páginas en blanco…</tr>
+  </text>
+  <text>
+    <en>WHERE [COUNT]</en>
+    <tr>DÓNDE [CUÁNTAS]</tr>
+  </text>
+  <text>
+    <en>from 1 to 10000 blank pages (not {count})</en>
+    <tr>de 1 a 10000 páginas en blanco (no {count})</tr>
+  </text>
+  <text>
+    <en>insert COUNT blank pages (default: 1) before page WHERE, as big as the page before them (at the start, as the first page)</en>
+    <tr>insertar CUÁNTAS páginas en blanco (por defecto: 1) antes de la página DÓNDE, del tamaño de la página anterior (al principio, de la primera página)</tr>
   </text>
 </interface>

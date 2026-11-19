@@ -20,6 +20,8 @@ argumentos posicionales:
                        visor
     header-footer      añadir encabezados y pies de página a los PDF
     watermark          añadir marcas de agua a los PDF
+    pages              mover, borrar, girar, insertar o dividir páginas de
+                       los PDF
     completion         imprimir el script de completado de un shell
     interface          mostrar o elegir el idioma de la interfaz
 
@@ -591,6 +593,109 @@ añadida; --remove las quita, dejando las páginas como estaban.
 
 Por ejemplo: py-foliation watermark libro.pdf --text BORRADOR --opacity 30%
 --scale 60 -i
+.fi
+.SS pages
+.nf
+uso: py-foliation pages [-h] [--interface {en,es}] [--order PÁGINAS]
+                        [--move PÁGINAS DÓNDE] [--delete PÁGINAS]
+                        [--duplicate PÁGINAS [DÓNDE] [PÁGINAS [DÓNDE] ...]]
+                        [--reverse [PÁGINAS]] [--rotate PÁGINAS GRADOS]
+                        [--insert-blank DÓNDE [CUÁNTAS] [DÓNDE [CUÁNTAS] ...]]
+                        [--insert PDF DÓNDE [PÁGINAS] [PDF DÓNDE [PÁGINAS] ...]]
+                        [--replace PÁGINAS PDF [PRIMERA] [PÁGINAS PDF [PRIMERA] ...]]
+                        [--extract PÁGINAS] [--labels {follow,position}]
+                        [--source-password CONTRASEÑA] [--split-every N]
+                        [--split-at PÁGINAS] [-o OUTPUT | -i |
+                        --output-dir CARPETA] [--name-prefix TEXTO]
+                        [--name-suffix TEXTO] [-n] [--conform NORMA]
+                        [--password CONTRASEÑA]
+                        ARCHIVO [ARCHIVO ...]
+
+Ordena las páginas de los PDF: las mueve, borra, duplica, invierte o gira, las pone en un orden nuevo, inserta páginas de otro PDF o reemplaza páginas por ellas, y guarda algunas como un archivo nuevo, o el todo como varios.
+
+argumentos posicionales:
+  ARCHIVO               PDF de origen
+
+opciones:
+  -h, --help            mostrar esta ayuda y terminar
+  --interface {en,es}   el idioma de la interfaz, solo para esta ejecución
+                        (para conservar una elección, use la orden
+                        'interface')
+  -o, --output OUTPUT   PDF de salida, con una sola entrada (por defecto:
+                        <entrada>-labelled.pdf)
+  -i, --in-place        cambiar los propios archivos de entrada
+  --output-dir CARPETA  guardar los PDF en esta carpeta, con sus propios
+                        nombres salvo que se den --name-prefix o --name-
+                        suffix
+  --name-prefix TEXTO   poner esto antes de los nombres de los PDF guardados
+  --name-suffix TEXTO   poner esto después de los nombres de los PDF
+                        guardados (por defecto: -labelled, o nada con
+                        --output-dir)
+  -n, --dry-run         mostrar cómo quedarían las páginas, sin escribir
+                        nada
+  --conform NORMA       guardar los PDF como PDF/A o PDF/X: a-1b, a-2b, a-3b
+                        (archivo) o x-4 (imprenta); los hace pdf2iso, que
+                        debe estar instalado
+  --password CONTRASEÑA
+                        la contraseña para abrir los PDF (su protección se
+                        conserva al guardarlos)
+
+operaciones (en el orden dado):
+  --order PÁGINAS       las páginas en este orden (repetidas: duplicadas;
+                        omitidas: borradas)
+  --move PÁGINAS DÓNDE  mover PÁGINAS antes de la página DÓNDE (o al
+                        principio o al final)
+  --delete PÁGINAS      borrar PÁGINAS
+  --duplicate PÁGINAS [DÓNDE] [PÁGINAS [DÓNDE] ...]
+                        copiar PÁGINAS, justo después de ellas o antes de la
+                        página DÓNDE
+  --reverse [PÁGINAS]   invertir el orden de PÁGINAS (por defecto: todas)
+  --rotate PÁGINAS GRADOS
+                        girar PÁGINAS 90, 180 o 270 grados en el sentido de
+                        las agujas del reloj (-90: en sentido contrario)
+  --insert-blank DÓNDE [CUÁNTAS] [DÓNDE [CUÁNTAS] ...]
+                        insertar CUÁNTAS páginas en blanco (por defecto: 1)
+                        antes de la página DÓNDE, del tamaño de la página
+                        anterior (al principio, de la primera página)
+  --insert PDF DÓNDE [PÁGINAS] [PDF DÓNDE [PÁGINAS] ...]
+                        insertar las páginas de otro PDF (o algunas) antes
+                        de la página DÓNDE
+  --replace PÁGINAS PDF [PRIMERA] [PÁGINAS PDF [PRIMERA] ...]
+                        reemplazar el contenido de PÁGINAS por páginas de
+                        otro PDF, desde su página PRIMERA (por defecto: 1);
+                        los enlaces y marcadores se quedan
+  --extract PÁGINAS     conservar solo PÁGINAS (con -o, un archivo nuevo con
+                        ellas)
+
+las etiquetas y el resultado:
+  --labels {follow,position}
+                        las etiquetas siguen a las páginas (por defecto), o
+                        se quedan por posición
+  --source-password CONTRASEÑA
+                        la contraseña de los PDF de --insert y --replace
+  --split-every N       guardar el resultado en archivos de N páginas cada
+                        uno
+  --split-at PÁGINAS    guardar el resultado en archivos que empiezan en
+                        PÁGINAS
+
+Las operaciones se hacen en el orden en que se dan, cada una sobre las
+páginas tal como las dejaron las anteriores. PÁGINAS es una lista de páginas,
+como 9-20,31 (LAST cuenta desde el final), 'all', 'even', 'odd', o 1-50,odd;
+DÓNDE es una página (las páginas van antes de ella), 'start' o 'end'.
+--order da todo el orden nuevo: 1-8,20-30,9-19,31- (las páginas pueden
+repetirse u omitirse; 10-1 va hacia atrás).
+
+Por defecto, las etiquetas siguen a las páginas: cada página conserva su
+etiqueta, y las páginas insertadas traen las que tenían. Con --labels
+position, los intervalos de etiquetas se quedan donde están, y las páginas
+toman las etiquetas de sus nuevos lugares. Los marcadores y los enlaces van
+con sus páginas; los que iban a una página borrada van a la siguiente.
+
+--split-every y --split-at guardan el resultado en varios archivos, con el
+nombre de la entrada y -1, -2 ... (en --output-dir, si se da).
+
+Por ejemplo: py-foliation pages libro.pdf --move 201-214 9 --delete LAST
+--rotate even 90 -i
 .fi
 .SS completion
 .nf

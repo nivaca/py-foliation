@@ -19,6 +19,7 @@ positional arguments:
     view               show or set how PDFs open in a viewer
     header-footer      add headers and footers to PDFs
     watermark          add watermarks to PDFs
+    pages              move, delete, rotate, insert or split pages of PDFs
     completion         print the completion script of a shell
     interface          show or choose the language of the interface
 
@@ -544,6 +545,100 @@ takes them away, putting the pages back as they were.
 
 For instance: py-foliation watermark book.pdf --text DRAFT --opacity 30%
 --scale 60 -i
+.fi
+.SS pages
+.nf
+usage: py-foliation pages [-h] [--interface {en,es}] [--order PAGES]
+                          [--move PAGES WHERE] [--delete PAGES]
+                          [--duplicate PAGES [WHERE] [PAGES [WHERE] ...]]
+                          [--reverse [PAGES]] [--rotate PAGES DEGREES]
+                          [--insert-blank WHERE [COUNT] [WHERE [COUNT] ...]]
+                          [--insert PDF WHERE [PAGES] [PDF WHERE [PAGES] ...]]
+                          [--replace PAGES PDF [FIRST] [PAGES PDF [FIRST] ...]]
+                          [--extract PAGES] [--labels {follow,position}]
+                          [--source-password PASSWORD] [--split-every N]
+                          [--split-at PAGES] [-o OUTPUT | -i |
+                          --output-dir FOLDER] [--name-prefix TEXT]
+                          [--name-suffix TEXT] [-n] [--conform STANDARD]
+                          [--password PASSWORD]
+                          FILE [FILE ...]
+
+Arrange the pages of PDFs: move, delete, duplicate, reverse or rotate them, put them in a new order, insert pages of another PDF or replace pages by them, and save some of them as a new file, or the whole as several.
+
+positional arguments:
+  FILE                  source PDF
+
+options:
+  -h, --help            show this help message and exit
+  --interface {en,es}   the language of the interface, for this run only (to
+                        keep a choice, use the 'interface' command)
+  -o, --output OUTPUT   output PDF, with one input only (default:
+                        <input>-labelled.pdf)
+  -i, --in-place        change the input files themselves
+  --output-dir FOLDER   save the PDFs in this folder, with their own names
+                        unless --name-prefix or --name-suffix are given
+  --name-prefix TEXT    put this before the names of the PDFs saved
+  --name-suffix TEXT    put this after the names of the PDFs saved (default:
+                        -labelled, or nothing with --output-dir)
+  -n, --dry-run         show what the pages would be, without writing
+                        anything
+  --conform STANDARD    save the PDFs as PDF/A or PDF/X: a-1b, a-2b, a-3b
+                        (archiving) or x-4 (printing), made by pdf2iso,
+                        which must be installed
+  --password PASSWORD   the password to open the PDFs (their protection is
+                        kept when they are saved)
+
+operations (in the order given):
+  --order PAGES         the pages in this order (repeated: duplicated; left
+                        out: deleted)
+  --move PAGES WHERE    move PAGES before page WHERE (or to the start or
+                        end)
+  --delete PAGES        delete PAGES
+  --duplicate PAGES [WHERE] [PAGES [WHERE] ...]
+                        copy PAGES, right after them or before page WHERE
+  --reverse [PAGES]     reverse the order of PAGES (default: all)
+  --rotate PAGES DEGREES
+                        turn PAGES clockwise by 90, 180 or 270 degrees (-90:
+                        counterclockwise)
+  --insert-blank WHERE [COUNT] [WHERE [COUNT] ...]
+                        insert COUNT blank pages (default: 1) before page
+                        WHERE, as big as the page before them (at the start,
+                        as the first page)
+  --insert PDF WHERE [PAGES] [PDF WHERE [PAGES] ...]
+                        insert the pages of another PDF (or some of them)
+                        before page WHERE
+  --replace PAGES PDF [FIRST] [PAGES PDF [FIRST] ...]
+                        replace the content of PAGES by pages of another
+                        PDF, from its page FIRST (default: 1); links and
+                        bookmarks stay
+  --extract PAGES       keep only PAGES (with -o, a new file of them)
+
+the labels and the result:
+  --labels {follow,position}
+                        the page labels follow the pages (default), or stay
+                        by position
+  --source-password PASSWORD
+                        the password of the PDFs of --insert and --replace
+  --split-every N       save the result as files of N pages each
+  --split-at PAGES      save the result as files that start at PAGES
+
+The operations are made in the order they are given, each on the pages as the
+ones before left them. PAGES is a list of pages, as 9-20,31 (LAST counts from
+the end), 'all', 'even', 'odd', or 1-50,odd; WHERE is a page (the pages go
+before it), 'start' or 'end'. --order gives the whole new order: 1-8,20-30,
+9-19,31- (pages may be repeated or left out; 10-1 goes backwards).
+
+By default the page labels follow the pages: each page keeps its label, and
+pages inserted bring the labels they had. With --labels position, the ranges
+of labels stay where they are, and the pages take the labels of their new
+places. Bookmarks and links go with their pages; those that went to a page
+deleted go to the page after it.
+
+--split-every and --split-at save the result as several files, named as the
+input with -1, -2 ... (in --output-dir, if given).
+
+For instance: py-foliation pages book.pdf --move 201-214 9 --delete LAST
+--rotate even 90 -i
 .fi
 .SS completion
 .nf

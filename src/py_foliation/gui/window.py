@@ -15,17 +15,18 @@ from PySide6.QtPdf import QPdfDocument
 from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtWidgets import (
     QAbstractItemView, QApplication, QDialog, QDialogButtonBox, QFileDialog, QHBoxLayout, QHeaderView, QInputDialog,
-    QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMainWindow, QMenu, QMessageBox, QPushButton, QSplitter,
+    QLabel, QLineEdit, QListView, QListWidgetItem, QMainWindow, QMenu, QMessageBox, QPushButton, QSplitter,
     QTableWidget, QVBoxLayout, QWidget,
 )
 
-from .. import __version__, conform, config, headfoot, interface, labels, stamps, view, watermark
+from .. import __version__, arrange, conform, config, files, headfoot, interface, labels, stamps, view, watermark
 from ..changes import Change
 from ..view import View, read_view
 from ..files import read_list, write_copy
-from ..interface import N_, tr
+from ..interface import N_, ntr, tr
 from ..labels import LabelError, Range
 from . import thumbnails
+from .arrange_dialog import PageList, ask_arrange, ask_labels
 from .headfoot_dialog import ask_header_footer
 from .watermark_dialog import ask_watermark
 from .widgets import FIELDS, LABELS, NumberDialog, edited_signal, fit_columns, range_row
@@ -65,7 +66,8 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)
         self.settings = QSettings("py-foliation", "py-foliation")
         self.path: Path | None = None
-        self.count = 0
+        self.count = 0  # (the pages there will be, once the operations on them waiting are made)
+        self.file_count = 0  # (the pages of the file)
         self.ranges: list[Range] = []  # (normalized)
         self.saved: list[Range] = []  # the labels of the file
         self.opening = View()  # the view of the document when it is opened
@@ -117,9 +119,12 @@ class MainWindow(QMainWindow):
             buttons.addWidget(b)
         buttons.addStretch(1)
 
-        self.pages = QListWidget()
+        self.pages = PageList()
         self.pages.setToolTip(tr("Double-click a page to start a range at it; select pages (Shift, Ctrl) and "
-                                 "right-click them for more"))
+                                 "right-click them for more; drag them to move them (with Ctrl, to copy them), "
+                                 "or drop PDFs to insert their pages"))
+        self.pages.moved.connect(self.move_pages)
+        self.pages.files_dropped.connect(self.files_dropped)
         self.pages.currentRowChanged.connect(self._page_chosen)
         self.pages.itemDoubleClicked.connect(lambda item: self.start_range_at(self.pages.row(item) + 1))
         self.pages.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -234,6 +239,30 @@ class MainWindow(QMainWindow):
         m.aboutToShow.connect(self._fill_view_menu)
         self._fill_view_menu()
         m = self.menuBar().addMenu(tr("&Pages"))
+        self.arrange_actions = []
+        for mode, text in (("rotate", N_("Rotate…")), ("delete", N_("Delete…")), ("move", N_("Move…")),
+                           ("duplicate", N_("Duplicate…")), ("reverse", N_("Reverse the order…")),
+                           ("order", N_("New order…")), (None, None),
+                           ("blank", N_("Insert blank pages…")), ("insert", N_("Insert from a PDF…")),
+                           ("replace", N_("Replace by pages of a PDF…")),
+                           (None, None), ("extract", N_("Extract to a new PDF…")), ("split", N_("Split…"))):
+            if mode is None:
+                m.addSeparator()
+                continue
+            self.arrange_actions.append(self._action(m, tr(text), lambda *_, md=mode: self.arrange_dialog(md)))
+        m.addSeparator()
+        self.m_labels_rule = m.addMenu(tr("The labels, when pages move"))
+        group = QActionGroup(self)
+        rule = self.settings.value("labels_when_moving", "ask")
+        for code, text in (("ask", N_("Ask each time")), (arrange.FOLLOW, arrange.LABEL_CHOICES[arrange.FOLLOW]),
+                           (arrange.POSITION, arrange.LABEL_CHOICES[arrange.POSITION])):
+            act = QAction(tr(text), self, checkable=True)
+            act.setChecked(code == rule)
+            act.setData(code)
+            act.triggered.connect(lambda _=False, c=code: self.set_labels_rule(c))
+            group.addAction(act)
+            self.m_labels_rule.addAction(act)
+        m.addSeparator()
         self.m_headfoot = m.addMenu(tr("Header and Footer"))
         self.m_headfoot.aboutToShow.connect(self._fill_headfoot_menu)
         self.m_headfoot.setToolTipsVisible(True)
@@ -412,7 +441,7 @@ class MainWindow(QMainWindow):
         self._thumbs = {}
         self._previewed = None
         with pikepdf.open(path, password=self.password) as pdf:
-            self.count = len(pdf.pages)
+            self.count = self.file_count = len(pdf.pages)
             self.added = stamps.additions(pdf)
 
     def save(self) -> bool:
@@ -453,6 +482,7 @@ class MainWindow(QMainWindow):
             self.redo_stack.clear()
         with pikepdf.open(target, password=self.password) as pdf:
             self.added = stamps.additions(pdf)
+            self.file_count = len(pdf.pages)
         self.saved, self.saved_opening, self.hf_changes = list(self.ranges), self.opening, ()
         self._previewed = None
         if target == self.path:
@@ -772,6 +802,119 @@ class MainWindow(QMainWindow):
     def _fill_watermark_menu(self):
         self._fill_stamp_menu(self.m_watermark, stamps.WATERMARK)
 
+    # ----------------------------------------------------------------- arranging the pages
+
+    def set_labels_rule(self, rule: str):
+        """What the labels do when pages move: 'ask', arrange.FOLLOW or arrange.POSITION."""
+        self.settings.setValue("labels_when_moving", rule)
+        for act in self.m_labels_rule.actions():
+            act.setChecked(act.data() == rule)
+
+    def ask_labels(self):
+        """(arrange.FOLLOW or POSITION, from now on?) as the user chooses (None if cancelled)."""
+        return ask_labels(self)
+
+    def labels_choice(self) -> str | None:
+        """What the labels do when pages move: as Pages ▸ The labels says, or as the user says now."""
+        rule = self.settings.value("labels_when_moving", "ask")
+        if rule in (arrange.FOLLOW, arrange.POSITION):
+            return rule
+        answer = self.ask_labels()
+        if answer is None:
+            return None
+        choice, keep = answer
+        if keep:
+            self.set_labels_rule(choice)
+        return choice
+
+    def arrange_pages(self, op: arrange.Operation, ask: bool = True) -> bool:
+        """Make OP on the pages when the file is saved (undoably); with ASK, ask (if the pages move
+        and have labels) what their labels do."""
+        if self.path is None:
+            return False
+        try:
+            if op.moves_pages():
+                op.items(self.count)
+            if ask and op.moves_pages() and self.ranges:
+                choice = self.labels_choice()
+                if choice is None:
+                    return False
+                op = dataclasses.replace(op, labels=choice)
+            ranges = arrange.ranges_after(op, self.ranges, self.count)
+            opening = self.opening
+            if opening.page is not None:
+                opening = dataclasses.replace(opening, page=arrange.position_after(op, opening.page, self.count))
+        except LabelError as e:
+            self.status(str(e), error=True)
+            return False
+        self.change(ranges, view=opening, hf_changes=self.hf_changes + (op,))
+        self.status(op.describe() + " " + tr("(written when the file is saved)"))
+        return True
+
+    def move_pages(self, pages: list[int], before: int, copied: bool = False) -> bool:
+        """Move PAGES before page BEFORE (count + 1: to the end); COPIED: copy them there."""
+        if not pages:
+            return False
+        op = arrange.Duplicate(tuple(pages), before) if copied else arrange.Move(tuple(pages), before)
+        if not copied and op.items(self.count) == list(range(1, self.count + 1)):
+            return False  # (dropped where they were)
+        n = self.count
+        if not self.arrange_pages(op):
+            return False
+        items = op.items(n)
+        first = next(i for i, item in enumerate(items) if item == pages[0] and (not copied or i + 1 != pages[0]))
+        self.show_page(first + 1)
+        return True
+
+    def files_dropped(self, paths: list[Path], before: int) -> bool:
+        """PDFs dropped on the list of pages: their pages inserted there (or, with no file open, open it)."""
+        if self.path is None:
+            return self.open_path(paths[0])
+        choice = arrange.FOLLOW
+        if self.ranges:
+            choice = self.labels_choice()
+            if choice is None:
+                return False
+        done = False
+        for path in paths:
+            try:
+                count = arrange.source_count(str(path))
+            except LabelError as e:
+                self.status(str(e), error=True)
+                continue
+            done = self.arrange_pages(arrange.Insert(str(path), (), before, labels=choice), ask=False) or done
+            before += count
+        return done
+
+    def ask_arrange(self, mode: str, pages: list[int] | None = None):
+        return ask_arrange(self, mode, self.count, pages, self.current_page(), Path(self.last_dir()))
+
+    def arrange_dialog(self, mode: str, pages: list[int] | None = None) -> bool:
+        """The dialog of an operation on the pages (see arrange_dialog.MODES), and the operation."""
+        if self.path is None:
+            return False
+        value = self.ask_arrange(mode, pages)
+        if value is None:
+            return False
+        if mode == "extract":
+            target = self._ask_save(tr("Extract to a new PDF"), f"{self.path.stem}-{stamps.compact_pages(value)}.pdf")
+            return target is not None and self.write_parts([(target.with_suffix(".pdf"), value)])
+        if mode == "split":
+            parts, folder = value
+            return self.write_parts([(folder / f"{self.path.stem}-{k}.pdf", list(range(first, last + 1)))
+                                     for k, (first, last) in enumerate(parts, 1)])
+        return self.arrange_pages(value, ask=False)
+
+    def write_parts(self, parts: list[tuple[Path, list[int]]]) -> bool:
+        """Save some pages, as they are now (with the changes waiting), as new files: [(target, pages)]."""
+        try:
+            files.write_parts(self.path, self.ranges, parts, self.password, self.opening, self.hf_changes)
+        except (OSError, pikepdf.PdfError, LabelError) as e:
+            self.status(tr("{path} cannot be written: {error}", path=parts[0][0], error=e), error=True)
+            return False
+        self.status(ntr("Saved {count} file: {path}", "Saved {count} files: {path}", len(parts), path=parts[0][0]))
+        return True
+
     def batch_dialog(self) -> bool:
         """Headers and footers, Bates numbers or watermarks on several files at once."""
         from .batch_dialog import BatchDialog
@@ -912,6 +1055,31 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction(tr("Start a range at page {page}", page=pages[0]), lambda: self.start_range_at(pages[0]))
         menu.addAction(tr("Copy their labels") if count > 1 else tr("Copy its label"), lambda: self.copy_labels())
+        menu.addSection(tr("Pages"))
+        menu.addAction(tr("Move to the start"), lambda *_: self.move_pages(pages, 1)).setEnabled(pages[0] > 1)
+        menu.addAction(tr("Move to the end"), lambda *_: self.move_pages(pages, self.count + 1)).setEnabled(
+            pages[-1] < self.count)
+        menu.addAction(tr("Move before page…"), lambda *_: self.arrange_dialog("move", pages))
+        turn = menu.addMenu(tr("Rotate"))
+        for angle, text in ((90, N_("90° clockwise")), (270, N_("90° counterclockwise")), (180, N_("180°"))):
+            turn.addAction(tr(text), lambda *_, a=angle: self.arrange_pages(arrange.Rotate(tuple(pages), a)))
+        menu.addAction(tr("Duplicate"), lambda *_: self.arrange_pages(arrange.Duplicate(tuple(pages))))
+        if count > 1:
+            menu.addAction(tr("Reverse their order"), lambda *_: self.arrange_pages(arrange.Reverse(tuple(pages))))
+        menu.addAction(tr("Delete"), lambda *_: self.arrange_pages(arrange.Delete(tuple(pages)))).setEnabled(
+            count < self.count)
+        menu.addAction(tr("Insert a blank page before this one") if count == 1 else
+                       tr("Insert a blank page before these"),
+                       lambda *_: self.arrange_pages(arrange.InsertBlank(pages[0])))
+        menu.addAction(tr("Insert a blank page after this one") if count == 1 else
+                       tr("Insert a blank page after these"),
+                       lambda *_: self.arrange_pages(arrange.InsertBlank(pages[-1] + 1)))
+        menu.addAction(tr("Insert blank pages…"), lambda *_: self.arrange_dialog("blank", pages))
+        menu.addAction(tr("Insert pages of a PDF before this one…") if count == 1 else
+                       tr("Insert pages of a PDF before these…"),
+                       lambda *_: self.arrange_dialog("insert", pages))
+        menu.addAction(tr("Replace by pages of a PDF…"), lambda *_: self.arrange_dialog("replace", pages))
+        menu.addAction(tr("Extract to a new PDF…"), lambda *_: self.arrange_dialog("extract", pages))
         menu.addSection(tr("Header, footer and watermark"))
         menu.addAction(tr("Header and footer on these pages…") if count > 1 else tr("Header and footer on this page…"),
                        lambda *_: self.stamp_dialog(stamps.HEADER_FOOTER, pages))
@@ -1021,8 +1189,17 @@ class MainWindow(QMainWindow):
 
     # ----------------------------------------------------------------- showing
 
+    def _recount(self):
+        """The pages there will be, once the operations on them waiting are made."""
+        operations = [c for c in self.hf_changes if isinstance(c, arrange.Operation)]
+        try:
+            self.count = arrange.items_of(operations, self.file_count)[1]
+        except LabelError:
+            self.count = self.file_count
+
     def refresh(self, select: int | None = None):
         """Show the ranges, the labels of the pages and the command line."""
+        self._recount()
         if select is None:
             row = self.table.currentRow()
             select = self.ranges[row].page if 0 <= row < len(self.ranges) else None
@@ -1138,8 +1315,10 @@ class MainWindow(QMainWindow):
         return self.labels_of([page])[0]
 
     def current_page(self) -> int:
+        """The page shown (1-based; within the pages there are, while the list catches up with them)."""
         row = self.pages.currentRow()
-        return row + 1 if row >= 0 else 1
+        page = row + 1 if row >= 0 else 1
+        return max(1, min(page, self.count)) if self.count else page
 
     def show_page(self, page: int):
         if self.count:
@@ -1172,7 +1351,7 @@ class MainWindow(QMainWindow):
     def _enable(self):
         has = self.path is not None
         for w in (self.b_add, self.b_remove, self.b_clear, self.a_save, self.a_save_as, self.a_revert,
-                  self.a_copy_from, self.a_import, self.a_export, self.go_to):
+                  self.a_copy_from, self.a_import, self.a_export, self.go_to, *self.arrange_actions):
             w.setEnabled(has)
         self._show_output()
         self.a_undo.setEnabled(bool(self.undo_stack))
