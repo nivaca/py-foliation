@@ -25,7 +25,15 @@ class ThumbList(PageList):
         super().__init__()
         self.setViewMode(QListView.ViewMode.IconMode)
         self.setResizeMode(QListView.ResizeMode.Adjust)
-        self.setMovement(QListView.Movement.Snap)
+        # Static, or Qt moves the thumbnails about by itself (and the pages stay where they were); but
+        # Static turns dragging off, so it is turned on again after it.
+        self.setMovement(QListView.Movement.Static)
+        self.setDragEnabled(True)
+        self.setAcceptDrops(True)
+        self.viewport().setAcceptDrops(True)
+        self.setDragDropMode(QListView.DragDropMode.DragDrop)
+        self.setDefaultDropAction(Qt.DropAction.MoveAction)
+        self.setDropIndicatorShown(True)
         self.setWordWrap(True)
         self.setUniformItemSizes(True)
         self.setSelectionMode(QListView.SelectionMode.ExtendedSelection)

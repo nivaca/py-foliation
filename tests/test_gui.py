@@ -558,3 +558,29 @@ def test_thumbnails_bar_and_keys(app, window, book, monkeypatch):
     window.a_page_list.setChecked(True)
     window.save_settings()
     assert window.settings.value("page_list") == "true"
+
+
+def test_thumbnails_are_dragged(app, window, book, monkeypatch):
+    """Dragging thumbnails moves the pages (Qt doesn't move them about by itself)."""
+    from PySide6.QtCore import QMimeData, QPointF, Qt
+    from PySide6.QtGui import QDropEvent
+    from PySide6.QtWidgets import QListView
+    window.open_path(book)
+    monkeypatch.setattr(window, "labels_choice", lambda: arrange.FOLLOW)
+    window.a_thumbs.setChecked(True)
+    window.show()
+    for _ in range(20):
+        app.processEvents()
+    thumbs = window.thumbs.list
+    assert thumbs.movement() == QListView.Movement.Static
+    assert thumbs.dragEnabled() and thumbs.viewport().acceptDrops()
+    assert thumbs.dragDropMode() == QListView.DragDropMode.DragDrop
+    thumbs.clearSelection()
+    thumbs.item(2).setSelected(True)
+    target = thumbs.visualItemRect(thumbs.item(7))
+    mime = QMimeData()  # (kept in a variable: the event doesn't own it)
+    mime.setData(thumbs.mimeTypes()[0], b"")
+    event = QDropEvent(QPointF(target.left() + 2, target.center().y()), Qt.DropAction.MoveAction, mime,
+                       Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+    thumbs.dropEvent(event)
+    assert window.hf_changes[-1] == arrange.Move((3,), 8, labels=arrange.FOLLOW)
