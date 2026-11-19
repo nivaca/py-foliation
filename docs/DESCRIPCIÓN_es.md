@@ -1,4 +1,4 @@
-# py-foliation 0.11: descripción
+# py-foliation 0.12: descripción
 
 ## Análisis
 

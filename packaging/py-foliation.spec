@@ -10,7 +10,7 @@
 # Build with packaging/build-rpm.sh, which makes the source tarball.
 
 Name:           py-foliation
-Version:        0.11
+Version:        0.12
 Release:        1%{?dist}
 Summary:        Change the page labels (the numbering a viewer shows) of PDF documents
 
@@ -96,6 +96,10 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
 %{zsh_completions_dir}/_py-foliation
 
 %changelog
+* Wed Nov 18 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.12-1
+- The operations on the pages in the panel of thumbnails (a bar, a More menu
+  and keys); View > List of pages hides or shows the list
+
 * Wed Nov 18 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.11-1
 - A panel of thumbnails (View > Thumbnails, F4), whose size can be changed
   with a slider or Ctrl and the mouse wheel
