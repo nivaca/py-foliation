@@ -16,8 +16,9 @@ línea de órdenes, para hacer lo mismo en scripts.
 
 ## Instalación
 
-Hay tres formas de instalarlo: la AppImage (no hay nada que instalar), el
-paquete de Fedora, o desde el código fuente.
+Hay cuatro formas de instalarlo: la AppImage (no hay nada que instalar), el
+paquete de Fedora, el instalador para Python (Linux, Windows y macOS), o
+desde el código fuente.
 
 ### AppImage (cualquier Linux)
 
@@ -61,6 +62,62 @@ Su huella es `8187 0643 CA22 1AF9 0C30 554E BE68 32CD 3599 4948`:
 sudo rpm --import RPM-GPG-KEY-py-foliation
 sudo dnf install ./py-foliation-*.noarch.rpm
 ```
+
+### Con Python (Linux, Windows, macOS)
+
+Los instaladores de [`installers/`](installers/) preparan py-foliation para
+usarlo con su propio Python 3.15 o posterior, sin binarios propios. No
+piden permisos de administrador y no tocan el Python del sistema.
+
+Linux y macOS, en una terminal:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/nivaca/py-foliation/main/installers/install.sh | sh
+```
+
+Windows, en PowerShell:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/nivaca/py-foliation/main/installers/install.ps1 | iex"
+```
+
+El instalador busca Python 3.15 o posterior y luego:
+
+1. hace un entorno de Python propio: en `~/.local/share/py-foliation`
+   (Linux), `~/Library/Application Support/py-foliation` (macOS) o
+   `%LOCALAPPDATA%\py-foliation` (Windows);
+2. instala allí py-foliation con la ventana, a partir del wheel de la
+   última versión (pip trae además pikepdf y PySide6);
+3. deja disponibles `py-foliation` y `py-foliation-gui`: enlazados en
+   `~/.local/bin` en Linux y macOS (avisa si esa carpeta no está en su PATH),
+   o con su carpeta añadida al PATH en Windows (abra luego una terminal
+   nueva);
+4. añade la ventana al menú de aplicaciones (el menú Inicio en Windows,
+   `~/Applications` en macOS).
+
+Si falta Python 3.15, dice dónde conseguirlo: los paquetes del sistema en
+Linux, [python.org](https://www.python.org/downloads/) o
+`brew install python@3.15` en macOS, python.org o
+`winget install Python.Python.3.15` en Windows. En Debian y Ubuntu hace
+falta además `python3-venv`.
+
+Para actualizar a la última versión, basta con ejecutarlo otra vez. Con una
+copia del repositorio, los scripts pueden ejecutarse directamente, con estas
+opciones:
+
+```bash
+sh installers/install.sh --version 1.0.1     # una versión determinada
+sh installers/install.sh --no-gui            # solo la línea de órdenes (sin PySide6)
+sh installers/install.sh --no-menu           # sin el acceso en el menú
+sh installers/install.sh --uninstall         # quitarlo
+python3 installers/install.py --from dist/py_foliation-1.0.1-py3-none-any.whl
+```
+
+En Windows: `powershell -ExecutionPolicy ByPass -File installers\install.ps1
+--uninstall`, etc. Para pasar opciones a la orden de una línea en Linux o
+macOS, se ponen tras `sh -s --`, como en `curl … | sh -s -- --uninstall`.
+Desinstalarlo quita el entorno, las órdenes y el acceso del menú, y nada
+más: sus ajustes y perfiles se quedan.
 
 ### Desde el código fuente
 
@@ -131,8 +188,13 @@ la derecha, la página elegida.
   etiquetas, para revisar todo un libro de un vistazo. Su control deslizante,
   o Ctrl y la rueda del ratón, las agrandan o achican; el panel puede ponerse
   a otro lado de la ventana o flotar aparte. Un clic en una miniatura muestra
-  su página, y allí las páginas pueden elegirse, abrir su menú con el botón
-  derecho y arrastrarse como en la lista. Una barra arriba gira, mueve,
+  su página, y allí las páginas pueden elegirse y abrir su menú con el botón
+  derecho como en la lista. Al arrastrar miniaturas, sus páginas van detrás
+  de la miniatura que está bajo el puntero (o de la más cercana), que una
+  línea del color de acento marca por debajo; el puntero dice cuántas páginas
+  lleva ("3 páginas"). Para ponerlas al principio, apunte a la mitad
+  izquierda de la primera miniatura. Con Ctrl se copian, y los PDF que se
+  sueltan en el panel insertan allí sus páginas. Una barra arriba gira, mueve,
   duplica y borra las páginas elegidas, inserta una página en blanco o las
   páginas de un PDF, y su menú **Más** tiene todas las demás operaciones del
   menú **Páginas** (el menú del botón derecho también lo tiene). Teclas, en

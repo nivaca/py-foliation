@@ -10,7 +10,7 @@ pages of the file.  Only the labels change; the pages themselves are left
 as they are.  Nicolas Vaughan made it in 2026.  It has a window, for
 seeing and editing the labels page by page, and a command line, for doing
 the same in scripts, in English or in Spanish.  Here I explain how it was
-made, in eleven stages.
+made, in twelve stages.
 
 py-foliation is free software, under the GNU General Public License,
 version 3 or later.  It is written in Python and relies on pikepdf (based
@@ -138,13 +138,8 @@ The rest came from use.  `copy` gives files the labels of another, as when
 a book is exported again; `set`, `clear` and `copy` take several files at
 once, and `--dry-run` only shows what they would do; `show --label` and
 the window's *Go to the page labelled…* find a page by its label.  The
-window can show the pages as thumbnails with their labels, in a panel
-of its own whose thumbnails can be made bigger or smaller (since 0.11), with
-a bar of the operations on the pages chosen and keys for them (since 0.12;
-the list can then be hidden).  Since 1.0 the thumbnails are drawn in Qt's
-own thread, those in view first, and each is kept as long as its page looks
-the same, so that moving, deleting or relabelling pages draws none again; a
-double-click on a page starts a range there.  Pages chosen in the list
+window can show the pages as thumbnails with their labels (see section
+12), and a double-click on a page starts a range there.  Pages chosen in the list
 (with Shift and Ctrl) can be numbered at once, in any style, numbered to
 continue from the page before them, given one label, or relabelled one
 by one, from the right-click menu.  Protected PDFs are opened with their
@@ -328,10 +323,58 @@ made in the order they were asked for, mixed with headers, footers and
 watermarks, a header added before some pages moved has to see the labels
 the pages had then; they are found going back from the labels at the end.
 
+12. Thumbnails, a lighter window and the installers
+----------------------------------------------------
+
+For a while the list of pages could show thumbnails by turning itself into
+a grid.  In 0.11 they moved to a panel of their own, which can sit on
+either side of the window, under it, or float apart, so the list stays a
+list; their size goes from 48 to 400 pixels, with a slider or with Ctrl and
+the mouse wheel.  In 0.12 the panel got a bar with the operations on the
+pages chosen, keys for them (in the list too), and a *More* menu with the
+rest of the *Pages* menu.  The list of pages can then be hidden.
+
+On a scanned book the panel was heavy.  A page of a scan takes a tenth of
+a second or more to draw, and the window drew eight at a time between
+events, so it stopped for a second or two, again and again, for half a
+minute; and any change, even to a label, threw all the thumbnails away.
+Since 1.0 they are drawn by Qt's own renderer, in a thread of C++, those
+in view first.  A thread of Python would not do: PySide keeps Python's
+lock while PDFium draws, and the window would wait all the same.  Each
+thumbnail is kept by what it shows (the page of the file it comes from and
+its rotation, or the page inserted or stamped), so moving, deleting or
+relabelling pages draws none again, and rotating a page draws only that
+one.  The page sizes come from pikepdf, which reads them from the
+structure of the file; PDFium would load every page to know them.  The
+preview is written again for a new label only when a header, footer or
+watermark waiting prints the labels.  Choosing many pages is now one step,
+not one per page, and rearranging a long book takes out and puts back only
+the pages that change.
+
+Dragging thumbnails was the last thing to settle (1.0.1).  A drop in the
+room between two thumbnails, where the hand naturally goes, fell on no
+thumbnail and sent the pages to the end of the book.  Now they go after
+the thumbnail under the pointer, or the nearest one.  A line in the
+accent colour, about a millimetre thick, under that thumbnail shows where,
+and the pointer carries only a small note of how many pages it drags.  The
+move itself waits until the drag is over, so the question about the
+labels does not open in the middle of it.
+
+`installers/` has installers for running py-foliation with Python on
+Linux, Windows and macOS, without the AppImage or the RPM.  `install.sh`
+and `install.ps1` look for Python 3.15 or later and run `install.py`,
+which needs only Python's standard library.  It makes a Python environment
+of its own in the user's folders, installs in it the wheel of the latest
+release (from GitHub, or from Codeberg if GitHub can't be reached), links
+the commands (on Windows, adds their folder to the PATH) and puts the
+window in the applications menu.  Removing it takes away only what it
+added: on macOS the environment shares its folder with the settings and
+profiles, and those stay.
+
 Testing
 -------
 
-The program has 151 automated tests (`tests/`), run with pytest.  They
+The program has 162 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, the reading and
 writing of the number tree, including odd trees, the ranges found in
@@ -350,7 +393,10 @@ docs/example/numbers-100.pdf, whose pages each show their number, and on
 broken input.  The window is tested without a screen, with Qt's
 offscreen platform: opening, editing, undoing, saving, saving as,
 unsaved changes, the view when the file is opened, the language, saving a
-copy as PDF/X and its setting, and a
-preview that settles at every size of the window.  Other tests check
+copy as PDF/X and its setting, a
+preview that settles at every size of the window, and thumbnails that are
+kept across changes and dropped where they should be.  Other tests check
 that every text has its translation and that none is left over, the menu
-installer on each system, and the packaging files and the signing key.  The tests run on every push, on GitHub Actions.
+installer on each system, the installers of `installers/` (without
+downloading anything, in a home folder of their own), and the packaging
+files and the signing key.  The tests run on every push, on GitHub Actions.

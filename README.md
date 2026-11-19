@@ -15,8 +15,9 @@ command line, for doing the same in scripts.
 
 ## Installation
 
-There are three ways to install it: the AppImage (nothing to install), the
-Fedora package, or from the source.
+There are four ways to install it: the AppImage (nothing to install), the
+Fedora package, the installer for Python (Linux, Windows and macOS), or
+from the source.
 
 ### AppImage (any Linux)
 
@@ -58,6 +59,61 @@ Its fingerprint is `8187 0643 CA22 1AF9 0C30 554E BE68 32CD 3599 4948`:
 sudo rpm --import RPM-GPG-KEY-py-foliation
 sudo dnf install ./py-foliation-*.noarch.rpm
 ```
+
+### With Python (Linux, Windows, macOS)
+
+The installers in [`installers/`](installers/) set py-foliation up to run
+with your own Python 3.15 or later, with no binaries of their own. They
+need no administrator rights and leave the system's Python alone.
+
+Linux and macOS, in a terminal:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/nivaca/py-foliation/main/installers/install.sh | sh
+```
+
+Windows, in PowerShell:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/nivaca/py-foliation/main/installers/install.ps1 | iex"
+```
+
+The installer looks for Python 3.15 or later and then:
+
+1. makes a Python environment of its own: in `~/.local/share/py-foliation`
+   (Linux), `~/Library/Application Support/py-foliation` (macOS) or
+   `%LOCALAPPDATA%\py-foliation` (Windows);
+2. installs in it py-foliation with the window, from the wheel of the
+   latest release (pip also fetches pikepdf and PySide6);
+3. makes `py-foliation` and `py-foliation-gui` available: linked in
+   `~/.local/bin` on Linux and macOS (it says so if that folder is not on
+   your PATH), or their folder added to your PATH on Windows (open a new
+   terminal afterwards);
+4. adds the window to the applications menu (the Start menu on Windows,
+   `~/Applications` on macOS).
+
+If Python 3.15 is missing, it says where to get it: your system's packages
+on Linux, [python.org](https://www.python.org/downloads/) or
+`brew install python@3.15` on macOS, python.org or
+`winget install Python.Python.3.15` on Windows. On Debian and Ubuntu,
+`python3-venv` is needed too.
+
+Run it again to update to the latest release. With a copy of the
+repository, the scripts can be run directly, with these options:
+
+```bash
+sh installers/install.sh --version 1.0.1     # a given release
+sh installers/install.sh --no-gui            # only the command line (no PySide6)
+sh installers/install.sh --no-menu           # without the menu entry
+sh installers/install.sh --uninstall         # remove it
+python3 installers/install.py --from dist/py_foliation-1.0.1-py3-none-any.whl
+```
+
+On Windows: `powershell -ExecutionPolicy ByPass -File installers\install.ps1
+--uninstall`, and so on. To pass options to the one-line command on Linux or
+macOS, put them after `sh -s --`, as in `curl … | sh -s -- --uninstall`.
+Uninstalling removes the environment, the commands and the menu entry, and
+nothing else: your settings and profiles stay.
 
 ### From the source
 
@@ -126,8 +182,13 @@ on the right, the chosen page.
   their labels, to look over a whole book at once. Its slider, or Ctrl and
   the mouse wheel, make them bigger or smaller; it can be moved to another
   side of the window, or float on its own. Clicking a thumbnail shows its
-  page, and pages can be chosen, right-clicked and dragged there as in the
-  list. A bar at its top rotates, moves, duplicates and deletes the pages
+  page, and pages can be chosen and right-clicked there as in the list.
+  Dragging thumbnails moves their pages after the thumbnail under the
+  pointer (or the nearest one), which a line in the accent colour under it
+  marks; the pointer shows how many pages it carries ("3 pages"). To put
+  them first, point at the left half of the first thumbnail. With Ctrl
+  they are copied, and PDFs dropped on the panel insert their pages there.
+  A bar at its top rotates, moves, duplicates and deletes the pages
   chosen, inserts a blank page or the pages of a PDF, and its **More** menu
   has every other operation of the **Pages** menu (the right-click menu has
   it too). Keys, in the thumbnails and in the list: Ctrl+R and Ctrl+Shift+R
