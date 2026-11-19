@@ -85,6 +85,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.12.1" date="2026-11-18">
+      <description>
+        <p>Thumbnails can be dragged in their panel: a drag moves the pages chosen, with Ctrl it copies them, and PDFs dropped on the panel insert their pages.</p>
+      </description>
+    </release>
     <release version="0.12" date="2026-11-18">
       <description>
         <p>Every operation on the pages can be done from the panel of thumbnails: a bar rotates, moves, duplicates and deletes the pages chosen and inserts blank pages or the pages of a PDF, and its More menu has the rest. Keys do the same in the thumbnails and in the list of pages, which View ▸ List of pages hides or shows.</p>
