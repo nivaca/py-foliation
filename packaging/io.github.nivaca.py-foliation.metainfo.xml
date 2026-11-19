@@ -85,6 +85,12 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.10" date="2026-11-18">
+      <description>
+        <p>Arranging pages: move, delete, duplicate, reverse and rotate them, put them in a new order, insert blank pages (as big as the page before them) or pages of another PDF, replace pages by those of another PDF, extract pages to a new file or split the document into several. The page labels follow the pages, or stay by position, as the user chooses; bookmarks and links go with their pages.</p>
+        <p>In the window, pages can be dragged in the list (with Ctrl, copied), and PDFs dropped on it insert their pages there; every change waits for Save and can be undone.</p>
+      </description>
+    </release>
     <release version="0.9" date="2026-11-17">
       <description>
         <p>PDF/A, for archiving, and PDF/X-4, for printing: File ▸ Save as writes a copy in either standard, and so do --conform on the command line and On several files. The conversion is made by pdf2iso, which must be installed; without it those choices are greyed out.</p>

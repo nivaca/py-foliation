@@ -10,7 +10,7 @@
 # Build with packaging/build-rpm.sh, which makes the source tarball.
 
 Name:           py-foliation
-Version:        0.9
+Version:        0.10
 Release:        1%{?dist}
 Summary:        Change the page labels (the numbering a viewer shows) of PDF documents
 
@@ -96,6 +96,11 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
 %{zsh_completions_dir}/_py-foliation
 
 %changelog
+* Wed Nov 18 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.10-1
+- Arranging pages: move, delete, duplicate, reverse, rotate, insert blank
+  pages or pages of another PDF, replace, extract and split, the labels
+  following the pages or staying by position
+
 * Tue Nov 17 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 0.9-1
 - PDF/A and PDF/X output, made by pdf2iso if it is installed: File > Save
   as, --conform, and On several files

@@ -132,7 +132,7 @@ wheels = [
 
 [[package]]
 name = "py-foliation"
-version = "0.9"
+version = "0.10"
 source = { editable = "." }
 dependencies = [
     { name = "pikepdf" },
