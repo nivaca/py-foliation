@@ -205,6 +205,8 @@ def test_window(book, tmp_path, monkeypatch):
     event = QDropEvent(QPointF(rect.center().x(), rect.top() + 1), Qt.DropAction.MoveAction, mime,
                        Qt.MouseButton.LeftButton, Qt.KeyboardModifier.ControlModifier)
     w.pages.dropEvent(event)
+    assert dropped == []  # (the move waits for the drag to be over)
+    QApplication.processEvents()
     assert dropped == [([1], 5, True)]
     menu = w.build_pages_menu()
     assert "Move to the end" in [a.text() for a in menu.actions()]

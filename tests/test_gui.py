@@ -600,7 +600,42 @@ def test_thumbnails_are_dragged(app, window, book, monkeypatch):
     event = QDropEvent(QPointF(target.left() + 2, target.center().y()), Qt.DropAction.MoveAction, mime,
                        Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
     thumbs.dropEvent(event)
-    assert window.hf_changes[-1] == arrange.Move((3,), 8, labels=arrange.FOLLOW)
+    app.processEvents()  # (the move, once the drag is over)
+    assert window.hf_changes[-1] == arrange.Move((3,), 9, labels=arrange.FOLLOW)  # (after page 8)
+
+
+def test_thumbnails_dropped_between_them(app, window, book):
+    """Pages dropped go after the thumbnail under the pointer, or the nearest one in the room
+    between thumbnails (never to the end of the book by mistake), before the first one on its left
+    half; a line under that thumbnail (above the first) shows where."""
+    from PySide6.QtCore import QPoint
+    window.open_path(book)
+    window.a_thumbs.setChecked(True)
+    window.show()
+    app.processEvents()
+    thumbs = window.thumbs.list
+    first, second = thumbs.visualItemRect(thumbs.item(0)), thumbs.visualItemRect(thumbs.item(1))
+    below = thumbs.visualItemRect(thumbs.item(2))
+    assert below.top() > first.bottom()  # (two thumbnails a row)
+    assert thumbs.before_of(QPoint(first.left() + 3, first.center().y())) == 1  # (left half of the first)
+    assert thumbs.before_of(QPoint(first.right() - 3, first.center().y())) == 2  # (after page 1)
+    gap = QPoint((first.right() + second.left()) // 2, first.center().y())
+    assert thumbs.before_of(gap) == 2  # (between 1 and 2: after 1)
+    assert thumbs.before_of(QPoint(second.right() + 3, second.center().y())) == 3  # (right of 2: after 2)
+    assert thumbs.before_of(QPoint(first.center().x(), (first.bottom() + below.top()) // 2)) == 2  # (under 1)
+    assert thumbs.before_of(QPoint(below.left() + 3, below.center().y())) == 4  # (on 3: after 3)
+    width = thumbs.marker_width()
+    assert width >= 3
+    thumbs._marker = 4  # (after page 3: a line under it)
+    line = thumbs.marker_line()
+    assert line.y1() == line.y2() and below.bottom() < line.y1() < below.bottom() + thumbs.gridSize().height()
+    assert below.left() <= line.x1() < line.x2() <= below.right()
+    thumbs._marker = 1  # (before the first: above it)
+    assert thumbs.marker_line().y1() < first.center().y()
+    thumbs._marker = None
+    assert thumbs.marker_line() is None
+    one, three = thumbs.drag_label(1), thumbs.drag_label(3)  # ("1 page", "3 pages" below the pointer)
+    assert not one.isNull() and three.width() > one.width()
 
 
 def test_thumbnails_kept_across_changes(app, window, book, monkeypatch):

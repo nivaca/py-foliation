@@ -3263,4 +3263,12 @@ repetirse u omitirse; 10-1 va hacia atrás).</tr>
     <en>More</en>
     <tr>Más</tr>
   </text>
+  <text>
+    <en>{count} page</en>
+    <tr>{count} página</tr>
+  </text>
+  <text>
+    <en>{count} pages</en>
+    <tr>{count} páginas</tr>
+  </text>
 </interface>

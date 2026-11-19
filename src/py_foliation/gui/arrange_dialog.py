@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QHBoxLayout, QLabel,
     QLineEdit, QListView, QListWidget, QMessageBox, QPushButton, QSpinBox, QVBoxLayout,
@@ -34,6 +34,8 @@ class PageList(QListWidget):
     def before_of(self, pos) -> int:
         """The page (1-based) before which something dropped at POS goes (count + 1: at the end)."""
         item = self.itemAt(pos)
+        if item is None and self.viewMode() == QListView.ViewMode.IconMode:
+            item = self._nearest(pos)
         if item is None:
             return self.count() + 1
         row = self.row(item)
@@ -43,6 +45,22 @@ class PageList(QListWidget):
         else:
             after = pos.y() > rect.center().y()
         return row + 2 if after else row + 1
+
+    def _nearest(self, pos):
+        """In icon mode: the thumbnail beside POS, when POS is in the room between thumbnails (or
+        to the right of the last of a row)."""
+        grid = self.gridSize()
+        if not self.count() or grid.isEmpty():
+            return None
+        cell = self.visualItemRect(self.item(0))
+        gap_x = max(grid.width() - cell.width(), 1)
+        gap_y = max(grid.height() - cell.height(), 1)
+        for dx, dy in ((-gap_x, 0), (gap_x, 0), (0, -gap_y), (-gap_x, -gap_y), (gap_x, -gap_y),
+                       (-grid.width(), 0), (-grid.width(), -gap_y)):
+            item = self.itemAt(pos + QPoint(dx, dy))
+            if item is not None:
+                return item
+        return None
 
     def _ours(self, mime) -> bool:
         """Whether MIME is files, or pages dragged in this list (whose drags never carry files)."""
@@ -69,14 +87,14 @@ class PageList(QListWidget):
             event.setDropAction(Qt.DropAction.CopyAction)
             event.accept()
             if paths:
-                self.files_dropped.emit(paths, before)
+                QTimer.singleShot(0, lambda: self.files_dropped.emit(paths, before))
             return
         pages = sorted(self.row(i) + 1 for i in self.selectedItems())
         copied = bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier)
         event.setDropAction(Qt.DropAction.IgnoreAction)  # (the window does it, and fills the list again)
         event.accept()
-        if pages:
-            self.moved.emit(pages, before, copied)
+        if pages:  # (once the drag is over: the window may ask what the labels do)
+            QTimer.singleShot(0, lambda: self.moved.emit(pages, before, copied))
 
 
 def ask_labels(parent) -> tuple[str, bool] | None:
