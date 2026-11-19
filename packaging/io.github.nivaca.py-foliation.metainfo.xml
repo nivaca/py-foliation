@@ -85,6 +85,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.11" date="2026-11-18">
+      <description>
+        <p>A panel of thumbnails (View ▸ Thumbnails, F4), beside the preview or anywhere else in the window, whose size can be changed with a slider or Ctrl and the mouse wheel. Pages can be chosen, right-clicked and dragged there as in the list of pages, which stays a list.</p>
+      </description>
+    </release>
     <release version="0.10" date="2026-11-18">
       <description>
         <p>Arranging pages: move, delete, duplicate, reverse and rotate them, put them in a new order, insert blank pages (as big as the page before them) or pages of another PDF, replace pages by those of another PDF, extract pages to a new file or split the document into several. The page labels follow the pages, or stay by position, as the user chooses; bookmarks and links go with their pages.</p>
