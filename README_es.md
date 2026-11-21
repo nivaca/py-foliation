@@ -498,3 +498,6 @@ que estén al día).
 
 GNU General Public License, versión 3 o posterior. Por
 [Nicolas Vaughan](https://nicolasvaughan.org).
+
+El software libre que usa, con sus licencias, está en
+[docs/TERCEROS_es.md](docs/TERCEROS_es.md).

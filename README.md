@@ -483,3 +483,6 @@ up to date).
 
 GNU General Public License, version 3 or later. By
 [Nicolas Vaughan](https://nicolasvaughan.org).
+
+The open-source software it uses, and their licences, are listed in
+[docs/THIRD-PARTY.md](docs/THIRD-PARTY.md).

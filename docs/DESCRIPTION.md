@@ -13,9 +13,12 @@ the same in scripts, in English or in Spanish.  Here I explain how it was
 made, in twelve stages.
 
 py-foliation is free software, under the GNU General Public License,
-version 3 or later.  It is written in Python and relies on pikepdf (based
-on QPDF), which reads and writes the PDF files; the window uses PySide6
-(Qt 6).  It is a companion to py-imposition, by the same author, and
+version 3 or later.  It is written in Python and relies on pikepdf
+(Mozilla Public License 2.0), based on QPDF (Apache License 2.0), which
+reads and writes the PDF files; the window uses PySide6 and Qt 6, under
+the GNU Lesser General Public License, version 3.  The open-source
+software it uses, with their licences, is listed in
+`docs/THIRD-PARTY.md`.  It is a companion to py-imposition, by the same author, and
 follows its layout and conventions.
 
 Nicolas Vaughan is Associate Professor of Literature at the School of Arts
