@@ -66,7 +66,7 @@ sudo dnf install ./py-foliation-*.noarch.rpm
 ### Con Python (Linux, Windows, macOS)
 
 Los instaladores de [`installers/`](installers/) preparan py-foliation para
-usarlo con su propio Python 3.15 o posterior, sin binarios propios. No
+usarlo con su propio Python 3.14 o posterior, sin binarios propios. No
 piden permisos de administrador y no tocan el Python del sistema.
 
 Linux y macOS, en una terminal:
@@ -81,7 +81,7 @@ Windows, en PowerShell:
 powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/nivaca/py-foliation/main/installers/install.ps1 | iex"
 ```
 
-El instalador busca Python 3.15 o posterior y luego:
+El instalador busca Python 3.14 o posterior y luego:
 
 1. hace un entorno de Python propio: en `~/.local/share/py-foliation`
    (Linux), `~/Library/Application Support/py-foliation` (macOS) o
@@ -95,10 +95,10 @@ El instalador busca Python 3.15 o posterior y luego:
 4. añade la ventana al menú de aplicaciones (el menú Inicio en Windows,
    `~/Applications` en macOS).
 
-Si falta Python 3.15, dice dónde conseguirlo: los paquetes del sistema en
+Si falta Python 3.14, dice dónde conseguirlo: los paquetes del sistema en
 Linux, [python.org](https://www.python.org/downloads/) o
-`brew install python@3.15` en macOS, python.org o
-`winget install Python.Python.3.15` en Windows. En Debian y Ubuntu hace
+`brew install python@3.14` en macOS, python.org o
+`winget install Python.Python.3.14` en Windows. En Debian y Ubuntu hace
 falta además `python3-venv`.
 
 Para actualizar a la última versión, basta con ejecutarlo otra vez. Con una
@@ -121,7 +121,7 @@ más: sus ajustes y perfiles se quedan.
 
 ### Desde el código fuente
 
-Se necesitan Python 3.15 o posterior y [uv](https://docs.astral.sh/uv/).
+Se necesitan Python 3.14 o posterior y [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone https://github.com/nivaca/py-foliation.git    # o https://codeberg.org/nivaca/py-foliation.git

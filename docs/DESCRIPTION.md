@@ -362,7 +362,7 @@ labels does not open in the middle of it.
 
 `installers/` has installers for running py-foliation with Python on
 Linux, Windows and macOS, without the AppImage or the RPM.  `install.sh`
-and `install.ps1` look for Python 3.15 or later and run `install.py`,
+and `install.ps1` look for Python 3.14 or later and run `install.py`,
 which needs only Python's standard library.  It makes a Python environment
 of its own in the user's folders, installs in it the wheel of the latest
 release (from GitHub, or from Codeberg if GitHub can't be reached), links

@@ -63,7 +63,7 @@ sudo dnf install ./py-foliation-*.noarch.rpm
 ### With Python (Linux, Windows, macOS)
 
 The installers in [`installers/`](installers/) set py-foliation up to run
-with your own Python 3.15 or later, with no binaries of their own. They
+with your own Python 3.14 or later, with no binaries of their own. They
 need no administrator rights and leave the system's Python alone.
 
 Linux and macOS, in a terminal:
@@ -78,7 +78,7 @@ Windows, in PowerShell:
 powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/nivaca/py-foliation/main/installers/install.ps1 | iex"
 ```
 
-The installer looks for Python 3.15 or later and then:
+The installer looks for Python 3.14 or later and then:
 
 1. makes a Python environment of its own: in `~/.local/share/py-foliation`
    (Linux), `~/Library/Application Support/py-foliation` (macOS) or
@@ -92,10 +92,10 @@ The installer looks for Python 3.15 or later and then:
 4. adds the window to the applications menu (the Start menu on Windows,
    `~/Applications` on macOS).
 
-If Python 3.15 is missing, it says where to get it: your system's packages
+If Python 3.14 is missing, it says where to get it: your system's packages
 on Linux, [python.org](https://www.python.org/downloads/) or
-`brew install python@3.15` on macOS, python.org or
-`winget install Python.Python.3.15` on Windows. On Debian and Ubuntu,
+`brew install python@3.14` on macOS, python.org or
+`winget install Python.Python.3.14` on Windows. On Debian and Ubuntu,
 `python3-venv` is needed too.
 
 Run it again to update to the latest release. With a copy of the
@@ -117,7 +117,7 @@ nothing else: your settings and profiles stay.
 
 ### From the source
 
-You need Python 3.15+ and [uv](https://docs.astral.sh/uv/).
+You need Python 3.14+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone https://github.com/nivaca/py-foliation.git    # or https://codeberg.org/nivaca/py-foliation.git

@@ -12,14 +12,14 @@
 #   powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/nivaca/py-foliation/main/installers/install.ps1 | iex"
 #   powershell -ExecutionPolicy ByPass -File install.ps1 [--version X] [--no-gui] [--no-menu] [--uninstall]
 #
-# It finds Python 3.15 or later (the py launcher, or python on the PATH) and
+# It finds Python 3.14 or later (the py launcher, or python on the PATH) and
 # runs install.py with it (the one next to this script, or else the one in
 # the repository): see install.py for what is installed, and where.
 $ErrorActionPreference = "Stop"
 $Url = "https://raw.githubusercontent.com/nivaca/py-foliation/main/installers/install.py"
 
 $Python = $null
-$Candidates = @(@("py", "-3.17"), @("py", "-3.16"), @("py", "-3.15"), @("python"), @("python3"))
+$Candidates = @(@("py", "-3.17"), @("py", "-3.16"), @("py", "-3.15"), @("py", "-3.14"), @("python"), @("python3"))
 foreach ($Candidate in $Candidates) {
     $Exe = $Candidate[0]
     if (-not (Get-Command $Exe -ErrorAction SilentlyContinue)) { continue }
@@ -27,13 +27,13 @@ foreach ($Candidate in $Candidates) {
     # (the py launcher says "No suitable Python runtime found" on stderr for a
     # version it lacks, which Windows PowerShell turns into an error: next)
     try {
-        & $Exe @Rest -c "import sys; sys.exit(sys.version_info < (3, 15))" 2>$null | Out-Null
+        & $Exe @Rest -c "import sys; sys.exit(sys.version_info < (3, 14))" 2>$null | Out-Null
     } catch { continue }
     if ($LASTEXITCODE -eq 0) { $Python = $Candidate; break }
 }
 if (-not $Python) {
-    Write-Host "install.ps1: py-foliation needs Python 3.15 or later, and none was found."
-    Write-Host "Install it from https://www.python.org/downloads/windows/ (or: winget install Python.Python.3.15)."
+    Write-Host "install.ps1: py-foliation needs Python 3.14 or later, and none was found."
+    Write-Host "Install it from https://www.python.org/downloads/windows/ (or: winget install Python.Python.3.14)."
     exit 1
 }
 

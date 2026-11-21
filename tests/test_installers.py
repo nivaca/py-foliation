@@ -39,7 +39,7 @@ def test_the_installers_are_there():
         assert subprocess.run(["sh", "-n", str(INSTALLERS / "install.sh")]).returncode == 0
     for name in ("install.sh", "install.ps1"):
         text = (INSTALLERS / name).read_text()
-        assert "(3, 15)" in text and "installers/install.py" in text  # (the same Python, the same script)
+        assert "(3, 14)" in text and "installers/install.py" in text  # (the same Python, the same script)
 
 
 def test_folders_of_each_system(installer, monkeypatch, tmp_path):
@@ -67,7 +67,7 @@ def test_what_pip_is_given(installer, tmp_path):
 
 def test_too_old_a_python(installer, monkeypatch):
     monkeypatch.setattr(sys, "version_info", (3, 13, 0))
-    with pytest.raises(SystemExit, match="3.15 or later"):
+    with pytest.raises(SystemExit, match="3.14 or later"):
         installer.main([])
 
 

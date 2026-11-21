@@ -11,7 +11,7 @@
 
     python3 install.py [--version X] [--from FILE] [--no-gui] [--no-menu] [--uninstall]
 
-It needs Python 3.15 or later, and only Python's standard library: install.sh
+It needs Python 3.14 or later, and only Python's standard library: install.sh
 (Linux, macOS) and install.ps1 (Windows) find such a Python and run it.
 
 * A Python environment of its own (venv), in the user's folders: no
@@ -44,7 +44,7 @@ import urllib.request
 from pathlib import Path
 
 NAME = "py-foliation"
-MINIMUM = (3, 15)
+MINIMUM = (3, 14)
 GITHUB = "https://github.com/nivaca/py-foliation"
 CODEBERG = "https://codeberg.org/nivaca/py-foliation"
 COMMANDS = ("py-foliation", "py-foliation-gui")
@@ -132,7 +132,7 @@ def make_venv(venv: Path) -> Path:
         venv_module.EnvBuilder(with_pip=True, upgrade_deps=False).create(venv)
     except (ImportError, subprocess.CalledProcessError, OSError) as e:
         raise SystemExit(f"install.py: a Python environment could not be made ({e}). On Debian and Ubuntu, "
-                         f"install python3-venv (or python3.15-venv) and try again.") from None
+                         f"install python3-venv (or python3.{sys.version_info[1]}-venv) and try again.") from None
     python = scripts_of(venv) / ("python.exe" if sys.platform == "win32" else "python")
     if not python.exists():
         raise SystemExit(f"install.py: the environment has no Python ({python})")

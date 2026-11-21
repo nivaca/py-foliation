@@ -18,7 +18,7 @@ Fuera del paquete quedan las herramientas: `tools/screenshots.py` hace las captu
 
 ## Implementación
 
-Está escrito en Python 3.15 o superior, con pikepdf (basada en QPDF), que lee y escribe los PDF. La ventana usa PySide6 (Qt 6), con QtPdf para mostrar las páginas. Son 31 módulos, unas 9000 líneas, y 10 órdenes.
+Está escrito en Python 3.14 o superior, con pikepdf (basada en QPDF), que lee y escribe los PDF. La ventana usa PySide6 (Qt 6), con QtPdf para mostrar las páginas. Son 31 módulos, unas 9000 líneas, y 10 órdenes.
 
 ### Las etiquetas
 
@@ -40,7 +40,7 @@ Desde la 1.0 las miniaturas las dibuja el renderizador de Qt, en un hilo de C++.
 
 ### Distribución
 
-La AppImage lleva su propio Python, con py-foliation, pikepdf y PySide6. Para Fedora hay un RPM firmado, hecho con el Python, pikepdf y PySide6 de Fedora. En `installers/`, `install.sh` e `install.ps1` buscan Python 3.15 o posterior y ejecutan `install.py`, que solo necesita la biblioteca estándar: hace un entorno propio en las carpetas del usuario, instala el wheel de la última versión y pone la ventana en el menú de aplicaciones. `tools/release.py` corre las pruebas, hace los paquetes y publica cada versión en GitHub, Codeberg y Copr.
+La AppImage lleva su propio Python, con py-foliation, pikepdf y PySide6. Para Fedora hay un RPM firmado, hecho con el Python, pikepdf y PySide6 de Fedora. En `installers/`, `install.sh` e `install.ps1` buscan Python 3.14 o posterior y ejecutan `install.py`, que solo necesita la biblioteca estándar: hace un entorno propio en las carpetas del usuario, instala el wheel de la última versión y pone la ventana en el menú de aplicaciones. `tools/release.py` corre las pruebas, hace los paquetes y publica cada versión en GitHub, Codeberg y Copr.
 
 ## Validación
 
@@ -48,7 +48,7 @@ Hay 162 pruebas automáticas (`tests/`), que se corren con `uv run pytest`. Comp
 
 ## Plataforma
 
-Funciona en Linux. Necesita Python 3.15 o superior y pikepdf, y para la ventana PySide6. Al ser Python y Qt, debería funcionar también en Windows y macOS, pero allí solo se ha probado con las pruebas automáticas; para instalarlo con Python en esos sistemas (y en Linux) están los instaladores de `installers/`. Para PDF/A y PDF/X hace falta pdf2iso, con Ghostscript. No necesita internet ni permisos de administrador.
+Funciona en Linux. Necesita Python 3.14 o superior y pikepdf, y para la ventana PySide6. Al ser Python y Qt, debería funcionar también en Windows y macOS, pero allí solo se ha probado con las pruebas automáticas; para instalarlo con Python en esos sistemas (y en Linux) están los instaladores de `installers/`. Para PDF/A y PDF/X hace falta pdf2iso, con Ghostscript. No necesita internet ni permisos de administrador.
 
 ## Ambiente
 

@@ -14,7 +14,7 @@
 #   sh install.sh [--version X] [--no-gui] [--no-menu] [--uninstall]
 #   (with curl ... | sh -s -- --uninstall, the options go after "-s --")
 #
-# It finds Python 3.15 or later and runs install.py with it (the one next to
+# It finds Python 3.14 or later and runs install.py with it (the one next to
 # this script, or else the one in the repository): see install.py for what
 # is installed, and where.
 set -eu
@@ -22,18 +22,18 @@ set -eu
 URL="https://raw.githubusercontent.com/nivaca/py-foliation/main/installers/install.py"
 
 python=""
-for candidate in python3.17 python3.16 python3.15 python3 python; do
+for candidate in python3.17 python3.16 python3.15 python3.14 python3 python; do
     if command -v "$candidate" >/dev/null 2>&1 &&
-       "$candidate" -c 'import sys; sys.exit(sys.version_info < (3, 15))' 2>/dev/null; then
+       "$candidate" -c 'import sys; sys.exit(sys.version_info < (3, 14))' 2>/dev/null; then
         python="$candidate"
         break
     fi
 done
 if [ -z "$python" ]; then
-    echo "install.sh: py-foliation needs Python 3.15 or later, and none was found." >&2
+    echo "install.sh: py-foliation needs Python 3.14 or later, and none was found." >&2
     case "$(uname -s)" in
-        Darwin) echo "Install it from https://www.python.org/downloads/macos/ (or: brew install python@3.15)." >&2 ;;
-        *) echo "Install it with your system's packages (python3.15), or from https://www.python.org/downloads/." >&2 ;;
+        Darwin) echo "Install it from https://www.python.org/downloads/macos/ (or: brew install python@3.14)." >&2 ;;
+        *) echo "Install it with your system's packages (python3.14), or from https://www.python.org/downloads/." >&2 ;;
     esac
     exit 1
 fi
