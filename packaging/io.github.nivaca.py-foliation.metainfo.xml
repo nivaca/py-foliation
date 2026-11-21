@@ -85,6 +85,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="1.0.2" date="2026-11-21">
+      <description>
+        <p>Python 3.14 or later is enough. The Windows installer no longer stops when the py launcher lacks a version of Python. The documentation lists the open-source software py-foliation uses, with their licences.</p>
+      </description>
+    </release>
     <release version="1.0.1" date="2026-11-19">
       <description>
         <p>Dragging thumbnails puts the pages after the thumbnail under the pointer, or the nearest one, and no longer sends them to the end of the book when dropped between thumbnails; a line under that thumbnail shows where, and the pointer shows how many pages it carries. New installers set py-foliation up to run with Python on Linux, Windows and macOS.</p>

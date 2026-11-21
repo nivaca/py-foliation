@@ -5,7 +5,11 @@ AppImages and RPMs, are on
 [Codeberg](https://codeberg.org/nivaca/py-foliation/releases) and
 [GitHub](https://github.com/nivaca/py-foliation/releases).
 
-## Unreleased
+## 1.0.2 — 2026-11-21
+
+- `docs/THIRD-PARTY.md` (and `docs/TERCEROS_es.md`, in Spanish) lists the
+  open-source software py-foliation uses, to run and to be built, tested
+  and packaged, with their licences; the READMEs link to it.
 
 - Python 3.14 or later is needed (it was 3.15): `requires-python`, the
   installers in `installers/` and the READMEs. The tests pass with 3.14;

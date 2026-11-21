@@ -5,7 +5,11 @@ ruedas, AppImages y RPM, están en
 [Codeberg](https://codeberg.org/nivaca/py-foliation/releases) y
 [GitHub](https://github.com/nivaca/py-foliation/releases).
 
-## Sin publicar
+## 1.0.2 — 2026-11-21
+
+- `docs/TERCEROS_es.md` (y `docs/THIRD-PARTY.md`, en inglés) enumera el
+  software libre que usa py-foliation, para funcionar y para construirlo,
+  probarlo y empaquetarlo, con sus licencias; los README enlazan a él.
 
 - Se necesita Python 3.14 o posterior (antes, 3.15): `requires-python`,
   los instaladores de `installers/` y los README. Las pruebas pasan con

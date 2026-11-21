@@ -1,6 +1,6 @@
 [project]
 name = "py-foliation"
-version = "1.0.1"
+version = "1.0.2"
 description = "Change the page labels (the numbering a PDF viewer shows) of PDF documents"
 readme = "README.md"
 license = "GPL-3.0-or-later"
