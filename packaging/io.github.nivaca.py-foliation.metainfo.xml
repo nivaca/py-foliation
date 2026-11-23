@@ -85,6 +85,11 @@
   </requires>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="1.0.3" date="2026-11-22">
+      <description>
+        <p>Every release is signed: each file published comes with its signature, with SHA256SUMS and its signature, and with the public key; the tag of the version is signed too. The READMEs say how to check a download.</p>
+      </description>
+    </release>
     <release version="1.0.2" date="2026-11-21">
       <description>
         <p>Python 3.14 or later is enough. The Windows installer no longer stops when the py launcher lacks a version of Python. The documentation lists the open-source software py-foliation uses, with their licences.</p>

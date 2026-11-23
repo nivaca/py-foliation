@@ -5,7 +5,7 @@ AppImages and RPMs, are on
 [Codeberg](https://codeberg.org/nivaca/py-foliation/releases) and
 [GitHub](https://github.com/nivaca/py-foliation/releases).
 
-## Unreleased
+## 1.0.3 — 2026-11-22
 
 - **Every release signed**: besides the RPM, each file published (the
   wheel, the source package, the AppImage) comes with its signature

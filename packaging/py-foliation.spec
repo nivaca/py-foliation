@@ -10,7 +10,7 @@
 # Build with packaging/build-rpm.sh, which makes the source tarball.
 
 Name:           py-foliation
-Version:        1.0.2
+Version:        1.0.3
 Release:        1%{?dist}
 Summary:        Change the page labels (the numbering a viewer shows) of PDF documents
 
@@ -96,6 +96,10 @@ export HOME="$PWD/check-home" PY_FOLIATION_CONFIG="$PWD/check-home/config" QT_QP
 %{zsh_completions_dir}/_py-foliation
 
 %changelog
+* Sun Nov 22 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 1.0.3-1
+- Every release signed: each file with its signature, SHA256SUMS and its
+  signature, the public key, and a signed tag
+
 * Sat Nov 21 2026 Nicolas Vaughan <nicolasvaughan@proton.me> - 1.0.2-1
 - Python 3.14 or later; the Windows installer no longer stops when the py
   launcher lacks a version; a list of the open-source software used, with
