@@ -60,6 +60,25 @@ sudo rpm --import RPM-GPG-KEY-py-foliation
 sudo dnf install ./py-foliation-*.noarch.rpm
 ```
 
+### Checking a download
+
+Every file of a release is signed with that same key, and so is the tag
+of the version. Each file comes with its signature (`FILE.asc`), and the
+release has `SHA256SUMS`, the checksums of all of them, with its own
+signature (`SHA256SUMS.asc`), and the key, `RPM-GPG-KEY-py-foliation`. To check
+a download, import the key once, then check the file's signature and its
+checksum:
+
+```bash
+gpg --import RPM-GPG-KEY-py-foliation
+gpg --verify py-foliation-VERSION-x86_64.AppImage.asc py-foliation-VERSION-x86_64.AppImage
+gpg --verify SHA256SUMS.asc SHA256SUMS && sha256sum -c --ignore-missing SHA256SUMS
+```
+
+The RPM carries its signature inside too, which `rpm -K` checks after
+`sudo rpm --import RPM-GPG-KEY-py-foliation`. The tag can be checked in a clone
+with `git tag -v vVERSION`.
+
 ### With Python (Linux, Windows, macOS)
 
 The installers in [`installers/`](installers/) set py-foliation up to run
@@ -474,7 +493,8 @@ The pictures in this README are made by `uv run python tools/screenshots.py`
 
 The AppImage is made by `uv run python tools/bundle-appimage.py`, the signed
 RPM by `packaging/build-rpm.sh --sign`, and each release, on GitHub, Codeberg
-and Copr, by `uv run python tools/release.py --rpm` (see `packaging/COPR.org`);
+and Copr, by `uv run python tools/release.py`, which signs every file and the
+tag (see `packaging/COPR.org`);
 `--pypi` also uploads it to PyPI. The manual pages are made from the command
 line's help by `uv run python tools/manpage.py` (a test checks they are
 up to date).

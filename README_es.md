@@ -63,6 +63,25 @@ sudo rpm --import RPM-GPG-KEY-py-foliation
 sudo dnf install ./py-foliation-*.noarch.rpm
 ```
 
+### Comprobar una descarga
+
+Cada archivo de una versión publicada se firma con esa misma clave, y
+también la etiqueta de la versión. Cada archivo va con su firma
+(`ARCHIVO.asc`), y la versión trae `SHA256SUMS`, las sumas de comprobación
+de todos, con su propia firma (`SHA256SUMS.asc`), y la clave,
+`RPM-GPG-KEY-py-foliation`. Para comprobar una descarga, se importa la clave una
+vez y luego se comprueban la firma del archivo y su suma:
+
+```bash
+gpg --import RPM-GPG-KEY-py-foliation
+gpg --verify py-foliation-VERSIÓN-x86_64.AppImage.asc py-foliation-VERSIÓN-x86_64.AppImage
+gpg --verify SHA256SUMS.asc SHA256SUMS && sha256sum -c --ignore-missing SHA256SUMS
+```
+
+El RPM lleva además su firma dentro, que `rpm -K` comprueba después de
+`sudo rpm --import RPM-GPG-KEY-py-foliation`. La etiqueta puede comprobarse en un
+clon con `git tag -v vVERSIÓN`.
+
 ### Con Python (Linux, Windows, macOS)
 
 Los instaladores de [`installers/`](installers/) preparan py-foliation para
@@ -489,7 +508,8 @@ Las imágenes de este README las hace `uv run python tools/screenshots.py`
 
 La AppImage la hace `uv run python tools/bundle-appimage.py`, el RPM firmado
 `packaging/build-rpm.sh --sign`, y cada versión, en GitHub, Codeberg y Copr,
-`uv run python tools/release.py --rpm` (vea `packaging/COPR.org`); `--pypi` la
+`uv run python tools/release.py`, que firma cada archivo y la etiqueta (vea
+`packaging/COPR.org`); `--pypi` la
 sube además a PyPI. Las páginas de manual se hacen a partir de la ayuda de la
 línea de órdenes con `uv run python tools/manpage.py` (una prueba comprueba
 que estén al día).

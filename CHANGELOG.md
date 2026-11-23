@@ -5,6 +5,16 @@ AppImages and RPMs, are on
 [Codeberg](https://codeberg.org/nivaca/py-foliation/releases) and
 [GitHub](https://github.com/nivaca/py-foliation/releases).
 
+## Unreleased
+
+- **Every release signed**: besides the RPM, each file published (the
+  wheel, the source package, the AppImage) comes with its signature
+  (`.asc`), with `SHA256SUMS` and its signature, and with the public key;
+  the tag of the version is signed too. `tools/release.py` makes the
+  signed RPM always (`--no-rpm` leaves it out) and checks each signature
+  with the published key before anything is published. The READMEs say
+  how to check a download.
+
 ## 1.0.2 — 2026-11-21
 
 - `docs/THIRD-PARTY.md` (and `docs/TERCEROS_es.md`, in Spanish) lists the

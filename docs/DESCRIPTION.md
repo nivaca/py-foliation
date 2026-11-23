@@ -10,7 +10,7 @@ pages of the file.  Only the labels change; the pages themselves are left
 as they are.  Nicolas Vaughan made it in 2026.  It has a window, for
 seeing and editing the labels page by page, and a command line, for doing
 the same in scripts, in English or in Spanish.  Here I explain how it was
-made, in twelve stages.
+made, in thirteen stages.
 
 py-foliation is free software, under the GNU General Public License,
 version 3 or later.  It is written in Python and relies on pikepdf
@@ -374,10 +374,26 @@ window in the applications menu.  Removing it takes away only what it
 added: on macOS the environment shares its folder with the settings and
 profiles, and those stay.
 
+13. Every release signed
+------------------------
+
+Only the RPM was signed, and only when the release was asked for it; the
+wheel, the source package and the AppImage went out with nothing to show
+where they came from, and so did the tag.  Now the RPM is always made, and
+a release signs everything with the same key: a detached signature for
+each file, a list of their SHA-256 sums with its own signature, and the
+tag, signed by git.  A signature nobody checks proves little, so the
+release checks each one before publishing, the way a user would, in a
+keyring of its own that holds only the public key published with the
+files.  A file changed after signing, or a published key that is not the
+one that signed, stops the release.  The tests sign with a key made for
+them, in a folder of their own, never with mine.  The same was done, at
+the same time, in py-imposition and py-pdftools.
+
 Testing
 -------
 
-The program has 162 automated tests (`tests/`), run with pytest.  They
+The program has 165 automated tests (`tests/`), run with pytest.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, the reading and
 writing of the number tree, including odd trees, the ranges found in
@@ -401,5 +417,6 @@ preview that settles at every size of the window, and thumbnails that are
 kept across changes and dropped where they should be.  Other tests check
 that every text has its translation and that none is left over, the menu
 installer on each system, the installers of `installers/` (without
-downloading anything, in a home folder of their own), and the packaging
-files and the signing key.  The tests run on every push, on GitHub Actions.
+downloading anything, in a home folder of their own), the packaging
+files and the signing key, and the signing of a release (with a key made
+in the test).  The tests run on every push, on GitHub Actions.
