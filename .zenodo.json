@@ -1,12 +1,19 @@
 {
   "title": "py-foliation",
   "upload_type": "software",
-  "description": "<p>Change the page labels (the numbering a PDF viewer shows) of PDF documents.</p>",
   "creators": [
     {
       "name": "Vaughan, Nicolas",
       "affiliation": "Universidad de los Andes",
       "orcid": "0000-0002-2877-0539"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Vaughan, Nicolas",
+      "affiliation": "Universidad de los Andes",
+      "orcid": "0000-0002-2877-0539",
+      "type": "ProjectLeader"
     }
   ],
   "license": "gpl-3.0-or-later",
@@ -19,5 +26,11 @@
     "pagination",
     "roman numerals",
     "folios"
-  ]
+  ],
+  "languages": [
+    "eng",
+    "spa"
+  ],
+  "programming_language": "python",
+  "development_status": "active"
 }
