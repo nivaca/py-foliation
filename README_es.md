@@ -499,7 +499,12 @@ ejecución.
 ## Desarrollo
 
     uv sync --all-extras
-    uv run pytest
+    uv run python tools/test.py
+
+`tools/test.py` corre cada archivo de pruebas en un proceso de pytest propio,
+tantos a la vez como procesadores haya (`-j N` lo cambia, `-v` muestra cada
+archivo); así las corren también la publicación y el `%check` del RPM.
+`uv run python -m pytest` las corre una tras otra.
 
 Las imágenes de este README las hace `uv run python tools/screenshots.py`
 (en los dos idiomas, sin mostrar nada en la pantalla), y los iconos

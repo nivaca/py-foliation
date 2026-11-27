@@ -393,7 +393,11 @@ the same time, in py-imposition and py-pdftools.
 Testing
 -------
 
-The program has 165 automated tests (`tests/`), run with pytest.  They
+The program has 165 automated tests (`tests/`), run with pytest:
+`tools/test.py` runs each test file in a pytest of its own, as many at
+once as there are processors, and the release script and the RPM's
+`%check` run them in the same way, so the RPM's build no longer waits on
+one long pytest and on its slow exit.  They
 check the numbers in every style, the reading of ranges in both forms and
 of page numbers, how ranges are laid over each other, the reading and
 writing of the number tree, including odd trees, the ranges found in

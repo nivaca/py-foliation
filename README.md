@@ -484,7 +484,12 @@ the configuration file; `--interface CODE` changes it for one run.
 ## Development
 
     uv sync --all-extras
-    uv run pytest
+    uv run python tools/test.py
+
+`tools/test.py` runs each test file in a pytest process of its own, as many
+at once as there are processors (`-j N` changes it, `-v` shows each file);
+the release and the RPM's `%check` run them so too. `uv run python -m
+pytest` runs them one after the other.
 
 The pictures in this README are made by `uv run python tools/screenshots.py`
 (in both languages, without showing anything on the screen), and the icons by
