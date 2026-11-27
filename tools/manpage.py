@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""Make the manual pages of py-foliation from the help of its command line:
+"""Hace las páginas de manual de py-foliation a partir de la ayuda de su línea de órdenes:
 
     uv run python tools/manpage.py [--check]
 
-It writes packaging/man/py-foliation.1 (English) and
-packaging/man/es/py-foliation.1 (Spanish), which the RPM installs. Each
-holds the help of the program and of every command, as the command line
-prints it, so the manual can't say anything the program doesn't.
---check only says whether the files are up to date (the tests use it).
+Escribe packaging/man/py-foliation.1 (en inglés) y packaging/man/es/py-foliation.1 (en
+español), que instala el RPM. Cada una trae la ayuda del programa y la de cada orden, tal
+como las imprime la línea de órdenes, de modo que el manual no puede decir nada que el
+programa no diga. --check solo dice si los archivos están al día (lo usan las pruebas).
 """
 
 from __future__ import annotations

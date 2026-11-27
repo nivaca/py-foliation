@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Make src/py_foliation/fontmetrics.py: the widths of the characters of the
-twelve standard PDF fonts that headers and footers use (Helvetica, Times and
-Courier, each regular, bold, italic and bold italic), in WinAnsiEncoding.
+"""Hace src/py_foliation/fontmetrics.py: los anchos de los caracteres de las doce
+fuentes estándar de PDF que usan los encabezados y pies de página (Helvetica, Times y
+Courier, cada una en redonda, negrita, cursiva y negrita cursiva), en WinAnsiEncoding.
 
-The widths are read from the AFM files of the URW base 35 fonts, which have
-the same metrics as Adobe's (Fedora: urw-base35-fonts), and the glyph names
-are mapped to characters with fontTools' Adobe Glyph List:
+Los anchos se leen de los archivos AFM de las fuentes URW base 35, que tienen las mismas
+métricas que las de Adobe (en Fedora, urw-base35-fonts), y los nombres de los glifos se
+convierten en caracteres con la Adobe Glyph List de fontTools:
 
     uv run --with fonttools python tools/fontmetrics.py [AFM_FOLDER]
 """

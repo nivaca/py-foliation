@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
-"""Make all the icons afresh from src/py_foliation/icons/py-foliation.svg:
+"""Hace de nuevo todos los iconos a partir de src/py_foliation/icons/py-foliation.svg:
 
     python3 tools/icons.py [--svg FILE] [-o FOLDER] [--dry-run]
 
-In FOLDER (src/py_foliation/icons/ by default) it writes:
+En FOLDER (por omisión src/py_foliation/icons/) escribe:
 
-* linux/hicolor/NxN/apps/py-foliation.png, for each N in HICOLOR_SIZES, and
-  linux/hicolor/scalable/apps/py-foliation.svg (a copy of the SVG), for
-  py-foliation-install and the window;
-* macos/py-foliation.iconset/icon_NxN[@2x].png and macos/py-foliation.icns;
+* linux/hicolor/NxN/apps/py-foliation.png, para cada N de HICOLOR_SIZES, y
+  linux/hicolor/scalable/apps/py-foliation.svg (una copia del SVG), para
+  py-foliation-install y la ventana;
+* macos/py-foliation.iconset/icon_NxN[@2x].png y macos/py-foliation.icns;
 * windows/py-foliation.ico.
 
-Each size is drawn by Inkscape from the SVG (never scaled down from a
-bigger PNG), all of them in a single run of Inkscape. The .ico is put
-together with Pillow from those same PNGs, and the .icns from the iconset
-as py-foliation-install does it (as iconutil would, with all ten sizes).
+Inkscape dibuja cada tamaño a partir del SVG (nunca reduciendo un PNG más grande),
+todos en una sola ejecución. El .ico lo arma Pillow con esos mismos PNG, y el .icns
+sale del iconset como lo hace py-foliation-install (como lo haría iconutil, con los diez
+tamaños).
 
-Inkscape may be a Flatpak (org.inkscape.Inkscape), and then it is run with
-"flatpak run", with absolute paths, and writing only inside FOLDER: a
-Flatpak does not see the host's /tmp. So the PNGs are first drawn in a
-hidden folder inside FOLDER, and only moved to their places once all are
-there. If there is no Flatpak, the inkscape on the PATH is used.
+Inkscape puede ser un Flatpak (org.inkscape.Inkscape); entonces se ejecuta con
+"flatpak run", con rutas absolutas y escribiendo solo dentro de FOLDER, porque un
+Flatpak no ve el /tmp del sistema. Por eso los PNG se dibujan primero en una carpeta
+oculta dentro de FOLDER y solo pasan a su lugar cuando están todos. Si no hay
+Flatpak, se usa el inkscape del PATH.
 """
 
 import argparse
